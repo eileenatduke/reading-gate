@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Read First</title>
+  <link rel="stylesheet" href="gate/tokens.css" />
+  <style>
+    body { width: 320px; margin: 0; font-family: var(--font-sans); background: var(--bg); color: var(--text); }
+    .p { padding: var(--sp-5); }
+    .brand { display:flex; align-items:center; gap: var(--sp-2); font-weight:700; margin-bottom: var(--sp-4); }
+    .brand .dot { width:10px; height:10px; border-radius:50%; background:var(--accent); }
+    input { width:100%; font:inherit; padding: var(--sp-3); margin-bottom: var(--sp-3);
+      border:1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); box-sizing:border-box; }
+    .btn { width:100%; font:inherit; font-weight:600; cursor:pointer; border:none; border-radius: var(--radius);
+      padding: var(--sp-3); background: var(--accent); color:#fff; margin-bottom: var(--sp-2); }
+    .btn.ghost { background: transparent; color: var(--accent); border:1px solid var(--border); }
+    .row { display:flex; gap: var(--sp-2); }
+    .row .btn { margin-bottom:0; }
+    .muted { color: var(--text-muted); font-size: var(--fs-sm); }
+    .err { color: var(--danger); font-size: var(--fs-sm); margin-bottom: var(--sp-2); min-height: 1em; }
+    .stat { display:flex; justify-content:space-between; padding: var(--sp-2) 0; border-bottom:1px solid var(--border); }
+    .stat b { font-size: var(--fs-lg); }
+    a { color: var(--accent); }
+    .hidden { display:none; }
+    .toggle-link { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; }
+  </style>
+</head>
+<body>
+  <div class="p">
+    <div class="brand"><span class="dot"></span> Read First</div>
+
+    <div id="need-config" class="hidden">
+      <p class="muted">Connect the extension to your Supabase project first.</p>
+      <button class="btn ghost" id="to-options-1">Open settings</button>
+    </div>
+
+    <div id="auth" class="hidden">
+      <div class="err" id="auth-err"></div>
+      <input id="email" type="email" placeholder="Email" autocomplete="username" />
+      <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
+      <button class="btn" id="signin">Log in</button>
+      <button class="btn ghost" id="signup">Create account</button>
+    </div>
+
+    <div id="dash" class="hidden">
+      <p class="muted" id="who"></p>
+      <div class="stat"><span>Unread in your queue</span><b id="pool">–</b></div>
+      <div class="stat"><span>Impulses this week</span><b id="impulses">–</b></div>
+      <div style="height: var(--sp-4)"></div>
+      <div class="row" style="margin-bottom: var(--sp-2)">
+        <button class="btn" id="refresh">Refresh articles</button>
+        <button class="btn ghost" id="to-options-2">Settings</button>
+      </div>
+      <a id="dashboard-link" class="muted" href="#" target="_blank">Open web dashboard ↗</a>
+      <div style="height: var(--sp-3)"></div>
+      <button class="toggle-link" id="signout">Log out</button>
+    </div>
+  </div>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

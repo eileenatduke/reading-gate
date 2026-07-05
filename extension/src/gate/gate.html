@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Read First</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="gate.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span> Read First</div>
+
+    <!-- Not-logged-in / not-configured state -->
+    <div id="blocked-state" class="card center hidden">
+      <p class="notice" id="blocked-msg"></p>
+      <p><button class="btn btn-ghost" id="open-options">Open settings</button></p>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading-state" class="card center">
+      <p class="blurb">Finding you something worth reading…</p>
+    </div>
+
+    <!-- The gate -->
+    <div id="gate-state" class="hidden">
+      <div class="card">
+        <div class="pills">
+          <span class="pill source" id="a-source"></span>
+          <span class="pill" id="a-genre"></span>
+          <span class="pill serendipity hidden" id="a-serendipity">Outside your usual — a wildcard</span>
+        </div>
+        <h1 class="headline" id="a-title"></h1>
+        <p class="blurb" id="a-blurb"></p>
+        <a class="btn btn-primary read-btn" id="a-read" target="_blank" rel="noopener">
+          Read on <span id="a-read-source"></span> ↗
+        </a>
+      </div>
+
+      <div class="card">
+        <label class="section-label" for="summary">Your summary</label>
+        <p class="hint">Write at least 70 words in your own words. The site unlocks only after you submit.</p>
+        <textarea id="summary" placeholder="What was the article about? What stood out?"></textarea>
+        <div class="counter" id="counter">0 / 70 words</div>
+
+        <div class="rating-row">
+          <div>
+            <div class="label">Quality</div>
+            <div class="sub">How good was the article?</div>
+          </div>
+          <div class="stars" id="quality" role="radiogroup" aria-label="Quality rating"></div>
+        </div>
+        <div class="rating-row">
+          <div>
+            <div class="label">Interest</div>
+            <div class="sub">How much did it match what you want to learn?</div>
+          </div>
+          <div class="stars" id="preference" role="radiogroup" aria-label="Interest rating"></div>
+        </div>
+
+        <div class="submit-row">
+          <button class="btn btn-primary" id="submit" disabled>Submit &amp; unlock</button>
+          <span class="why" id="why"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="gate.js"></script>
+</body>
+</html>

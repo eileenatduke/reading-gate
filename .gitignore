@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+dashboard/node_modules/
+
+# builds
+dist/
+dashboard/dist/
+*.zip
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+
+# editor / OS
+.DS_Store
+.vscode/
+*.log
+npm-debug.log*

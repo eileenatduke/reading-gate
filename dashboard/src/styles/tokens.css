@@ -1,0 +1,51 @@
+/* Design tokens — the visual contract (see DESIGN.md). Keep in sync with
+   extension/src/gate/tokens.css. */
+:root {
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --surface-2: #f1efe9;
+  --border: #e4e1d8;
+  --text: #1f1d1a;
+  --text-muted: #6b6660;
+  --accent: #c2410c;
+  --accent-weak: #fdecdf;
+  --success: #3f7d5b;
+  --warning: #b58a2b;
+  --danger: #b3352b;
+
+  --chart-1: #c2410c;
+  --chart-2: #2563eb;
+  --chart-3: #3f7d5b;
+  --chart-4: #7c3aed;
+  --chart-5: #b58a2b;
+  --chart-6: #0891b2;
+  --chart-heat-0: #f1efe9;
+  --chart-heat-4: #c2410c;
+
+  --fs-xs: .75rem;  --fs-sm: .875rem; --fs-base: 1rem;   --fs-lg: 1.125rem;
+  --fs-xl: 1.375rem; --fs-2xl: 1.75rem; --fs-3xl: 2.25rem;
+
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+
+  --radius-sm: 6px; --radius: 10px; --radius-lg: 16px; --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+  --shadow: 0 4px 16px rgba(0,0,0,.08);
+  --ease: cubic-bezier(.2,.7,.2,1);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: Georgia, "Times New Roman", serif;
+}
+
+:root[data-theme="dark"] {
+  --bg: #17150f;
+  --surface: #211e17;
+  --surface-2: #2b271e;
+  --border: #38332a;
+  --text: #f2efe6;
+  --text-muted: #a49d90;
+  --accent: #f97316;
+  --accent-weak: #3a2417;
+  --chart-heat-0: #2b271e;
+  --chart-heat-4: #f97316;
+}
