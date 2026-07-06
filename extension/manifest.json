@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Read First — the reading gate",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Read and summarize a news article before a distracting site unlocks. Every open, a fresh article.",
   "permissions": ["tabs", "storage", "alarms", "webNavigation"],
   "host_permissions": ["<all_urls>"],

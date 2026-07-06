@@ -44,6 +44,19 @@ const MARSHALL = rss("The Marshall Project", "https://www.themarshallproject.org
 const YAHOO_FINANCE = rss("Yahoo Finance", "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US");
 const YAHOO_TECH = rss("Yahoo Tech", "https://www.engadget.com/rss.xml");
 
+// Wired (native RSS) + OpenAI (official news feed).
+const WIRED = rss("Wired", "https://www.wired.com/feed/rss");
+const WIRED_AI = rss("Wired", "https://www.wired.com/feed/tag/ai/latest/rss");
+const WIRED_SECURITY = rss("Wired", "https://www.wired.com/feed/category/security/latest/rss");
+const WIRED_SCIENCE = rss("Wired", "https://www.wired.com/feed/category/science/latest/rss");
+const OPENAI = rss("OpenAI", "https://openai.com/news/rss.xml");
+
+// Anthropic and the Stanford Digital Economy Lab publish no RSS — cover them via
+// Google News topic feeds (best-effort; these are news *about* them from many outlets).
+const gnews = (q) => `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US:en`;
+const ANTHROPIC = rss("Anthropic", gnews("Anthropic Claude AI"));
+const STANFORD_DEL = rss("Stanford Digital Economy Lab", gnews('"Stanford Digital Economy Lab"'));
+
 // ---------------------------------------------------------------------------
 // Catalog: category → the sources that fill it. First entries are the strongest.
 // ---------------------------------------------------------------------------
@@ -65,10 +78,10 @@ export const CATALOG = {
   "Real Estate & Housing": [gTag("money/property")],
   "Labor & Work": [gTag("money/work-and-careers")],
   // Tech & Science
-  "Technology": [rss("BBC", bbc("news/technology")), gSection("technology"), rss("NPR", npr(1019)), YAHOO_TECH],
-  "AI": [gTag("technology/artificialintelligenceai")],
-  "Cybersecurity": [gTag("technology/data-computer-security")],
-  "Science": [rss("BBC", bbc("news/science_and_environment")), gSection("science"), rss("NPR", npr(1007)), rss("PBS News", pbs("science"))],
+  "Technology": [rss("BBC", bbc("news/technology")), gSection("technology"), rss("NPR", npr(1019)), YAHOO_TECH, WIRED],
+  "AI": [gTag("technology/artificialintelligenceai"), WIRED_AI, OPENAI, ANTHROPIC, STANFORD_DEL],
+  "Cybersecurity": [gTag("technology/data-computer-security"), WIRED_SECURITY],
+  "Science": [rss("BBC", bbc("news/science_and_environment")), gSection("science"), rss("NPR", npr(1007)), rss("PBS News", pbs("science")), WIRED_SCIENCE],
   "Space": [gTag("science/space")],
   // Environment & Energy
   "Climate & Environment": [gSection("environment"), rss("BBC", bbc("news/science_and_environment"))],
@@ -148,7 +161,8 @@ export async function fetchSource(spec, genre) {
     const res = await fetch(spec.url, { cache: "no-store" });
     if (!res.ok) throw new Error(`${spec.source} ${genre} HTTP ${res.status}`);
     const xml = await res.text();
-    return parseFeed(xml).map((a) => ({ ...a, source: spec.source, genre }));
+    // Cap per feed — some feeds (e.g. OpenAI) publish 1000+ items in one file.
+    return parseFeed(xml).slice(0, 25).map((a) => ({ ...a, source: spec.source, genre }));
   }
   // Guardian section or tag
   const cfg = await getConfig();
