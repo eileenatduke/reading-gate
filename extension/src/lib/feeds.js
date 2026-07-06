@@ -27,45 +27,55 @@ export const GENRE_GROUPS = [
 // Flat list (default interest set when a user hasn't chosen any).
 export const GENRES = GENRE_GROUPS.flatMap((g) => g.genres);
 
-// BBC RSS + NPR RSS helpers.
+// Feed-URL helpers.
 const bbc = (path) => `https://feeds.bbci.co.uk/${path}/rss.xml`;
 const npr = (id) => `https://feeds.npr.org/${id}/rss.xml`;
+const pbs = (path) => `https://www.pbs.org/newshour/feeds/rss/${path}`;
 const rss = (source, url) => ({ source, kind: "rss", url });
 const gSection = (ref) => ({ source: "Guardian", kind: "section", ref });
 const gTag = (ref) => ({ source: "Guardian", kind: "tag", ref });
+
+// Extra publisher feeds (owner-requested). AP has no official RSS — using a
+// third-party mirror (best-effort). Yahoo Tech's own feed is defunct — using
+// Engadget, Yahoo's tech publication. Yahoo Finance uses its markets headline feed.
+const AP = rss("AP News", "https://feedx.net/rss/ap.xml");
+const PROPUBLICA = rss("ProPublica", "https://www.propublica.org/feeds/propublica/main");
+const MARSHALL = rss("The Marshall Project", "https://www.themarshallproject.org/rss/recent.rss");
+const YAHOO_FINANCE = rss("Yahoo Finance", "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US");
+const YAHOO_TECH = rss("Yahoo Tech", "https://www.engadget.com/rss.xml");
 
 // ---------------------------------------------------------------------------
 // Catalog: category → the sources that fill it. First entries are the strongest.
 // ---------------------------------------------------------------------------
 export const CATALOG = {
   // Front of the feed
-  "Top Stories": [rss("BBC", bbc("news")), rss("NPR", npr(1001)), gSection("news")],
+  "Top Stories": [rss("BBC", bbc("news")), rss("NPR", npr(1001)), gSection("news"), AP, rss("PBS News", pbs("headlines")), PROPUBLICA],
   "Opinion": [gSection("commentisfree")],
   // News & Politics
-  "World": [rss("BBC", bbc("news/world")), gSection("world"), rss("NPR", npr(1004))],
-  "U.S. / National": [gSection("us-news"), rss("NPR", npr(1003))],
-  "Politics": [rss("BBC", bbc("news/politics")), gSection("politics"), rss("NPR", npr(1014))],
+  "World": [rss("BBC", bbc("news/world")), gSection("world"), rss("NPR", npr(1004)), AP, rss("PBS News", pbs("world"))],
+  "U.S. / National": [gSection("us-news"), rss("NPR", npr(1003)), AP, rss("PBS News", pbs("nation")), PROPUBLICA],
+  "Politics": [rss("BBC", bbc("news/politics")), gSection("politics"), rss("NPR", npr(1014)), rss("PBS News", pbs("politics")), PROPUBLICA],
   "Immigration": [gTag("world/migration")],
-  "Legal & Justice": [gSection("law")],
+  "Legal & Justice": [gSection("law"), MARSHALL],
   "Military & Defense": [gTag("us-news/us-military")],
-  "Crime & Safety": [gTag("us-news/us-crime")],
+  "Crime & Safety": [gTag("us-news/us-crime"), MARSHALL],
   // Business & Money
-  "Business & Finance": [rss("BBC", bbc("news/business")), gSection("business"), rss("NPR", npr(1006))],
+  "Business & Finance": [rss("BBC", bbc("news/business")), gSection("business"), rss("NPR", npr(1006)), rss("PBS News", pbs("economy")), YAHOO_FINANCE],
   "Personal Finance": [gSection("money")],
   "Real Estate & Housing": [gTag("money/property")],
   "Labor & Work": [gTag("money/work-and-careers")],
   // Tech & Science
-  "Technology": [rss("BBC", bbc("news/technology")), gSection("technology"), rss("NPR", npr(1019))],
+  "Technology": [rss("BBC", bbc("news/technology")), gSection("technology"), rss("NPR", npr(1019)), YAHOO_TECH],
   "AI": [gTag("technology/artificialintelligenceai")],
   "Cybersecurity": [gTag("technology/data-computer-security")],
-  "Science": [rss("BBC", bbc("news/science_and_environment")), gSection("science"), rss("NPR", npr(1007))],
+  "Science": [rss("BBC", bbc("news/science_and_environment")), gSection("science"), rss("NPR", npr(1007)), rss("PBS News", pbs("science"))],
   "Space": [gTag("science/space")],
   // Environment & Energy
   "Climate & Environment": [gSection("environment"), rss("BBC", bbc("news/science_and_environment"))],
   "Weather": [gTag("world/extreme-weather")],
   "Energy": [gTag("environment/energy")],
   // Health & Wellbeing
-  "Health": [rss("BBC", bbc("news/health")), gTag("society/health"), rss("NPR", npr(1128))],
+  "Health": [rss("BBC", bbc("news/health")), gTag("society/health"), rss("NPR", npr(1128)), rss("PBS News", pbs("health"))],
   "Wellness & Mental Health": [gTag("lifeandstyle/health-and-wellbeing")],
   // Culture & Entertainment
   "Entertainment": [gSection("film"), gSection("culture")],
