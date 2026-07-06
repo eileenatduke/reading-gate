@@ -1,4 +1,3 @@
-import { getConfig, setConfig } from "./lib/config.js";
 import { currentUser, db } from "./lib/sb.js";
 import { GENRE_GROUPS } from "./lib/feeds.js";
 
@@ -67,27 +66,6 @@ function normalizeDomain(d) {
     .replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
 }
 
-async function loadConn() {
-  const cfg = await getConfig();
-  $("sb-url").value = cfg.SUPABASE_URL || "";
-  $("sb-key").value = cfg.SUPABASE_ANON_KEY || "";
-  $("guardian").value = cfg.GUARDIAN_API_KEY || "";
-  $("dash-url").value = cfg.DASHBOARD_URL || "";
-  $("grace").value = cfg.GRACE_SECS ?? 30;
-}
-
-async function saveConn() {
-  await setConfig({
-    SUPABASE_URL: $("sb-url").value.trim().replace(/\/$/, ""),
-    SUPABASE_ANON_KEY: $("sb-key").value.trim(),
-    GUARDIAN_API_KEY: $("guardian").value.trim() || "test",
-    DASHBOARD_URL: $("dash-url").value.trim(),
-    GRACE_SECS: Number($("grace").value) || 30,
-  });
-  status($("conn-status"), "Saved. Now log in from the popup.", true);
-  await loadAccount();
-}
-
 async function loadAccount() {
   const user = await currentUser();
   if (!user) {
@@ -143,7 +121,6 @@ async function saveAccount() {
   }
 }
 
-$("save-conn").addEventListener("click", saveConn);
 $("save-account").addEventListener("click", saveAccount);
 $("add-domain").addEventListener("click", () => {
   const d = normalizeDomain($("new-domain").value);
@@ -155,4 +132,4 @@ $("new-domain").addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); $("add-domain").click(); }
 });
 
-(async () => { await loadConn(); await loadAccount(); })();
+loadAccount();
