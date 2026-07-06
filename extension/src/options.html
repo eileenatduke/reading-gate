@@ -19,6 +19,9 @@
     .btn.ghost { background:transparent; color:var(--accent); border:1px solid var(--border); }
     .muted { color: var(--text-muted); font-size: var(--fs-sm); }
     .pills { display:flex; flex-wrap:wrap; gap: var(--sp-2); margin: var(--sp-2) 0 var(--sp-4); }
+    .pill { display:inline-block; font-size: var(--fs-sm); font-weight:600; padding: 5px 12px;
+      border-radius: var(--radius-pill); background: var(--surface-2); color: var(--text); }
+    .pill.source { background: var(--accent-weak); color: var(--accent); }
     .group-heading { font-size: var(--fs-xs); font-weight:700; text-transform:uppercase;
       letter-spacing:.06em; color: var(--text-muted); margin-top: var(--sp-4); }
     .toggle { cursor:pointer; user-select:none; padding: 6px 14px; border-radius: var(--radius-pill);
@@ -38,7 +41,13 @@
 </head>
 <body>
   <div class="wrap">
-    <h1>Read First — Settings <span style="font-size:var(--fs-sm);color:var(--success);font-weight:600;">v0.4.0</span></h1>
+    <h1>Settings &amp; Preferences <span style="font-size:var(--fs-sm);color:var(--success);font-weight:600;">v0.5.0</span></h1>
+
+    <div class="card">
+      <h2 style="margin-top:0">Where your articles come from</h2>
+      <p class="muted">For transparency, here are all the publishers Read First pulls news from. Which topics draw from which sources is chosen automatically.</p>
+      <div class="pills" id="sources"></div>
+    </div>
 
     <div id="account" class="card hidden">
       <h2 style="margin-top:0">Interests</h2>

@@ -1,7 +1,26 @@
 import { currentUser, db } from "./lib/sb.js";
-import { GENRE_GROUPS } from "./lib/feeds.js";
+import { GENRE_GROUPS, CATALOG } from "./lib/feeds.js";
 
 const $ = (id) => document.getElementById(id);
+
+// Unique publisher list, in first-appearance order across the catalog.
+function renderSources() {
+  const seen = new Set();
+  const sources = [];
+  for (const specs of Object.values(CATALOG)) {
+    for (const spec of specs) {
+      if (!seen.has(spec.source)) { seen.add(spec.source); sources.push(spec.source); }
+    }
+  }
+  const box = $("sources");
+  box.innerHTML = "";
+  for (const s of sources) {
+    const pill = document.createElement("span");
+    pill.className = "pill source";
+    pill.textContent = s;
+    box.appendChild(pill);
+  }
+}
 
 let selectedInterests = new Set();
 let domains = [];
@@ -132,4 +151,5 @@ $("new-domain").addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); $("add-domain").click(); }
 });
 
+renderSources();
 loadAccount();
