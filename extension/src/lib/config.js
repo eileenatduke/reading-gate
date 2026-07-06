@@ -9,8 +9,8 @@
 // chrome.storage.local and overrides the values below.
 
 export const DEFAULT_CONFIG = {
-  SUPABASE_URL: "",          // e.g. https://xxxxxxxx.supabase.co
-  SUPABASE_ANON_KEY: "",     // the anon/public key
+  SUPABASE_URL: "https://xkvcvhnnbusuujlhkiky.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrdmN2aG5uYnVzdXVqbGhraWt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyOTk0NTUsImV4cCI6MjA5ODg3NTQ1NX0.DMnoaTeZ2RCYr8nzApKHUthNTdTeLLpWgakgKLUk0BM",
   GUARDIAN_API_KEY: "test",  // "test" works for light use; get a free key for real use
   GRACE_SECS: 30,            // re-gate grace period (Spec §3 default)
   MAX_SESSION_MINUTES: 0,    // optional continuous-unlock cap (0 = disabled, Spec §3)
