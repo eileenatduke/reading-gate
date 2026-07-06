@@ -18,7 +18,9 @@
       padding: var(--sp-3) var(--sp-5); background: var(--accent); color:#fff; }
     .btn.ghost { background:transparent; color:var(--accent); border:1px solid var(--border); }
     .muted { color: var(--text-muted); font-size: var(--fs-sm); }
-    .pills { display:flex; flex-wrap:wrap; gap: var(--sp-2); margin: var(--sp-3) 0; }
+    .pills { display:flex; flex-wrap:wrap; gap: var(--sp-2); margin: var(--sp-2) 0 var(--sp-4); }
+    .group-heading { font-size: var(--fs-xs); font-weight:700; text-transform:uppercase;
+      letter-spacing:.06em; color: var(--text-muted); margin-top: var(--sp-4); }
     .toggle { cursor:pointer; user-select:none; padding: 6px 14px; border-radius: var(--radius-pill);
       border:1px solid var(--border); background: var(--surface); font-size: var(--fs-sm); }
     .toggle.on { background: var(--accent); color:#fff; border-color: var(--accent); }
@@ -48,7 +50,7 @@
     <div id="account" class="card hidden">
       <h2 style="margin-top:0">Interests</h2>
       <p class="muted">Pick the topics you want to read. Articles are drawn from these (plus a 1-in-10 wildcard).</p>
-      <div class="pills" id="interests"></div>
+      <div id="interests"></div>
 
       <h2>Blocked sites</h2>
       <p class="muted">Opening any of these triggers the gate. Enter a bare domain, e.g. <code>instagram.com</code>.</p>

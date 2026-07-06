@@ -4,40 +4,22 @@
 
 import { db, currentUser } from "./sb.js";
 import { getConfig } from "./config.js";
-import {
-  RSS_FEEDS, FALLBACK, GUARDIAN_SECTIONS, GENRES,
-  fetchRss, fetchGuardian,
-} from "./feeds.js";
+import { CATALOG, GENRES, fetchSource } from "./feeds.js";
 
-// Fetch everything we can, tolerating individual feed failures.
+// Fetch every source for the user's selected genres, tolerating individual failures.
 async function fetchAll(interests) {
-  const wanted = new Set(interests && interests.length ? interests : GENRES);
+  const wanted = interests && interests.length ? interests : GENRES;
   const jobs = [];
 
-  for (const feed of RSS_FEEDS) {
-    if (!wanted.has(feed.genre)) continue;
-    jobs.push(fetchRss(feed).catch((e) => { console.warn("[content]", e.message); return []; }));
-  }
-  for (const sec of GUARDIAN_SECTIONS) {
-    if (!wanted.has(sec.genre)) continue;
-    jobs.push(fetchGuardian(sec).catch((e) => { console.warn("[content]", e.message); return []; }));
-  }
-
-  let articles = (await Promise.all(jobs)).flat();
-
-  // Yahoo fallback: if a best-effort genre came up empty, backfill from reliable feeds.
-  for (const genre of ["Technology", "Business"]) {
-    if (!wanted.has(genre)) continue;
-    const have = articles.some((a) => a.genre === genre);
-    if (!have) {
-      for (const feed of FALLBACK[genre] || []) {
-        try {
-          articles = articles.concat(await fetchRss(feed));
-          if (articles.some((a) => a.genre === genre)) break;
-        } catch (e) { console.warn("[content:fallback]", e.message); }
-      }
+  for (const genre of wanted) {
+    const specs = CATALOG[genre];
+    if (!specs) continue;
+    for (const spec of specs) {
+      jobs.push(fetchSource(spec, genre).catch((e) => { console.warn("[content]", e.message); return []; }));
     }
   }
+
+  const articles = (await Promise.all(jobs)).flat();
 
   // De-dup by URL.
   const seen = new Set();

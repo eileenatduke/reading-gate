@@ -1,6 +1,6 @@
 import { getConfig, setConfig } from "./lib/config.js";
 import { currentUser, db } from "./lib/sb.js";
-import { GENRES } from "./lib/feeds.js";
+import { GENRE_GROUPS } from "./lib/feeds.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -15,18 +15,28 @@ function status(el, msg, ok) {
 function renderInterests() {
   const box = $("interests");
   box.innerHTML = "";
-  for (const g of GENRES) {
-    const b = document.createElement("div");
-    b.className = "toggle" + (selectedInterests.has(g) ? " on" : "");
-    b.textContent = g;
-    b.setAttribute("role", "checkbox");
-    b.setAttribute("aria-checked", String(selectedInterests.has(g)));
-    b.addEventListener("click", () => {
-      if (selectedInterests.has(g)) selectedInterests.delete(g);
-      else selectedInterests.add(g);
-      renderInterests();
-    });
-    box.appendChild(b);
+  for (const { group, genres } of GENRE_GROUPS) {
+    const heading = document.createElement("div");
+    heading.className = "group-heading";
+    heading.textContent = group;
+    box.appendChild(heading);
+
+    const row = document.createElement("div");
+    row.className = "pills";
+    for (const g of genres) {
+      const b = document.createElement("div");
+      b.className = "toggle" + (selectedInterests.has(g) ? " on" : "");
+      b.textContent = g;
+      b.setAttribute("role", "checkbox");
+      b.setAttribute("aria-checked", String(selectedInterests.has(g)));
+      b.addEventListener("click", () => {
+        if (selectedInterests.has(g)) selectedInterests.delete(g);
+        else selectedInterests.add(g);
+        renderInterests();
+      });
+      row.appendChild(b);
+    }
+    box.appendChild(row);
   }
 }
 

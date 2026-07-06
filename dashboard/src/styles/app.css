@@ -74,6 +74,8 @@ button { font: inherit; }
 .toggle { cursor: pointer; user-select: none; padding: 6px 14px; border-radius: var(--radius-pill);
   border: 1px solid var(--border); background: var(--surface); font-size: var(--fs-sm); }
 .toggle.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.group-heading { font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--text-muted); margin-bottom: var(--sp-2); }
 .chip { display: inline-flex; align-items: center; gap: var(--sp-2); padding: 6px 10px 6px 12px;
   border-radius: var(--radius-pill); background: var(--surface-2); font-size: var(--fs-sm); }
 .chip button { border: none; background: none; cursor: pointer; color: var(--text-muted); font-size: 1rem; }

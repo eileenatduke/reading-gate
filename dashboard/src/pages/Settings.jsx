@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase.js";
 import { fetchProfile, fetchBlocklist } from "../lib/data.js";
-import { GENRES } from "../lib/genres.js";
+import { GENRE_GROUPS } from "../lib/genres.js";
 
 function normalizeDomain(d) {
   return (d || "").trim().toLowerCase()
@@ -73,16 +73,21 @@ export default function Settings() {
       <div className="card" style={{ marginBottom: 24 }}>
         <h3>Interests</h3>
         <p className="panel-sub">Articles are drawn from these topics (plus a 1-in-10 wildcard).</p>
-        <div className="row">
-          {GENRES.map((g) => (
-            <div key={g} className={"toggle" + (interests.has(g) ? " on" : "")}
-              role="checkbox" aria-checked={interests.has(g)} tabIndex={0}
-              onClick={() => toggle(g)}
-              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggle(g))}>
-              {g}
+        {GENRE_GROUPS.map(({ group, genres }) => (
+          <div key={group} style={{ marginBottom: "var(--sp-4)" }}>
+            <div className="group-heading">{group}</div>
+            <div className="row">
+              {genres.map((g) => (
+                <div key={g} className={"toggle" + (interests.has(g) ? " on" : "")}
+                  role="checkbox" aria-checked={interests.has(g)} tabIndex={0}
+                  onClick={() => toggle(g)}
+                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggle(g))}>
+                  {g}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
       <div className="card" style={{ marginBottom: 24 }}>
