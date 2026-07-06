@@ -247,7 +247,12 @@ chrome.runtime.onInstalled.addListener(async () => {
 chrome.runtime.onStartup.addListener(restore);
 
 chrome.alarms.onAlarm.addListener((a) => {
-  if (a.name === "refill") refillPool().catch(() => {});
+  if (a.name === "refill") {
+    // Re-sync the blocklist from Supabase too, so edits made on the web dashboard
+    // reach the extension without needing a browser restart.
+    loadBlocklist().catch(() => {});
+    refillPool().catch(() => {});
+  }
 });
 
 // Kick a restore on first load of the worker.
