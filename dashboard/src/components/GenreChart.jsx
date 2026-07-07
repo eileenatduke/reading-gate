@@ -1,29 +1,38 @@
-import { useMemo } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useMemo, useState } from "react";
 import { genreDistribution } from "../lib/data.js";
 
-const c = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-
-// Horizontal, single-hue, sorted descending (Spec §8) — a "who's biggest" comparison.
+// Horizontal, single-hue, sorted bars (design-faithful). Themed via CSS variables.
 export default function GenreChart({ reading }) {
-  const data = useMemo(() => genreDistribution(reading), [reading]);
+  const genres = useMemo(() => genreDistribution(reading), [reading]);
+  const [hi, setHi] = useState(null);
+  const max = Math.max(1, ...genres.map((g) => g.count));
+  const total = genres.reduce((a, g) => a + g.count, 0) || 1;
+
   return (
-    <div className="card">
-      <h3>Genre distribution</h3>
-      {data.length === 0 ? (
+    <section className="card">
+      <h2>Genre distribution</h2>
+      <p className="sub">Cumulative articles per genre.</p>
+      {genres.length === 0 ? (
         <p className="muted">No reads yet.</p>
       ) : (
-        <ResponsiveContainer width="100%" height={Math.max(160, data.length * 42)}>
-          <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
-            <CartesianGrid stroke={c("--border")} strokeDasharray="3 3" horizontal={false} />
-            <XAxis type="number" allowDecimals={false} tick={{ fill: c("--text-muted"), fontSize: 12 }} />
-            <YAxis type="category" dataKey="genre" width={90} tick={{ fill: c("--text"), fontSize: 12 }} />
-            <Tooltip cursor={{ fill: c("--surface-2") }}
-              contentStyle={{ background: c("--surface"), border: `1px solid ${c("--border")}`, borderRadius: 10, color: c("--text") }} />
-            <Bar dataKey="count" name="Articles" fill={c("--chart-1")} radius={[0, 4, 4, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {genres.map((g, i) => (
+            <div key={g.genre} style={{ cursor: "pointer" }} onMouseEnter={() => setHi(i)} onMouseLeave={() => setHi(null)}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13.5, marginBottom: 6 }}>
+                <span style={{ fontWeight: 500 }}>{g.genre}</span>
+                <span className="muted"><b style={{ color: "var(--text)" }}>{g.count}</b> · {Math.round(g.count / total * 100)}%</span>
+              </div>
+              <div style={{ height: 12, borderRadius: 8, background: "var(--track,var(--surface-2))", overflow: "hidden" }}>
+                <div style={{
+                  height: "100%", borderRadius: 8, width: `${(g.count / max) * 100}%`,
+                  background: (hi == null || hi === i) ? "var(--bar-main)" : "color-mix(in srgb, var(--bar-main) 52%, #ffffff)",
+                  transition: "width .6s cubic-bezier(.22,1,.36,1), background .2s ease",
+                }} />
+              </div>
+            </div>
+          ))}
+        </div>
       )}
-    </div>
+    </section>
   );
 }

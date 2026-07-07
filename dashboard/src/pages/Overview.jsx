@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchReadingLog, fetchImpulseLog, impulsesThisWeek, currentStreak } from "../lib/data.js";
+import { fetchReadingLog, fetchImpulseLog, impulsesThisWeek, currentStreak, startOfWeek } from "../lib/data.js";
 import StatCard from "../components/StatCard.jsx";
 import ArticleCountChart from "../components/ArticleCountChart.jsx";
 import GenreChart from "../components/GenreChart.jsx";
@@ -20,34 +20,47 @@ export default function Overview() {
       .catch((e) => setErr(e.message));
   }, []);
 
+  const readsThisWeek = useMemo(() => {
+    if (!reading) return 0;
+    const start = startOfWeek();
+    return reading.filter((r) => new Date(r.created_at) >= start).length;
+  }, [reading]);
+
+  const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
   if (err) return <div className="loading">Couldn't load data: {err}</div>;
   if (reading === null) return <div className="loading">Loading…</div>;
 
   return (
     <>
-      <h1 className="page-title">Overview</h1>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Overview</h1>
+          <p className="page-sub">Your reading, at a glance.</p>
+        </div>
+        <div style={{ textAlign: "right", color: "var(--faint)", fontSize: 13 }}>
+          <div style={{ fontWeight: 600, color: "var(--muted)", fontSize: 14 }}>{today}</div>
+        </div>
+      </div>
 
-      <div className="grid cols-4" style={{ marginBottom: 24 }}>
-        <StatCard value={impulsesThisWeek(impulses)} label="Impulses this week" onClick={() => nav("/impulses")} />
+      <div className="grid stats">
+        <StatCard value={impulsesThisWeek(impulses)} label="Impulses this week" delta="tap →" onClick={() => nav("/impulses")} />
         <StatCard value={currentStreak(reading)} label="Day streak" />
-        <StatCard value={reading.length} label="Articles read" />
-        <StatCard value={impulses.length} label="Impulses all time" />
+        <StatCard value={reading.length} label="Articles read" delta={readsThisWeek ? `+${readsThisWeek}` : null} deltaAccent />
+        <StatCard value={impulses.length} label="Impulses all-time" />
       </div>
 
-      <div style={{ marginBottom: 24 }}>
-        <ArticleCountChart reading={reading} />
-      </div>
+      <ArticleCountChart reading={reading} />
 
-      <div className="grid cols-2" style={{ marginBottom: 24 }}>
+      <div className="grid bottom" style={{ marginBottom: 20 }}>
         <GenreChart reading={reading} />
-        <SerendipityCard reading={reading} />
-      </div>
-
-      <div style={{ marginBottom: 24 }}>
         <Heatmap impulses={impulses} />
       </div>
 
-      <SourceScorecard reading={reading} />
+      <div className="grid bottom" style={{ marginBottom: 20 }}>
+        <SerendipityCard reading={reading} />
+        <SourceScorecard reading={reading} />
+      </div>
     </>
   );
 }

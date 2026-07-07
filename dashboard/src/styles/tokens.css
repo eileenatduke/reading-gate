@@ -1,51 +1,54 @@
-/* Design tokens — the visual contract (see DESIGN.md). Keep in sync with
-   extension/src/gate/tokens.css. */
-:root {
-  --bg: #f7f6f3;
-  --surface: #ffffff;
-  --surface-2: #f1efe9;
-  --border: #e4e1d8;
-  --text: #1f1d1a;
-  --text-muted: #6b6660;
-  --accent: #c2410c;
-  --accent-weak: #fdecdf;
-  --success: #3f7d5b;
-  --warning: #b58a2b;
-  --danger: #b3352b;
+/* Base + glass system — ported from the Reading Gate Dashboard design.
+   All colors come from CSS variables set at runtime by the theme engine
+   (src/lib/themes.js + theme-context.jsx). Do not hardcode theme colors. */
 
-  --chart-1: #c2410c;
-  --chart-2: #2563eb;
-  --chart-3: #3f7d5b;
-  --chart-4: #7c3aed;
-  --chart-5: #b58a2b;
-  --chart-6: #0891b2;
-  --chart-heat-0: #f1efe9;
-  --chart-heat-4: #c2410c;
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; padding: 0; }
+body {
+  background: var(--app-bg, #f7f7f5);
+  background-attachment: fixed;
+  color: var(--text, #161615);
+  font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  transition: background .5s ease, color .4s ease;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent2); }
 
-  --fs-xs: .75rem;  --fs-sm: .875rem; --fs-base: 1rem;   --fs-lg: 1.125rem;
-  --fs-xl: 1.375rem; --fs-2xl: 1.75rem; --fs-3xl: 2.25rem;
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
 
-  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
-  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+.serif { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
 
-  --radius-sm: 6px; --radius: 10px; --radius-lg: 16px; --radius-pill: 999px;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
-  --shadow: 0 4px 16px rgba(0,0,0,.08);
-  --ease: cubic-bezier(.2,.7,.2,1);
+/* compatibility aliases for a few older inline references */
+:root { --danger: #d9534f; --success: var(--accent); --fs-sm: 13.5px; --sp-4: 16px; }
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
+/* ---- glass panels: auto-applied to cards/stats/nav under a glass theme ---- */
+:root[data-theme-group="glass"] :is(.card, .stat, aside.nav) {
+  -webkit-backdrop-filter: blur(7px) saturate(1.8);
+  backdrop-filter: blur(7px) saturate(1.8);
+  position: relative;
+}
+:root[data-theme-group="glass"] :is(.card, .stat, aside.nav) > * { position: relative; z-index: 1; }
+:root[data-theme-group="glass"] :is(.card, .stat)::before {
+  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
+  background: radial-gradient(150% 95% at 50% -46%, rgba(255,255,255,.72) 0%, rgba(255,255,255,.5) 42%, rgba(255,255,255,0) 60%);
+}
+:root[data-theme-group="glass"] :is(.card, .stat):nth-of-type(even)::before { background: radial-gradient(150% 98% at 22% -50%, rgba(255,255,255,.7) 0%, rgba(255,255,255,.44) 44%, rgba(255,255,255,0) 62%); }
+:root[data-theme-group="glass"] :is(.card, .stat):nth-of-type(3n)::before { background: radial-gradient(130% 88% at 82% -40%, rgba(255,255,255,.72) 0%, rgba(255,255,255,.4) 40%, rgba(255,255,255,0) 58%); }
+:root[data-theme-group="glass"] aside.nav::before {
+  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
+  background: radial-gradient(150% 55% at 50% -26%, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 52%);
+}
+:root[data-theme-group="glass"] :is(.card, .stat, aside.nav)::after {
+  content:''; position:absolute; inset:var(--rim-inset,3px); border-radius:inherit; pointer-events:none; z-index:0;
+  box-shadow:
+    inset calc(-1 * var(--rim-w,1.4px)) calc(-1.4 * var(--rim-w,1.4px)) 0 0 rgba(255,255,255,var(--rim-a,.85)),
+    inset calc(0.35 * var(--rim-w,1.4px)) calc(0.35 * var(--rim-w,1.4px)) 0 0 rgba(255,255,255,calc(var(--rim-a,.85) * 0.32)),
+    inset calc(-0.6 * var(--rim-glow,7px)) calc(-0.8 * var(--rim-glow,7px)) var(--rim-glow,7px) 0 rgba(255,255,255,var(--rim-glow-a,.5)),
+    inset calc(-1 * var(--rim-br-w,0px)) calc(-1 * var(--rim-br-w,0px)) 0 0 rgba(255,255,255,var(--rim-br-a,0)),
+    inset calc(-1 * var(--rim-br-glow,0px)) calc(-1 * var(--rim-br-glow,0px)) var(--rim-br-glow,0px) 0 rgba(255,255,255,var(--rim-br-glow-a,0));
 }
 
-:root[data-theme="dark"] {
-  --bg: #17150f;
-  --surface: #211e17;
-  --surface-2: #2b271e;
-  --border: #38332a;
-  --text: #f2efe6;
-  --text-muted: #a49d90;
-  --accent: #f97316;
-  --accent-weak: #3a2417;
-  --chart-heat-0: #2b271e;
-  --chart-heat-4: #f97316;
-}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

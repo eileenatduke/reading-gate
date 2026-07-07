@@ -1,7 +1,8 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
 body {
-  background: var(--bg);
+  background: var(--app-bg);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font-sans);
   font-size: var(--fs-base);
@@ -9,12 +10,28 @@ body {
   display: flex;
   justify-content: center;
   padding: var(--sp-7) var(--sp-4);
+  transition: background .5s ease, color .4s ease;
+}
+
+/* glass panels when a glass theme is active */
+:root[data-theme-group="glass"] .card {
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  position: relative;
+}
+:root[data-theme-group="glass"] .card > * { position: relative; z-index: 1; }
+:root[data-theme-group="glass"] .card::before {
+  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
+  background: radial-gradient(150% 95% at 50% -46%, rgba(255,255,255,.7) 0%, rgba(255,255,255,.46) 42%, rgba(255,255,255,0) 60%);
+}
+:root[data-theme-group="glass"] .card::after {
+  content:''; position:absolute; inset:3px; border-radius:inherit; pointer-events:none; z-index:0;
+  box-shadow: inset -1.4px -2px 0 0 rgba(255,255,255,.85), inset -5px -6px 8px 0 rgba(255,255,255,.5);
 }
 .wrap { width: 100%; max-width: 640px; }
 
 .brand {
   display: flex; align-items: center; gap: var(--sp-2);
-  color: var(--text-muted); font-size: var(--fs-sm);
+  color: var(--muted); font-size: var(--fs-sm);
   margin-bottom: var(--sp-4);
 }
 .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
@@ -32,7 +49,7 @@ body {
 .pill {
   font-size: var(--fs-xs); font-weight: 600; letter-spacing: .02em;
   padding: 3px 10px; border-radius: var(--radius-pill);
-  background: var(--surface-2); color: var(--text-muted);
+  background: var(--surface-2); color: var(--muted);
 }
 .pill.source { background: var(--accent-weak); color: var(--accent); }
 .pill.serendipity { background: var(--accent); color: #fff; }
@@ -42,7 +59,7 @@ body {
   font-size: var(--fs-2xl); font-weight: 700; line-height: 1.2;
   margin: 0 0 var(--sp-3);
 }
-.blurb { color: var(--text-muted); margin: 0 0 var(--sp-5); }
+.blurb { color: var(--muted); margin: 0 0 var(--sp-5); }
 
 .btn {
   font: inherit; font-weight: 600; cursor: pointer;
@@ -53,7 +70,7 @@ body {
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:hover { filter: brightness(1.05); }
 .btn-primary:disabled {
-  background: var(--surface-2); color: var(--text-muted);
+  background: var(--surface-2); color: var(--muted);
   cursor: not-allowed; filter: none;
 }
 .btn-ghost {
@@ -66,7 +83,7 @@ body {
   font-size: var(--fs-sm); font-weight: 600; color: var(--text);
   margin-bottom: var(--sp-2); display: block;
 }
-.hint { font-size: var(--fs-sm); color: var(--text-muted); margin: 0 0 var(--sp-4); }
+.hint { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--sp-4); }
 
 textarea {
   width: 100%; min-height: 160px; resize: vertical;
@@ -76,12 +93,12 @@ textarea {
 }
 textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-.counter { font-size: var(--fs-sm); color: var(--text-muted); margin-top: var(--sp-2); }
+.counter { font-size: var(--fs-sm); color: var(--muted); margin-top: var(--sp-2); }
 .counter.ok { color: var(--success); font-weight: 600; }
 
 .rating-row { display: flex; align-items: center; justify-content: space-between; margin: var(--sp-4) 0; }
 .rating-row .label { font-weight: 600; }
-.rating-row .sub { font-size: var(--fs-sm); color: var(--text-muted); }
+.rating-row .sub { font-size: var(--fs-sm); color: var(--muted); }
 .stars { display: flex; gap: var(--sp-1); }
 .star {
   font-size: 1.6rem; line-height: 1; cursor: pointer; background: none; border: none;
@@ -91,7 +108,7 @@ textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; 
 .star:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
 
 .submit-row { margin-top: var(--sp-5); display: flex; align-items: center; gap: var(--sp-4); }
-.submit-row .why { font-size: var(--fs-sm); color: var(--text-muted); }
+.submit-row .why { font-size: var(--fs-sm); color: var(--muted); }
 
 .notice {
   background: var(--accent-weak); color: var(--accent);

@@ -36,12 +36,12 @@ export default function ImpulseHistory() {
           <ResponsiveContainer width="100%" height={340}>
             <BarChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
               <CartesianGrid stroke={c("--border")} strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="week" tick={{ fill: c("--text-muted"), fontSize: 11 }} />
-              <YAxis allowDecimals={false} tick={{ fill: c("--text-muted"), fontSize: 12 }} />
+              <XAxis dataKey="week" tick={{ fill: c("--muted"), fontSize: 11 }} />
+              <YAxis allowDecimals={false} tick={{ fill: c("--muted"), fontSize: 12 }} />
               <Tooltip contentStyle={{ background: c("--surface"), border: `1px solid ${c("--border")}`, borderRadius: 10, color: c("--text") }} />
               <Legend />
-              <Bar dataKey="total" name="Impulses" fill={c("--chart-1")} radius={[4, 4, 0, 0]} maxBarSize={48} />
-              <Bar dataKey="completed" name="Completed" fill={c("--chart-3")} radius={[4, 4, 0, 0]} maxBarSize={48} />
+              <Bar dataKey="total" name="Impulses" fill={c("--accent")} radius={[4, 4, 0, 0]} maxBarSize={48} />
+              <Bar dataKey="completed" name="Completed" fill={c("--accent2")} radius={[4, 4, 0, 0]} maxBarSize={48} />
             </BarChart>
           </ResponsiveContainer>
         )}

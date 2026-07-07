@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase.js";
 import { fetchProfile, fetchBlocklist } from "../lib/data.js";
 import { GENRE_GROUPS, SOURCES } from "../lib/genres.js";
+import { useTheme } from "../lib/theme-context.jsx";
+import { THEME_GROUPS, THEMES, swatchBg } from "../lib/themes.js";
 
 function normalizeDomain(d) {
   return (d || "").trim().toLowerCase()
@@ -9,6 +11,7 @@ function normalizeDomain(d) {
 }
 
 export default function Settings() {
+  const { theme, setTheme } = useTheme();
   const [interests, setInterests] = useState(new Set());
   const [domains, setDomains] = useState([]);
   const [newDomain, setNewDomain] = useState("");
@@ -68,21 +71,50 @@ export default function Settings() {
 
   return (
     <>
-      <h1 className="page-title">Settings</h1>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Settings</h1>
+          <p className="page-sub">Personalize your reading and your view.</p>
+        </div>
+      </div>
 
-      <div className="card" style={{ marginBottom: 24 }}>
-        <h3>Where your articles come from</h3>
-        <p className="panel-sub">For transparency, here are all the publishers Read First pulls news from. Which topics draw from which sources is chosen automatically.</p>
+      <div className="card" style={{ marginBottom: 20 }}>
+        <h2>Theme</h2>
+        <p className="sub">Pick a look. It applies to the dashboard and the reading gate.</p>
+        {THEME_GROUPS.map(({ label, keys }) => (
+          <div key={label} style={{ marginBottom: 16 }}>
+            <div className="group-heading">{label}</div>
+            <div className="swatches">
+              {keys.map((k) => (
+                <button
+                  key={k}
+                  title={THEMES[k].name}
+                  aria-label={`${THEMES[k].name} theme`}
+                  aria-pressed={theme === k}
+                  onClick={() => setTheme(k)}
+                  className="swatch"
+                  style={{ background: swatchBg(k), boxShadow: theme === k ? "0 0 0 2px var(--accent)" : "0 0 0 1px rgba(0,0,0,.08)" }}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+        <div className="muted" style={{ fontSize: 13 }}>Current: <b style={{ color: "var(--text)" }}>{THEMES[theme].name}</b></div>
+      </div>
+
+      <div className="card" style={{ marginBottom: 20 }}>
+        <h2>Where your articles come from</h2>
+        <p className="sub">For transparency, here are all the publishers Read First pulls news from. Which topics draw from which sources is chosen automatically.</p>
         <div className="row">
           {SOURCES.map((s) => <span key={s} className="pill source">{s}</span>)}
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: 24 }}>
-        <h3>Interests</h3>
-        <p className="panel-sub">Articles are drawn from these topics (plus a 1-in-10 wildcard).</p>
+      <div className="card" style={{ marginBottom: 20 }}>
+        <h2>Interests</h2>
+        <p className="sub">Articles are drawn from these topics (plus a 1-in-10 wildcard).</p>
         {GENRE_GROUPS.map(({ group, genres }) => (
-          <div key={group} style={{ marginBottom: "var(--sp-4)" }}>
+          <div key={group} style={{ marginBottom: 16 }}>
             <div className="group-heading">{group}</div>
             <div className="row">
               {genres.map((g) => (
@@ -98,9 +130,9 @@ export default function Settings() {
         ))}
       </div>
 
-      <div className="card" style={{ marginBottom: 24 }}>
-        <h3>Blocked sites</h3>
-        <p className="panel-sub">Opening any of these triggers the gate. Use a bare domain like <code>instagram.com</code>.</p>
+      <div className="card" style={{ marginBottom: 20 }}>
+        <h2>Blocked sites</h2>
+        <p className="sub">Opening any of these triggers the gate. Use a bare domain like <code>instagram.com</code>.</p>
         <div className="row" style={{ marginBottom: 16 }}>
           {domains.length === 0 && <span className="muted">No sites yet.</span>}
           {domains.map((d, i) => (

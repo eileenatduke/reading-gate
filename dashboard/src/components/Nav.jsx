@@ -3,13 +3,13 @@ import { supabase } from "../lib/supabase.js";
 
 export default function Nav() {
   return (
-    <nav className="nav">
-      <div className="brand"><span className="dot" /> Read First</div>
-      <NavLink to="/" end>Overview</NavLink>
-      <NavLink to="/library">Library</NavLink>
-      <NavLink to="/settings">Settings</NavLink>
-      <div className="spacer" />
-      <button className="signout" onClick={() => supabase.auth.signOut()}>Log out</button>
-    </nav>
+    <aside className="nav">
+      <div className="brand"><span className="dot" /> <span className="name">Read First</span></div>
+      <NavLink to="/" end><span>◐</span> Overview</NavLink>
+      <NavLink to="/library"><span>▤</span> Library</NavLink>
+      <NavLink to="/settings"><span>⚙</span> Settings</NavLink>
+      <div className="nav-spacer" />
+      <button className="navbtn" onClick={() => supabase.auth.signOut()}><span>→</span> Log out</button>
+    </aside>
   );
 }
