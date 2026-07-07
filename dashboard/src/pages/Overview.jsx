@@ -44,7 +44,7 @@ export default function Overview() {
       </div>
 
       <div className="grid stats">
-        <StatCard value={impulsesThisWeek(impulses)} label="Impulses this week" delta="tap →" onClick={() => nav("/impulses")} />
+        <StatCard value={impulsesThisWeek(impulses)} label="Impulses this week" delta="history →" deltaAccent onClick={() => nav("/impulses")} />
         <StatCard value={currentStreak(reading)} label="Day streak" />
         <StatCard value={reading.length} label="Articles read" delta={readsThisWeek ? `+${readsThisWeek}` : null} deltaAccent />
         <StatCard value={impulses.length} label="Impulses all-time" />

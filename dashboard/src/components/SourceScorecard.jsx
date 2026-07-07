@@ -12,7 +12,8 @@ export default function SourceScorecard({ reading }) {
       {rows.length === 0 ? (
         <p className="muted">No reads yet.</p>
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 320 }}>
           <thead>
             <tr style={{ textAlign: "left", color: "var(--muted)", fontSize: 13 }}>
               <th style={{ padding: "6px 0", fontWeight: 500 }}>Source</th>
@@ -32,6 +33,7 @@ export default function SourceScorecard({ reading }) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </section>
   );

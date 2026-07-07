@@ -23,11 +23,13 @@ export default function ImpulseHistory() {
 
   return (
     <>
-      <button className="btn ghost" style={{ marginBottom: 16 }} onClick={() => nav("/")}>← Overview</button>
-      <h1 className="page-title">Impulse history</h1>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 24 }}>
-        Every gate trigger, bucketed by week — including the times you bailed without reading.
-      </p>
+      <button className="btn ghost" style={{ marginBottom: 20 }} onClick={() => nav("/")}>← Overview</button>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Impulse history</h1>
+          <p className="page-sub">Every gate trigger, bucketed by week — including the times you bailed without reading.</p>
+        </div>
+      </div>
 
       <div className="card">
         {data.length === 0 ? (
