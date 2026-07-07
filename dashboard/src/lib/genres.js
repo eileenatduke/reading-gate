@@ -13,3 +13,11 @@ export const GENRE_GROUPS = [
 ];
 
 export const GENRES = GENRE_GROUPS.flatMap((g) => g.genres);
+
+// Publishers the extension pulls from (mirrors the CATALOG sources in
+// extension/src/lib/feeds.js). Shown on Settings for transparency.
+export const SOURCES = [
+  "BBC", "NPR", "Guardian", "AP News", "PBS News", "ProPublica",
+  "The Marshall Project", "Yahoo Finance", "Yahoo Tech", "Wired",
+  "OpenAI", "Anthropic", "Stanford Digital Economy Lab",
+];

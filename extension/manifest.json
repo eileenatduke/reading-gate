@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Read First — the reading gate",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Read and summarize a news article before a distracting site unlocks. Every open, a fresh article.",
   "permissions": ["tabs", "storage", "alarms", "webNavigation"],
   "host_permissions": ["<all_urls>"],
@@ -20,7 +20,6 @@
     "default_popup": "src/popup.html",
     "default_title": "Read First"
   },
-  "options_page": "src/options.html",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",

@@ -3,8 +3,13 @@ import { signIn, signUp, signOut, currentUser, db } from "./lib/sb.js";
 
 const $ = (id) => document.getElementById(id);
 const showOnly = (id) => {
-  ["need-config", "auth", "dash"].forEach((x) => $(x).classList.toggle("hidden", x !== id));
+  ["auth", "dash"].forEach((x) => $(x).classList.toggle("hidden", x !== id));
 };
+
+async function dashboardUrl(path = "") {
+  const cfg = await getConfig();
+  return (cfg.DASHBOARD_URL || "https://reading-gate.vercel.app").replace(/\/$/, "") + path;
+}
 
 function startOfWeekISO() {
   // Monday-start week, in UTC, without relying on Date.now-forbidden APIs (popups can use Date).
@@ -61,16 +66,14 @@ async function doAuth(fn) {
 }
 
 async function init() {
-  const cfg = await getConfig();
-  if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) { showOnly("need-config"); }
-  else {
-    const user = await currentUser();
-    if (user) await renderDash(user);
-    else showOnly("auth");
-  }
+  const user = await currentUser();
+  if (user) await renderDash(user);
+  else showOnly("auth");
 
-  $("to-options-1").addEventListener("click", () => chrome.runtime.openOptionsPage());
-  $("to-options-2").addEventListener("click", () => chrome.runtime.openOptionsPage());
+  // Preferences live on the web dashboard, not in the extension.
+  $("to-prefs").addEventListener("click", async () => {
+    chrome.tabs.create({ url: await dashboardUrl("/settings") });
+  });
   $("signin").addEventListener("click", () => doAuth(signIn));
   $("signup").addEventListener("click", () => doAuth(signUp));
   $("refresh").addEventListener("click", refresh);

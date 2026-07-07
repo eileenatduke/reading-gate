@@ -1,5 +1,5 @@
 import { getConfig } from "../lib/config.js";
-import { currentUser, db } from "../lib/sb.js";
+import { currentUser, db, signIn, signUp } from "../lib/sb.js";
 import { pickArticle } from "../lib/recommender.js";
 
 const params = new URLSearchParams(location.search);
@@ -14,9 +14,16 @@ let quality = 0;
 let preference = 0;
 
 function show(stateId) {
-  ["blocked-state", "loading-state", "gate-state"].forEach((id) => {
+  ["login-state", "message-state", "loading-state", "gate-state"].forEach((id) => {
     $(id).classList.toggle("hidden", id !== stateId);
   });
+}
+
+async function message(text) {
+  $("message-msg").textContent = text;
+  const cfg = await getConfig();
+  $("open-dashboard").href = cfg.DASHBOARD_URL || "https://reading-gate.vercel.app";
+  show("message-state");
 }
 
 function wordCount(text) {
@@ -107,16 +114,9 @@ async function submit() {
 }
 
 async function init() {
-  const cfg = await getConfig();
-  if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) {
-    $("blocked-msg").textContent = "The extension isn't connected to Supabase yet.";
-    show("blocked-state");
-    return;
-  }
   const user = await currentUser();
   if (!user) {
-    $("blocked-msg").textContent = "Please log in to Read First to continue.";
-    show("blocked-state");
+    show("login-state");
     return;
   }
 
@@ -124,14 +124,11 @@ async function init() {
   try {
     article = await pickArticle();
   } catch (e) {
-    $("blocked-msg").textContent = "Couldn't load an article: " + e.message;
-    show("blocked-state");
+    await message("Couldn't load an article: " + e.message);
     return;
   }
   if (!article) {
-    $("blocked-msg").textContent =
-      "No articles are ready yet. Pick some interests in settings, then try again.";
-    show("blocked-state");
+    await message("No articles are ready yet. Add a few interests on your dashboard, then reopen this site.");
     return;
   }
 
@@ -153,5 +150,39 @@ async function init() {
   show("gate-state");
 }
 
-$("open-options").addEventListener("click", () => chrome.runtime.openOptionsPage());
+async function doAuth(fn) {
+  const err = $("login-err");
+  err.classList.add("hidden");
+  const email = $("email").value.trim();
+  const password = $("password").value;
+  if (!email || !password) {
+    err.textContent = "Enter your email and password.";
+    err.classList.remove("hidden");
+    return;
+  }
+  $("login-btn").disabled = true;
+  $("signup-btn").disabled = true;
+  try {
+    const session = await fn(email, password);
+    if (!session) {
+      err.textContent = "Check your email to confirm your account, then log in.";
+      err.classList.remove("hidden");
+      return;
+    }
+    // Prime the extension, then go straight into reading — no settings detour.
+    await chrome.runtime.sendMessage({ type: "REFRESH_BLOCKLIST" }).catch(() => {});
+    await chrome.runtime.sendMessage({ type: "REFILL_POOL" }).catch(() => {});
+    await init();
+  } catch (e) {
+    err.textContent = e.message;
+    err.classList.remove("hidden");
+  } finally {
+    $("login-btn").disabled = false;
+    $("signup-btn").disabled = false;
+  }
+}
+
+$("login-btn").addEventListener("click", () => doAuth(signIn));
+$("signup-btn").addEventListener("click", () => doAuth(signUp));
+$("password").addEventListener("keydown", (e) => { if (e.key === "Enter") $("login-btn").click(); });
 init();

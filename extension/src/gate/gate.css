@@ -97,6 +97,13 @@ textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; 
   background: var(--accent-weak); color: var(--accent);
   border-radius: var(--radius); padding: var(--sp-4); font-size: var(--fs-sm);
 }
+.field {
+  width: 100%; font: inherit; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: var(--sp-3);
+  margin-bottom: var(--sp-3); box-sizing: border-box;
+}
+.field:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .center { text-align: center; }
 .hidden { display: none !important; }
 a { color: var(--accent); }

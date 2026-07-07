@@ -11,10 +11,23 @@
   <div class="wrap">
     <div class="brand"><span class="dot"></span> Read First</div>
 
-    <!-- Not-logged-in / not-configured state -->
-    <div id="blocked-state" class="card center hidden">
-      <p class="notice" id="blocked-msg"></p>
-      <p><button class="btn btn-ghost" id="open-options">Open settings</button></p>
+    <!-- Inline login (shown when not signed in) -->
+    <div id="login-state" class="card hidden">
+      <h1 class="headline" style="font-size:var(--fs-xl)">Log in to keep reading</h1>
+      <p class="blurb">Sign in to load your article. Once you’re in, you’ll read, summarize, and unlock the site.</p>
+      <p class="notice hidden" id="login-err"></p>
+      <input class="field" id="email" type="email" placeholder="you@example.com" autocomplete="username" />
+      <input class="field" id="password" type="password" placeholder="Your password" autocomplete="current-password" />
+      <div class="submit-row">
+        <button class="btn btn-primary" id="login-btn">Log in</button>
+        <button class="btn btn-ghost" id="signup-btn">Create account</button>
+      </div>
+    </div>
+
+    <!-- Generic message (no articles, errors) -->
+    <div id="message-state" class="card center hidden">
+      <p class="notice" id="message-msg"></p>
+      <p><a class="btn btn-ghost" id="open-dashboard" target="_blank" rel="noopener">Open dashboard</a></p>
     </div>
 
     <!-- Loading -->

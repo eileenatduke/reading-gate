@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase.js";
 import { fetchProfile, fetchBlocklist } from "../lib/data.js";
-import { GENRE_GROUPS } from "../lib/genres.js";
+import { GENRE_GROUPS, SOURCES } from "../lib/genres.js";
 
 function normalizeDomain(d) {
   return (d || "").trim().toLowerCase()
@@ -69,6 +69,14 @@ export default function Settings() {
   return (
     <>
       <h1 className="page-title">Settings</h1>
+
+      <div className="card" style={{ marginBottom: 24 }}>
+        <h3>Where your articles come from</h3>
+        <p className="panel-sub">For transparency, here are all the publishers Read First pulls news from. Which topics draw from which sources is chosen automatically.</p>
+        <div className="row">
+          {SOURCES.map((s) => <span key={s} className="pill source">{s}</span>)}
+        </div>
+      </div>
 
       <div className="card" style={{ marginBottom: 24 }}>
         <h3>Interests</h3>
