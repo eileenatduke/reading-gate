@@ -42,6 +42,21 @@ async function restore() {
   resolveReady();
   // Then refresh the blocklist from Supabase in the background.
   loadBlocklist().catch(() => {});
+  // One-time: flush any queue built by the old, non-diverse algorithm.
+  maybeResetStalePool().catch(() => {});
+}
+
+// Reset the article queue exactly once after upgrading to the diverse-pool logic,
+// so users don't keep draining a stale single-topic backlog.
+async function maybeResetStalePool() {
+  const KEY = "pool_algo_v";
+  const CURRENT = "diverse-1";
+  const { [KEY]: v } = await chrome.storage.local.get(KEY);
+  if (v === CURRENT) return;
+  const user = await currentUser();
+  if (!user) return; // not logged in yet — try again on the next worker start
+  await resetPool().catch(() => {});
+  await chrome.storage.local.set({ [KEY]: CURRENT });
 }
 
 // ---- blocklist cache -------------------------------------------------------

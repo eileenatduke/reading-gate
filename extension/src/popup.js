@@ -67,6 +67,7 @@ async function doAuth(fn) {
 }
 
 async function init() {
+  $("version").textContent = "v" + chrome.runtime.getManifest().version;
   const user = await currentUser();
   if (user) await renderDash(user);
   else showOnly("auth");

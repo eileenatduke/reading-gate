@@ -73,15 +73,27 @@ export async function pickArticle() {
   const inInterest = pool.filter((a) => interests.includes(a.genre));
   const outInterest = pool.filter((a) => !interests.includes(a.genre));
 
+  // Avoid repeating recently-served topics/sources so the feed visibly varies.
+  const recent = (await db("reading_log").select("genre,source").eq("user_id", uid)
+    .order("created_at", { ascending: false }).limit(4).run()) || [];
+  const recentGenres = new Set(recent.map((r) => r.genre));
+  const recentSources = new Set(recent.slice(0, 2).map((r) => r.source));
+  const freshen = (list) => {
+    let c = list.filter((a) => !recentGenres.has(a.genre));
+    if (!c.length) c = list;                              // ran out of new genres
+    const s = c.filter((a) => !recentSources.has(a.source));
+    return s.length ? s : c;                              // then vary the source
+  };
+
   let chosen = null;
-  const seed = readCount + 1; // stable per-position seed, no Math.random needed
+  const seed = Math.floor(Math.random() * 100000);
 
   if (isSerendipity && outInterest.length) {
     // Uniform across outside-interest genres (all trusted sources).
-    chosen = outInterest[seed % outInterest.length];
+    chosen = freshen(outInterest)[seed % freshen(outInterest).length];
   } else if (inInterest.length) {
     const weights = await genreWeights(uid, interests);
-    chosen = weightedPick(inInterest, weights, seed);
+    chosen = weightedPick(freshen(inInterest), weights, seed);
   } else {
     // Fallbacks: whatever the pool has.
     chosen = (isSerendipity ? outInterest[0] : null) || pool[0];
