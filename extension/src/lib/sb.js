@@ -122,6 +122,24 @@ export async function currentUser() {
   return s?.user || null;
 }
 
+// Fetch the freshest user record (incl. user_metadata) from the server. The stored
+// session's metadata can be stale if it changed on another device (e.g. the theme
+// picked in the web dashboard), so read it live.
+export async function getUserFresh() {
+  const cfg = await base();
+  const token = await accessToken();
+  if (!token) return null;
+  try {
+    const res = await fetch(`${cfg.SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: cfg.SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 // ---- PostgREST (data) ------------------------------------------------------
 // Usage:
 //   await db("reading_log").insert({ ... })

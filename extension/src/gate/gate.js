@@ -1,5 +1,5 @@
 import { getConfig } from "../lib/config.js";
-import { currentUser, db, signIn, signUp } from "../lib/sb.js";
+import { currentUser, db, signIn, signUp, getUserFresh } from "../lib/sb.js";
 import { pickArticle } from "../lib/recommender.js";
 import { applyTheme, DEFAULT_THEME } from "../lib/themes.js";
 
@@ -114,13 +114,16 @@ async function submit() {
   }
 }
 
-async function loadTheme(uid) {
+async function loadTheme() {
   try {
-    const rows = await db("profiles").select("theme").eq("user_id", uid).run();
-    const t = rows?.[0]?.theme;
-    if (t) applyTheme(t);
+    const user = await getUserFresh();
+    const t = user?.user_metadata?.theme;
+    if (t) {
+      applyTheme(t);
+      chrome.storage.local.set({ gate_theme: t }); // cache for instant next paint
+    }
   } catch (e) {
-    // theme column may not exist yet — keep the default
+    // keep the current theme
   }
 }
 
@@ -130,7 +133,7 @@ async function init() {
     show("login-state");
     return;
   }
-  loadTheme(user.id); // match the dashboard's chosen theme
+  loadTheme(); // match the theme chosen in the web dashboard
 
   show("loading-state");
   try {
@@ -198,5 +201,6 @@ $("login-btn").addEventListener("click", () => doAuth(signIn));
 $("signup-btn").addEventListener("click", () => doAuth(signUp));
 $("password").addEventListener("keydown", (e) => { if (e.key === "Enter") $("login-btn").click(); });
 
-applyTheme(DEFAULT_THEME); // instant themed paint; refined once the profile loads
+// Instant paint from the cached theme, then refine from the server in loadTheme().
+chrome.storage.local.get("gate_theme").then(({ gate_theme }) => applyTheme(gate_theme || DEFAULT_THEME));
 init();

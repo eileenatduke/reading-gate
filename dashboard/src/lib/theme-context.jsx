@@ -27,13 +27,14 @@ export function ThemeProvider({ children }) {
     return DEFAULT_THEME;
   });
 
-  // Reconcile with the user's saved profile theme (cross-surface source of truth).
+  // Reconcile with the theme saved in the user's auth metadata (cross-surface
+  // source of truth — the extension gate reads the same place). No DB migration.
   useEffect(() => {
     let cancelled = false;
-    supabase.from("profiles").select("theme").maybeSingle().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }) => {
       if (cancelled) return;
-      const t = data?.theme;
-      if (t && isValidTheme(t) && t !== theme) setThemeState(t);
+      const t = data?.user?.user_metadata?.theme;
+      if (t && isValidTheme(t)) setThemeState(t);
     }).catch(() => {});
     return () => { cancelled = true; };
   }, []);
@@ -44,12 +45,8 @@ export function ThemeProvider({ children }) {
     if (!isValidTheme(key)) return;
     setThemeState(key);
     try { localStorage.setItem(KEY, key); } catch {}
-    // Save to the profile so the extension gate matches. Ignore if the column
-    // hasn't been added yet (migration 0002) — the app still works locally.
-    supabase.auth.getUser().then(({ data }) => {
-      const uid = data?.user?.id;
-      if (uid) supabase.from("profiles").update({ theme: key }).eq("user_id", uid).then(() => {}, () => {});
-    });
+    // Persist to auth metadata so the extension gate picks up the same theme.
+    supabase.auth.updateUser({ data: { theme: key } }).then(() => {}, () => {});
   }, []);
 
   return (
