@@ -1,4 +1,4 @@
-import { currentUser, db } from "./lib/sb.js";
+import { currentUser, db, signIn, signUp } from "./lib/sb.js";
 import { GENRE_GROUPS, CATALOG } from "./lib/feeds.js";
 
 const $ = (id) => document.getElementById(id);
@@ -140,6 +140,26 @@ async function saveAccount() {
   }
 }
 
+async function doAuth(fn) {
+  $("auth-err").textContent = "";
+  const email = $("email").value.trim();
+  const password = $("password").value;
+  if (!email || !password) { $("auth-err").textContent = "Enter your email and password."; return; }
+  try {
+    const session = await fn(email, password);
+    if (!session) { $("auth-err").textContent = "Check your email to confirm your account, then log in."; return; }
+    // Prime the extension the same way the popup does.
+    await chrome.runtime.sendMessage({ type: "REFRESH_BLOCKLIST" }).catch(() => {});
+    await chrome.runtime.sendMessage({ type: "REFILL_POOL" }).catch(() => {});
+    await loadAccount();
+  } catch (e) {
+    $("auth-err").textContent = e.message;
+  }
+}
+
+$("login-btn").addEventListener("click", () => doAuth(signIn));
+$("signup-btn").addEventListener("click", () => doAuth(signUp));
+$("password").addEventListener("keydown", (e) => { if (e.key === "Enter") $("login-btn").click(); });
 $("save-account").addEventListener("click", saveAccount);
 $("add-domain").addEventListener("click", () => {
   const d = normalizeDomain($("new-domain").value);

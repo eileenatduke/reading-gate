@@ -36,12 +36,14 @@
     .add-row input { flex:1; }
     .status { font-size: var(--fs-sm); margin-left: var(--sp-3); }
     .status.ok { color: var(--success); } .status.err { color: var(--danger); }
+    .err { color: var(--danger); font-size: var(--fs-sm); min-height: 1em; margin-bottom: var(--sp-2); }
+    .row { display:flex; gap: var(--sp-2); flex-wrap:wrap; align-items:center; }
     .hidden { display:none; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Settings &amp; Preferences <span style="font-size:var(--fs-sm);color:var(--success);font-weight:600;">v0.5.1</span></h1>
+    <h1>Settings &amp; Preferences <span style="font-size:var(--fs-sm);color:var(--success);font-weight:600;">v0.6.0</span></h1>
 
     <div class="card">
       <h2 style="margin-top:0">Where your articles come from</h2>
@@ -68,7 +70,17 @@
     </div>
 
     <div id="login-note" class="card">
-      <p class="muted">Log in from the extension popup to edit your interests and blocklist.</p>
+      <h2 style="margin-top:0">Log in</h2>
+      <p class="muted">Log in to edit your interests and blocklist. Your reading history stays saved in your account.</p>
+      <div class="err" id="auth-err"></div>
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="username" />
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="Your password" autocomplete="current-password" />
+      <div class="row" style="margin-top: var(--sp-4)">
+        <button class="btn" id="login-btn">Log in</button>
+        <button class="btn ghost" id="signup-btn">Create account</button>
+      </div>
     </div>
 
   </div>

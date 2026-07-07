@@ -102,8 +102,16 @@ export async function accessToken() {
     try {
       s = await refresh(s);
     } catch (e) {
-      await clearSession();
-      return null;
+      // Another context (background/gate/popup) may have refreshed concurrently and
+      // rotated the refresh token, making ours look invalid. Before logging the user
+      // out, re-read storage — if a fresh session is already there, use it.
+      const latest = await getSession();
+      if (latest && !isExpired(latest) && latest.refresh_token !== s.refresh_token) {
+        s = latest;
+      } else {
+        await clearSession();
+        return null;
+      }
     }
   }
   return s.access_token;
