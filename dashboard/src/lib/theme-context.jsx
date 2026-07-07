@@ -1,9 +1,11 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import { THEMES, DEFAULT_THEME, isValidTheme, computeVars } from "./themes.js";
 import { supabase } from "./supabase.js";
 
 const KEY = "rg_theme";
-const ThemeCtx = createContext({ theme: DEFAULT_THEME, setTheme: () => {}, isGlass: true });
+const ThemeCtx = createContext({
+  theme: DEFAULT_THEME, preview: () => {}, commit: () => {}, resetPreview: () => {}, isGlass: true,
+});
 
 function apply(key) {
   const vars = computeVars(key);
@@ -22,13 +24,15 @@ export function bootstrapTheme() {
 }
 
 export function ThemeProvider({ children }) {
+  // `theme` is the SAVED theme. Previews change the on-screen look without touching it.
   const [theme, setThemeState] = useState(() => {
     try { const s = localStorage.getItem(KEY); if (s && isValidTheme(s)) return s; } catch {}
     return DEFAULT_THEME;
   });
+  const themeRef = useRef(theme);
+  useEffect(() => { themeRef.current = theme; }, [theme]);
 
-  // Reconcile with the theme saved in the user's auth metadata (cross-surface
-  // source of truth — the extension gate reads the same place). No DB migration.
+  // Reconcile with the theme saved in the user's auth metadata (shared with the gate).
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getUser().then(({ data }) => {
@@ -41,16 +45,20 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => { apply(theme); }, [theme]);
 
-  const setTheme = useCallback((key) => {
+  // Live preview — visual only, not persisted.
+  const preview = useCallback((key) => { if (isValidTheme(key)) apply(key); }, []);
+  // Revert the on-screen look to the last saved theme.
+  const resetPreview = useCallback(() => { apply(themeRef.current); }, []);
+  // Persist a theme (called from the Settings "Save changes" button).
+  const commit = useCallback((key) => {
     if (!isValidTheme(key)) return;
     setThemeState(key);
     try { localStorage.setItem(KEY, key); } catch {}
-    // Persist to auth metadata so the extension gate picks up the same theme.
     supabase.auth.updateUser({ data: { theme: key } }).then(() => {}, () => {});
   }, []);
 
   return (
-    <ThemeCtx.Provider value={{ theme, setTheme, isGlass: THEMES[theme].group === "glass" }}>
+    <ThemeCtx.Provider value={{ theme, preview, commit, resetPreview, isGlass: THEMES[theme].group === "glass" }}>
       {children}
     </ThemeCtx.Provider>
   );

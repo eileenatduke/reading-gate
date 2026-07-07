@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
 import { fetchProfile, fetchBlocklist } from "../lib/data.js";
 import { GENRE_GROUPS, SOURCES } from "../lib/genres.js";
@@ -11,7 +11,13 @@ function normalizeDomain(d) {
 }
 
 export default function Settings() {
-  const { theme, setTheme } = useTheme();
+  const { theme, preview, commit, resetPreview } = useTheme();
+  const [pendingTheme, setPendingTheme] = useState(theme);
+  // Follow the saved theme until the user picks a different one.
+  useEffect(() => { setPendingTheme(theme); }, [theme]);
+  // Revert any unsaved theme preview when leaving the page.
+  useEffect(() => () => resetPreview(), [resetPreview]);
+
   const [interests, setInterests] = useState(new Set());
   const [domains, setDomains] = useState([]);
   const [newDomain, setNewDomain] = useState("");
@@ -44,6 +50,9 @@ export default function Settings() {
     try {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user.id;
+
+      // Persist the previewed theme now (not on click).
+      commit(pendingTheme);
 
       // interests → profiles
       const { error: pErr } = await supabase.from("profiles")
@@ -90,16 +99,19 @@ export default function Settings() {
                   key={k}
                   title={THEMES[k].name}
                   aria-label={`${THEMES[k].name} theme`}
-                  aria-pressed={theme === k}
-                  onClick={() => setTheme(k)}
+                  aria-pressed={pendingTheme === k}
+                  onClick={() => { setPendingTheme(k); preview(k); }}
                   className="swatch"
-                  style={{ background: swatchBg(k), boxShadow: theme === k ? "0 0 0 2px var(--accent)" : "0 0 0 1px rgba(0,0,0,.08)" }}
+                  style={{ background: swatchBg(k), boxShadow: pendingTheme === k ? "0 0 0 2px var(--accent)" : "0 0 0 1px rgba(0,0,0,.08)" }}
                 />
               ))}
             </div>
           </div>
         ))}
-        <div className="muted" style={{ fontSize: 13 }}>Current: <b style={{ color: "var(--text)" }}>{THEMES[theme].name}</b></div>
+        <div className="muted" style={{ fontSize: 13 }}>
+          Selected: <b style={{ color: "var(--text)" }}>{THEMES[pendingTheme].name}</b>
+          {pendingTheme !== theme && <span style={{ color: "var(--accent)" }}> · unsaved</span>}
+        </div>
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
