@@ -105,6 +105,9 @@ textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; 
   color: var(--border); transition: color 120ms var(--ease); padding: 0 2px;
 }
 .star.filled { color: var(--accent); }
+/* On the liquid-pastel (glass) themes the border color is translucent white and
+   reads too faint, so make unselected stars solid white. Filled stars keep --accent. */
+:root[data-theme-group="glass"] .star:not(.filled) { color: #ffffff; }
 .star:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
 
 .submit-row { margin-top: var(--sp-5); display: flex; align-items: center; gap: var(--sp-4); }
