@@ -39,10 +39,12 @@ export default function Library() {
 
   return (
     <>
-      <h1 className="page-title">Library</h1>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 16 }}>
-        Your personal knowledge base — {reading.length} article{reading.length === 1 ? "" : "s"} read.
-      </p>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Library</h1>
+          <p className="page-sub">Your personal knowledge base — {reading.length} article{reading.length === 1 ? "" : "s"} read.</p>
+        </div>
+      </div>
 
       <div className="filters">
         <input type="search" placeholder="Search titles & summaries…" value={q} onChange={(e) => setQ(e.target.value)} />

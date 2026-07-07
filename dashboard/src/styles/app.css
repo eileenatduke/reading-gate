@@ -92,6 +92,12 @@ button { font-family: inherit; }
 .filters input, .filters select { font: inherit; padding: 9px 13px; border: 1px solid var(--border); border-radius: 12px;
   background: var(--surface); color: var(--text); }
 .filters input[type="search"] { min-width: 240px; }
+.filters select {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  padding-right: 34px; cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%236a6a66' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat; background-position: right 13px center;
+}
 .lib-row { padding: 18px 0; border-bottom: 1px solid var(--border); }
 .lib-row .top { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; }
 .lib-row .title { font-size: 18px; font-weight: 600; }
