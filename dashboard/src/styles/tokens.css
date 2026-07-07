@@ -30,7 +30,10 @@ a:hover { color: var(--accent2); }
   backdrop-filter: blur(7px) saturate(1.8);
   position: relative;
 }
-:root[data-theme-group="glass"] :is(.card, .stat, aside.nav) > * { position: relative; z-index: 1; }
+:root[data-theme-group="glass"] :is(.card, .stat) > * { position: relative; z-index: 1; }
+/* nav-inner is position:sticky — give it z-index without forcing position:relative
+   (which would break the sticky behavior). */
+:root[data-theme-group="glass"] aside.nav > .nav-inner { z-index: 1; }
 :root[data-theme-group="glass"] :is(.card, .stat)::before {
   content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
   background: radial-gradient(150% 95% at 50% -46%, rgba(255,255,255,.72) 0%, rgba(255,255,255,.5) 42%, rgba(255,255,255,0) 60%);
