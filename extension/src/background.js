@@ -10,7 +10,7 @@
 
 import { getConfig } from "./lib/config.js";
 import { db, currentUser } from "./lib/sb.js";
-import { refillPool } from "./lib/content.js";
+import { refillPool, resetPool } from "./lib/content.js";
 
 const NONE = chrome.windows.WINDOW_ID_NONE;
 
@@ -229,6 +229,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
       case "REFILL_POOL": {
         const r = await refillPool().catch((e) => ({ error: e.message }));
+        return sendResponse(r);
+      }
+      case "RESET_POOL": {
+        const r = await resetPool().catch((e) => ({ error: e.message }));
         return sendResponse(r);
       }
       default:

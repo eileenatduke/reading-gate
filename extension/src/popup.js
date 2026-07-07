@@ -41,7 +41,8 @@ async function renderDash(user) {
 async function refresh() {
   $("refresh").textContent = "Refreshing…";
   try {
-    await chrome.runtime.sendMessage({ type: "REFILL_POOL" });
+    // Full reset: flush the unread queue and refill with a fresh, diverse batch.
+    await chrome.runtime.sendMessage({ type: "RESET_POOL" });
     const user = await currentUser();
     if (user) await renderDash(user);
   } finally {

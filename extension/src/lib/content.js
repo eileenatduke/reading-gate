@@ -6,24 +6,47 @@ import { db, currentUser } from "./sb.js";
 import { getConfig } from "./config.js";
 import { CATALOG, GENRES, fetchSource } from "./feeds.js";
 
-// Fetch every source for the user's selected genres, tolerating individual failures.
-async function fetchAll(interests) {
-  const wanted = interests && interests.length ? interests : GENRES;
-  const jobs = [];
-
-  for (const genre of wanted) {
-    const specs = CATALOG[genre];
-    if (!specs) continue;
-    for (const spec of specs) {
-      jobs.push(fetchSource(spec, genre).catch((e) => { console.warn("[content]", e.message); return []; }));
-    }
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
+  return a;
+}
 
-  const articles = (await Promise.all(jobs)).flat();
+// Round-robin merge: take item 0 from every list, then item 1, ... so the result
+// alternates between lists instead of exhausting one before the next.
+function interleave(lists) {
+  const out = [];
+  const maxLen = lists.reduce((m, l) => Math.max(m, l.length), 0);
+  for (let i = 0; i < maxLen; i++) {
+    for (const list of lists) if (i < list.length) out.push(list[i]);
+  }
+  return out;
+}
+
+// Fetch the user's genres and return a DIVERSE, deduped article list: genres are
+// shuffled and round-robined, and sources within each genre are shuffled and
+// round-robined — so slicing the front of the list yields a spread of topics and
+// publishers rather than "the first genre from the first source".
+async function fetchAll(interests) {
+  const wanted = shuffle(interests && interests.length ? interests : GENRES);
+
+  const perGenre = await Promise.all(wanted.map(async (genre) => {
+    const specs = CATALOG[genre];
+    if (!specs) return [];
+    const lists = await Promise.all(
+      specs.map((spec) => fetchSource(spec, genre).catch((e) => { console.warn("[content]", e.message); return []; }))
+    );
+    return interleave(shuffle(lists)); // vary the source within the genre
+  }));
+
+  const merged = interleave(perGenre); // vary the genre across the pool
 
   // De-dup by URL.
   const seen = new Set();
-  return articles.filter((a) => {
+  return merged.filter((a) => {
     if (!a.url || seen.has(a.url)) return false;
     seen.add(a.url);
     return true;
@@ -76,4 +99,17 @@ export async function refillPool() {
     return { added: 0, reason: "insert-failed" };
   }
   return { added: rows.length };
+}
+
+// Flush the user's unread queue and refill it with a fresh, diverse batch. Used by
+// the popup's "Refresh articles" button so a skewed queue can be reset on demand.
+export async function resetPool() {
+  const user = await currentUser();
+  if (!user) return { added: 0, reason: "not-authenticated" };
+  try {
+    await db("article_pool").eq("user_id", user.id).is("served", "false").remove();
+  } catch (e) {
+    console.warn("[content:reset]", e.message);
+  }
+  return refillPool();
 }
