@@ -23,7 +23,8 @@ export default function Heatmap({ impulses }) {
   const bg = (val) => {
     const ratio = val / max;
     if (isGlass) return heatColor(theme, ratio);
-    if (val === 0) return "var(--surface-2)";
+    // Solid themes: empty cells are white (not a tint that looks like activity).
+    if (val === 0) return "#ffffff";
     return `rgba(var(--accent-rgb), ${(0.06 + ratio * 0.94).toFixed(2)})`;
   };
 
@@ -65,7 +66,7 @@ export default function Heatmap({ impulses }) {
                   onMouseLeave={() => setCell(null)}
                   style={{
                     aspectRatio: "1", borderRadius: 5, background: bg(val),
-                    border: isGlass ? "1px solid var(--bar-main)" : "1px solid transparent",
+                    border: isGlass ? "1px solid var(--bar-main)" : "1px solid var(--border)",
                     boxShadow: cell && cell.d === di && cell.h === hi ? "0 0 0 2px var(--accent2)" : "none",
                     cursor: "pointer", transition: "box-shadow .15s ease",
                   }} />
