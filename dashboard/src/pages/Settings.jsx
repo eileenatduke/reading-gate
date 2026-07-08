@@ -116,7 +116,7 @@ export default function Settings() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Where your articles come from</h2>
-        <p className="sub">For transparency, here are all the publishers Read First pulls news from. Which topics draw from which sources is chosen automatically.</p>
+        <p className="sub">For transparency, here are all the publishers Reading Gate pulls news from. Which topics draw from which sources is chosen automatically.</p>
         <div className="row">
           {SOURCES.map((s) => <span key={s} className="pill source">{s}</span>)}
         </div>

@@ -11,7 +11,7 @@ automation (no `navigator.webdriver` sniffing — it's fragile and an anti-patte
 
 Instead, **separate the browser profiles**:
 
-- **Human profile:** install the Read First extension here. This is the surface that
+- **Human profile:** install the Reading Gate extension here. This is the surface that
   gets gated.
 - **AI / automation profile:** a *separate* Chrome/Chromium profile (or a
   Playwright/Puppeteer `userDataDir`) with the extension **not installed**. The AI
@@ -25,7 +25,7 @@ purely about where the gate is present.
 
 ### Option A — a dedicated Chrome profile for automation
 1. Chrome → profile menu → **Add** → create e.g. "Automation".
-2. Do **not** install Read First in that profile.
+2. Do **not** install Reading Gate in that profile.
 3. Point your MCP/computer-use tooling at that profile
    (`--profile-directory="Profile N"` or a distinct `--user-data-dir`).
 

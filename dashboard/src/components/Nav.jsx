@@ -5,7 +5,7 @@ export default function Nav() {
   return (
     <aside className="nav">
       <div className="nav-inner">
-        <div className="brand"><span className="dot" /> <span className="name">Read First</span></div>
+        <div className="brand"><span className="name">Reading Gate</span></div>
         <NavLink to="/" end><span>◐</span> Overview</NavLink>
         <NavLink to="/library"><span>▤</span> Library</NavLink>
         <NavLink to="/settings"><span>⚙</span> Settings</NavLink>
