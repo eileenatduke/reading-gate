@@ -124,6 +124,11 @@ textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; 
   margin-bottom: var(--sp-3); box-sizing: border-box;
 }
 .field:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.progress {
+  display: inline-block; font-size: var(--fs-sm); font-weight: 600;
+  color: var(--accent); background: var(--accent-weak);
+  padding: 6px 14px; border-radius: var(--radius-pill); margin-bottom: var(--sp-4);
+}
 .center { text-align: center; }
 .hidden { display: none !important; }
 a { color: var(--accent); }

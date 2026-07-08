@@ -20,6 +20,7 @@ export default function Settings() {
 
   const [interests, setInterests] = useState(new Set());
   const [domains, setDomains] = useState([]);
+  const [articlesRequired, setArticlesRequired] = useState(1);
   const [newDomain, setNewDomain] = useState("");
   const [status, setStatus] = useState("");
   const [err, setErr] = useState("");
@@ -31,7 +32,14 @@ export default function Settings() {
         setDomains(b.map((r) => r.domain));
       })
       .catch((e) => setErr(e.message));
+    // Minimum-articles preference lives in auth metadata (shared with the gate).
+    supabase.auth.getUser().then(({ data }) => {
+      const n = parseInt(data?.user?.user_metadata?.articles_required, 10);
+      if (Number.isFinite(n) && n > 0) setArticlesRequired(n);
+    }).catch(() => {});
   }, []);
+
+  const clampReq = (n) => Math.max(1, Math.min(20, parseInt(n, 10) || 1));
 
   function toggle(g) {
     const next = new Set(interests);
@@ -51,8 +59,10 @@ export default function Settings() {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user.id;
 
-      // Persist the previewed theme now (not on click).
+      // Persist the previewed theme locally now (not on click).
       commit(pendingTheme);
+      // Theme + minimum-articles → auth metadata in one write (shared with the gate).
+      await supabase.auth.updateUser({ data: { theme: pendingTheme, articles_required: articlesRequired } });
 
       // interests → profiles
       const { error: pErr } = await supabase.from("profiles")
@@ -140,6 +150,19 @@ export default function Settings() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="card" style={{ marginBottom: 20 }}>
+        <h2>Articles per unlock</h2>
+        <p className="sub">How many articles you must read before a blocked site will open. You can always keep reading past this at the gate.</p>
+        <div className="row" style={{ alignItems: "center", gap: 12 }}>
+          <button className="btn ghost" aria-label="Fewer" onClick={() => setArticlesRequired((v) => clampReq(v - 1))} style={{ padding: "8px 16px", fontSize: 18, lineHeight: 1 }}>−</button>
+          <input className="input" type="number" min="1" max="20" value={articlesRequired}
+            onChange={(e) => setArticlesRequired(clampReq(e.target.value))}
+            style={{ width: 72, textAlign: "center" }} />
+          <button className="btn ghost" aria-label="More" onClick={() => setArticlesRequired((v) => clampReq(v + 1))} style={{ padding: "8px 16px", fontSize: 18, lineHeight: 1 }}>+</button>
+          <span className="muted" style={{ fontSize: 13 }}>{articlesRequired === 1 ? "article" : "articles"} to unlock a site</span>
+        </div>
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>

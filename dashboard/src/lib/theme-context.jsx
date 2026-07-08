@@ -49,12 +49,12 @@ export function ThemeProvider({ children }) {
   const preview = useCallback((key) => { if (isValidTheme(key)) apply(key); }, []);
   // Revert the on-screen look to the last saved theme.
   const resetPreview = useCallback(() => { apply(themeRef.current); }, []);
-  // Persist a theme (called from the Settings "Save changes" button).
+  // Commit a theme locally (state + localStorage). The Settings page writes it to
+  // auth metadata (together with other prefs) in a single call on Save.
   const commit = useCallback((key) => {
     if (!isValidTheme(key)) return;
     setThemeState(key);
     try { localStorage.setItem(KEY, key); } catch {}
-    supabase.auth.updateUser({ data: { theme: key } }).then(() => {}, () => {});
   }, []);
 
   return (

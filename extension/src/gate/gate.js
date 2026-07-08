@@ -13,9 +13,11 @@ const MIN_WORDS = 70;
 let article = null;
 let quality = 0;
 let preference = 0;
+let required = 1;      // minimum articles to read before the site can be accessed
+let sessionReads = 0;  // articles completed during this gate visit
 
 function show(stateId) {
-  ["login-state", "message-state", "loading-state", "gate-state"].forEach((id) => {
+  ["login-state", "message-state", "loading-state", "gate-state", "choices-state"].forEach((id) => {
     $(id).classList.toggle("hidden", id !== stateId);
   });
 }
@@ -82,7 +84,7 @@ async function submit() {
     const user = await currentUser();
     if (!user) throw new Error("Not logged in");
 
-    // 1. Save the completed read.
+    // Save the completed read.
     await db("reading_log").insert({
       user_id: user.id,
       article_title: article.title,
@@ -94,37 +96,97 @@ async function submit() {
       preference_rating: preference,
       is_serendipity: !!article.is_serendipity,
     });
+    sessionReads++;
 
-    // 2. Mark this gate trigger as completed.
-    const { impulseId } = await chrome.runtime.sendMessage({ type: "GET_PENDING_IMPULSE" });
-    if (impulseId) {
-      await db("impulse_log").eq("id", impulseId).update({ completed: true });
-      await chrome.runtime.sendMessage({ type: "CLEAR_PENDING_IMPULSE" });
+    // Mark this gate trigger completed the moment the minimum is met.
+    if (sessionReads === required) {
+      const { impulseId } = await chrome.runtime.sendMessage({ type: "GET_PENDING_IMPULSE" });
+      if (impulseId) {
+        await db("impulse_log").eq("id", impulseId).update({ completed: true });
+        await chrome.runtime.sendMessage({ type: "CLEAR_PENDING_IMPULSE" });
+      }
     }
 
-    // 3. Grant the unlock (background must record it BEFORE we navigate to target).
-    await chrome.runtime.sendMessage({ type: "GRANT_UNLOCK", domain });
-
-    // 4. Unlock this visit only — go to the site the user wanted.
-    location.href = target || `https://${domain}`;
+    // Below the minimum → keep reading. At/above → let the user choose.
+    if (sessionReads >= required) showChoices();
+    else await loadNextArticle();
   } catch (e) {
     $("submit").disabled = false;
-    $("submit").textContent = "Submit & unlock";
+    $("submit").textContent = "Submit";
     $("why").textContent = "Save failed: " + e.message;
   }
 }
 
-async function loadTheme() {
+function showChoices() {
+  $("choices-msg").textContent =
+    `You've read ${sessionReads} article${sessionReads === 1 ? "" : "s"} — your goal of ${required} is met. Keep reading, or head to the site.`;
+  show("choices-state");
+}
+
+async function accessSite() {
+  // Grant the unlock (background records it BEFORE we navigate), then go.
+  await chrome.runtime.sendMessage({ type: "GRANT_UNLOCK", domain });
+  location.href = target || `https://${domain}`;
+}
+
+// Load the user's prefs (theme + minimum articles) from auth metadata.
+async function loadPrefs() {
   try {
     const user = await getUserFresh();
-    const t = user?.user_metadata?.theme;
-    if (t) {
-      applyTheme(t);
-      chrome.storage.local.set({ gate_theme: t }); // cache for instant next paint
+    const meta = user?.user_metadata || {};
+    if (meta.theme) {
+      applyTheme(meta.theme);
+      chrome.storage.local.set({ gate_theme: meta.theme });
     }
-  } catch (e) {
-    // keep the current theme
+    const n = parseInt(meta.articles_required, 10);
+    required = Number.isFinite(n) && n > 0 ? n : 1;
+  } catch {
+    required = 1;
   }
+}
+
+function updateProgress() {
+  const p = $("progress");
+  if (required > 1) {
+    p.textContent = `Article ${sessionReads + 1} · goal ${required}`;
+    p.classList.remove("hidden");
+  } else {
+    p.classList.add("hidden");
+  }
+}
+
+function renderArticle(a) {
+  article = a; quality = 0; preference = 0;
+  $("a-source").textContent = a.source;
+  $("a-genre").textContent = a.genre;
+  $("a-serendipity").classList.toggle("hidden", !a.is_serendipity);
+  $("a-title").textContent = a.title;
+  $("a-blurb").textContent = a.blurb || "";
+  $("a-read").href = a.url;
+  $("a-read-source").textContent = a.source;
+  buildStars("quality", (v) => { quality = v; });
+  buildStars("preference", (v) => { preference = v; });
+  $("summary").value = "";
+  $("submit").textContent = "Submit";
+  updateProgress();
+  updateCounter();
+  show("gate-state");
+}
+
+async function loadNextArticle() {
+  show("loading-state");
+  let a;
+  try {
+    a = await pickArticle();
+  } catch (e) {
+    await message("Couldn't load an article: " + e.message);
+    return;
+  }
+  if (!a) {
+    await message("No articles are ready yet. Add a few interests on your dashboard, then reopen this site.");
+    return;
+  }
+  renderArticle(a);
 }
 
 async function init() {
@@ -133,36 +195,9 @@ async function init() {
     show("login-state");
     return;
   }
-  loadTheme(); // match the theme chosen in the web dashboard
-
-  show("loading-state");
-  try {
-    article = await pickArticle();
-  } catch (e) {
-    await message("Couldn't load an article: " + e.message);
-    return;
-  }
-  if (!article) {
-    await message("No articles are ready yet. Add a few interests on your dashboard, then reopen this site.");
-    return;
-  }
-
-  // Render
-  $("a-source").textContent = article.source;
-  $("a-genre").textContent = article.genre;
-  $("a-serendipity").classList.toggle("hidden", !article.is_serendipity);
-  $("a-title").textContent = article.title;
-  $("a-blurb").textContent = article.blurb || "";
-  $("a-read").href = article.url;
-  $("a-read-source").textContent = article.source;
-
-  buildStars("quality", (v) => { quality = v; });
-  buildStars("preference", (v) => { preference = v; });
-  $("summary").addEventListener("input", updateCounter);
-  $("submit").addEventListener("click", submit);
-  updateCounter();
-
-  show("gate-state");
+  sessionReads = 0;
+  await loadPrefs();       // theme + minimum-articles requirement
+  await loadNextArticle();
 }
 
 async function doAuth(fn) {
@@ -200,6 +235,10 @@ async function doAuth(fn) {
 $("login-btn").addEventListener("click", () => doAuth(signIn));
 $("signup-btn").addEventListener("click", () => doAuth(signUp));
 $("password").addEventListener("keydown", (e) => { if (e.key === "Enter") $("login-btn").click(); });
+$("submit").addEventListener("click", submit);
+$("summary").addEventListener("input", updateCounter);
+$("access-btn").addEventListener("click", accessSite);
+$("more-btn").addEventListener("click", loadNextArticle);
 
 // Instant paint from the cached theme, then refine from the server in loadTheme().
 chrome.storage.local.get("gate_theme").then(({ gate_theme }) => applyTheme(gate_theme || DEFAULT_THEME));
