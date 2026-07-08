@@ -79,6 +79,7 @@ export function currentStreak(reading) {
 // selected window. Returns [{ label, full, showLabel, count, cumulative }].
 export function articleCountSeries(reading, period = "week") {
   const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const times = reading.map((r) => new Date(r.created_at));
   const countBetween = (d0, d1) => times.filter((t) => t >= d0 && t < d1).length;
   const buckets = [];
@@ -91,6 +92,7 @@ export function articleCountSeries(reading, period = "week") {
       buckets.push({
         label: String(day), full: `${monName} ${day}`,
         showLabel: day === 1 || day % 7 === 1, // 1, 8, 15, 22, 29
+        future: day > now.getDate(),
         count: countBetween(new Date(y, m, day), new Date(y, m, day + 1)),
       });
     }
@@ -101,6 +103,7 @@ export function articleCountSeries(reading, period = "week") {
     for (let mo = 0; mo < 12; mo++) {
       buckets.push({
         label: letters[mo], full: short[mo], showLabel: true,
+        future: mo > now.getMonth(),
         count: countBetween(new Date(y, mo, 1), new Date(y, mo + 1, 1)),
       });
     }
@@ -110,12 +113,20 @@ export function articleCountSeries(reading, period = "week") {
     for (let i = 0; i < 7; i++) {
       const d0 = new Date(start); d0.setDate(start.getDate() + i);
       const d1 = new Date(d0); d1.setDate(d0.getDate() + 1);
-      buckets.push({ label: days[i], full: days[i], showLabel: true, count: countBetween(d0, d1) });
+      buckets.push({
+        label: days[i], full: days[i], showLabel: true,
+        future: d0.getTime() > todayStart.getTime(),
+        count: countBetween(d0, d1),
+      });
     }
   }
 
+  // Cumulative accrues only through today; future buckets carry no cumulative point.
   let cumulative = 0;
-  return buckets.map((b) => ({ ...b, cumulative: (cumulative += b.count) }));
+  return buckets.map((b) => {
+    if (!b.future) cumulative += b.count;
+    return { ...b, cumulative: b.future ? null : cumulative };
+  });
 }
 
 // ---------- genre distribution ----------

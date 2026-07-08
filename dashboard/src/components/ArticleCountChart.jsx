@@ -19,20 +19,22 @@ export default function ArticleCountChart({ reading }) {
 
   const n = series.length;
   const counts = series.map((s) => s.count);
-  const cums = series.map((s) => s.cumulative);
+  const nonFuture = series.filter((s) => !s.future);
+  const cums = nonFuture.map((s) => s.cumulative);
   const axisMax = niceMax(Math.max(1, ...counts));
-  const cumMax = niceMax(Math.max(1, ...cums));
-  const cumMin = cums.length ? Math.max(0, cums[0] - counts[0]) : 0;
+  const cumMax = niceMax(Math.max(1, ...cums, 1));
+  const cumMin = cums.length ? Math.max(0, cums[0] - nonFuture[0].count) : 0;
   const span = cumMax - cumMin || 1;
   const cumTop = (v) => 100 - ((v - cumMin) / span) * 100;
 
   const bars = series.map((s, i) => ({
-    label: s.label, full: s.full, showLabel: s.showLabel, count: s.count, cum: s.cumulative,
+    label: s.label, full: s.full, showLabel: s.showLabel, future: s.future, count: s.count, cum: s.cumulative,
     heightPct: (s.count / axisMax) * 100,
     centerPct: ((i + 0.5) / n) * 100,
-    cumTopPct: cumTop(s.cumulative),
+    cumTopPct: s.future ? null : cumTop(s.cumulative),
   }));
-  const linePoints = bars.map((b) => `${b.centerPct.toFixed(2)},${b.cumTopPct.toFixed(2)}`).join(" ");
+  // Line + dots stop at the last elapsed bucket — no cumulative on future days.
+  const linePoints = bars.filter((b) => !b.future).map((b) => `${b.centerPct.toFixed(2)},${b.cumTopPct.toFixed(2)}`).join(" ");
   const leftTicks = [0, 1, 2, 3, 4].map((i) => ({ val: Math.round(axisMax * (4 - i) / 4), topPct: (i / 4) * 100 }));
   const rightTicks = [0, 1, 2, 3, 4].map((i) => ({ val: Math.round(cumMin + span * (4 - i) / 4), topPct: (i / 4) * 100 }));
   const tip = tipI != null && bars[tipI] ? bars[tipI] : null;
@@ -83,15 +85,15 @@ export default function ArticleCountChart({ reading }) {
                 <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}>
                   <polyline points={linePoints} fill="none" stroke="var(--line)" strokeWidth="2.6" vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,.18))" }} />
                 </svg>
-                {bars.map((b, i) => (
+                {bars.map((b, i) => b.future ? null : (
                   <div key={i} style={{ position: "absolute", left: `${b.centerPct}%`, top: `${b.cumTopPct}%`, width: 9, height: 9, borderRadius: "50%", background: "var(--dot,#fff)", border: "2px solid var(--line)", boxShadow: "0 1px 3px rgba(0,0,0,.2)", transform: "translate(-50%,-50%)" }} />
                 ))}
               </div>
               {tip && (
-                <div style={{ position: "absolute", left: `${tip.centerPct}%`, top: `${tip.cumTopPct}%`, transform: "translate(-50%,calc(-100% - 14px))", background: "var(--tip-bg)", color: "var(--tip-text)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 13px", boxShadow: "0 10px 30px rgba(0,0,0,.18)", pointerEvents: "none", whiteSpace: "nowrap", zIndex: 5, backdropFilter: "var(--blur)" }}>
+                <div style={{ position: "absolute", left: `${tip.centerPct}%`, top: `${tip.future ? 100 : tip.cumTopPct}%`, transform: "translate(-50%,calc(-100% - 14px))", background: "var(--tip-bg)", color: "var(--tip-text)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 13px", boxShadow: "0 10px 30px rgba(0,0,0,.18)", pointerEvents: "none", whiteSpace: "nowrap", zIndex: 5, backdropFilter: "var(--blur)" }}>
                   <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>{tip.full}</div>
                   <div style={{ display: "flex", gap: 7, alignItems: "center", fontSize: 13 }}><span style={{ width: 9, height: 9, borderRadius: 2, background: "var(--accent)" }} />Per {UNIT[period]}<b style={{ marginLeft: "auto", paddingLeft: 14 }}>{tip.count}</b></div>
-                  <div style={{ display: "flex", gap: 7, alignItems: "center", fontSize: 13, marginTop: 4 }}><span style={{ width: 9, height: 9, borderRadius: 2, background: "var(--line)" }} />Cumulative<b style={{ marginLeft: "auto", paddingLeft: 14 }}>{tip.cum}</b></div>
+                  <div style={{ display: "flex", gap: 7, alignItems: "center", fontSize: 13, marginTop: 4 }}><span style={{ width: 9, height: 9, borderRadius: 2, background: "var(--line)" }} />Cumulative<b style={{ marginLeft: "auto", paddingLeft: 14 }}>{tip.cum == null ? "—" : tip.cum}</b></div>
                 </div>
               )}
             </div>
