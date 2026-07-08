@@ -191,3 +191,48 @@ export function impulseWeekly(impulses) {
   }
   return [...m.values()].sort((a, b) => a.week.localeCompare(b.week));
 }
+
+// ---------- impulse history: last N weeks + this-week metrics with trend ----------
+// Powers the Impulse history page (design "4e" — aligned table). Returns the last
+// `numWeeks` consecutive weeks — each split into completed vs bailed for the stacked
+// bar chart — plus three metrics, each carrying a this-week value, the change vs last
+// week, and an N-week series for the sparkline. Empty weeks are kept as zeros so both
+// the bars and the trend line stay continuous.
+export function impulseTrend(impulses, numWeeks = 8) {
+  const agg = new Map();
+  for (const i of impulses) {
+    const k = weekKey(new Date(i.created_at));
+    const cur = agg.get(k) || { total: 0, completed: 0 };
+    cur.total++;
+    if (i.completed) cur.completed++;
+    agg.set(k, cur);
+  }
+
+  const start = startOfWeek();
+  const weeks = [];
+  for (let i = numWeeks - 1; i >= 0; i--) {
+    const d = new Date(start);
+    d.setDate(start.getDate() - i * 7);
+    const rec = agg.get(ymd(d)) || { total: 0, completed: 0 };
+    const total = rec.total;
+    const completed = rec.completed;
+    weeks.push({
+      key: ymd(d),
+      label: `${d.getMonth() + 1}/${d.getDate()}`,
+      total,
+      completed,
+      bailed: total - completed,
+      rate: total ? Math.round((completed / total) * 100) : 0,
+    });
+  }
+
+  const last = weeks[weeks.length - 1] || { total: 0, completed: 0, rate: 0 };
+  const prev = weeks[weeks.length - 2] || { total: 0, completed: 0, rate: 0 };
+  const metrics = [
+    { key: "triggers",  name: "Gate triggers",  value: last.total,           delta: last.total - prev.total,         goodWhenDown: true,  series: weeks.map((w) => w.total) },
+    { key: "completed", name: "Read through",   value: last.completed,       delta: last.completed - prev.completed, goodWhenDown: false, series: weeks.map((w) => w.completed) },
+    { key: "rate",      name: "Follow-through", value: `${last.rate}%`,      delta: last.rate - prev.rate, unit: "pp", goodWhenDown: false, series: weeks.map((w) => w.rate) },
+  ];
+
+  return { weeks, metrics };
+}
