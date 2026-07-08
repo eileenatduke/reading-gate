@@ -8,7 +8,7 @@ const showOnly = (id) => {
 
 async function dashboardUrl(path = "") {
   const cfg = await getConfig();
-  return (cfg.DASHBOARD_URL || "https://foyer.vercel.app").replace(/\/$/, "") + path;
+  return (cfg.DASHBOARD_URL || "https://reading-gate.vercel.app").replace(/\/$/, "") + path;
 }
 
 function startOfWeekISO() {
@@ -24,7 +24,7 @@ async function renderDash(user) {
   $("who").textContent = user.email || "Logged in";
 
   const cfg = await getConfig();
-  $("dashboard-link").href = cfg.DASHBOARD_URL || "https://foyer.vercel.app";
+  $("dashboard-link").href = cfg.DASHBOARD_URL || "https://reading-gate.vercel.app";
 
   try {
     const pool = await db("article_pool").select("id,served").eq("user_id", user.id).is("served", "false").run();

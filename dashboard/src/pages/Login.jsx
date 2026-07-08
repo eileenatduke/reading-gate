@@ -27,7 +27,7 @@ export default function Login() {
   return (
     <div className="center-screen">
       <div className="card" style={{ width: 360 }}>
-        <div className="brand" style={{ marginBottom: 24 }}><span className="dot" /> Foyer</div>
+        <div className="brand" style={{ marginBottom: 24 }}><span className="dot" /> Read First</div>
         {err && <p style={{ color: "var(--danger)", fontSize: "var(--fs-sm)" }}>{err}</p>}
         {msg && <p style={{ color: "var(--success)", fontSize: "var(--fs-sm)" }}>{msg}</p>}
         <input className="input" style={{ width: "100%", marginBottom: 12 }} type="email"

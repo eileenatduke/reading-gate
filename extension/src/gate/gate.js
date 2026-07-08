@@ -23,7 +23,7 @@ function show(stateId) {
 async function message(text) {
   $("message-msg").textContent = text;
   const cfg = await getConfig();
-  $("open-dashboard").href = cfg.DASHBOARD_URL || "https://foyer.vercel.app";
+  $("open-dashboard").href = cfg.DASHBOARD_URL || "https://reading-gate.vercel.app";
   show("message-state");
 }
 

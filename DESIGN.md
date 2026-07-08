@@ -1,4 +1,4 @@
-# DESIGN.md — Foyer visual contract
+# DESIGN.md — Read First visual contract
 
 The **visual contract** both surfaces (browser extension gate + web dashboard)
 follow. Everything is **token-based**: components reference CSS custom properties,

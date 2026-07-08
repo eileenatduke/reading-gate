@@ -1,6 +1,6 @@
 # Sources & topics
 
-The topic → source map for Foyer. Genre is derived from the feed/section/tag an
+The topic → source map for Read First. Genre is derived from the feed/section/tag an
 article comes from (Spec §5) — no AI classification. The authoritative definition
 lives in `extension/src/lib/feeds.js` (`GENRE_GROUPS` + `CATALOG`); this doc mirrors it
 for reference. If you change the catalog, update this file too.
