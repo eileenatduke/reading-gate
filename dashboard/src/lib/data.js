@@ -71,21 +71,51 @@ export function currentStreak(reading) {
   return streak;
 }
 
-// ---------- article-count combo chart (incremental bars + cumulative line) ----------
+// ---------- article-count combo chart (calendar buckets + cumulative line) ----------
+// week  -> 7 bars, one per day of the current week (Mon–Sun)
+// month -> one bar per day of the current month (28–31)
+// year  -> 12 bars, one per month of the current year (Jan–Dec)
+// Each bar = articles read in that bucket; the line is the running total within the
+// selected window. Returns [{ label, full, showLabel, count, cumulative }].
 export function articleCountSeries(reading, period = "week") {
-  const keyFn = period === "month" ? monthKey : period === "year" ? yearKey : weekKey;
-  const labelFn = (k) => k;
-  const buckets = new Map();
-  for (const r of reading) {
-    const k = keyFn(new Date(r.created_at));
-    buckets.set(k, (buckets.get(k) || 0) + 1);
+  const now = new Date();
+  const times = reading.map((r) => new Date(r.created_at));
+  const countBetween = (d0, d1) => times.filter((t) => t >= d0 && t < d1).length;
+  const buckets = [];
+
+  if (period === "month") {
+    const y = now.getFullYear(), m = now.getMonth();
+    const monName = now.toLocaleDateString("en-US", { month: "short" });
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) {
+      buckets.push({
+        label: String(day), full: `${monName} ${day}`,
+        showLabel: day === 1 || day % 7 === 1, // 1, 8, 15, 22, 29
+        count: countBetween(new Date(y, m, day), new Date(y, m, day + 1)),
+      });
+    }
+  } else if (period === "year") {
+    const y = now.getFullYear();
+    const letters = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+    const short = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    for (let mo = 0; mo < 12; mo++) {
+      buckets.push({
+        label: letters[mo], full: short[mo], showLabel: true,
+        count: countBetween(new Date(y, mo, 1), new Date(y, mo + 1, 1)),
+      });
+    }
+  } else {
+    const start = startOfWeek(now);
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    for (let i = 0; i < 7; i++) {
+      const d0 = new Date(start); d0.setDate(start.getDate() + i);
+      const d1 = new Date(d0); d1.setDate(d0.getDate() + 1);
+      buckets.push({ label: days[i], full: days[i], showLabel: true, count: countBetween(d0, d1) });
+    }
   }
-  const keys = [...buckets.keys()].sort();
+
   let cumulative = 0;
-  return keys.map((k) => {
-    cumulative += buckets.get(k);
-    return { period: labelFn(k), count: buckets.get(k), cumulative };
-  });
+  return buckets.map((b) => ({ ...b, cumulative: (cumulative += b.count) }));
 }
 
 // ---------- genre distribution ----------

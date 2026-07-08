@@ -8,7 +8,7 @@ function niceMax(m) {
   return Math.ceil(m / step) * step;
 }
 
-const UNIT = { week: "week", month: "month", year: "year" };
+const UNIT = { week: "day", month: "day", year: "month" };
 
 // Dual-axis combo chart (design-faithful, custom SVG/CSS): bars = articles per period
 // (left axis), line = cumulative total (right axis). Themed via CSS variables.
@@ -27,7 +27,7 @@ export default function ArticleCountChart({ reading }) {
   const cumTop = (v) => 100 - ((v - cumMin) / span) * 100;
 
   const bars = series.map((s, i) => ({
-    label: s.period, count: s.count, cum: s.cumulative,
+    label: s.label, full: s.full, showLabel: s.showLabel, count: s.count, cum: s.cumulative,
     heightPct: (s.count / axisMax) * 100,
     centerPct: ((i + 0.5) / n) * 100,
     cumTopPct: cumTop(s.cumulative),
@@ -36,6 +36,9 @@ export default function ArticleCountChart({ reading }) {
   const leftTicks = [0, 1, 2, 3, 4].map((i) => ({ val: Math.round(axisMax * (4 - i) / 4), topPct: (i / 4) * 100 }));
   const rightTicks = [0, 1, 2, 3, 4].map((i) => ({ val: Math.round(cumMin + span * (4 - i) / 4), topPct: (i / 4) * 100 }));
   const tip = tipI != null && bars[tipI] ? bars[tipI] : null;
+  // Tighten spacing as the bar count grows (month can have 28–31 bars).
+  const gap = n > 20 ? "0.6%" : n > 12 ? "1.2%" : "2%";
+  const barW = n > 20 ? "82%" : n > 8 ? "60%" : "52%";
 
   return (
     <section className="card" style={{ marginBottom: 20 }}>
@@ -68,11 +71,11 @@ export default function ArticleCountChart({ reading }) {
               {leftTicks.map((tk, i) => (
                 <div key={i} style={{ position: "absolute", left: 0, right: 0, top: `${tk.topPct}%`, borderTop: "1px dashed var(--grid)" }} />
               ))}
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "flex-end", gap: "2%", padding: "0 1%" }}>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "flex-end", gap, padding: "0 1%" }}>
                 {bars.map((b, i) => (
                   <div key={i} style={{ flex: 1, height: "100%", display: "flex", alignItems: "flex-end", justifyContent: "center", cursor: "pointer" }}
                     onMouseEnter={() => setTipI(i)} onMouseLeave={() => setTipI(null)}>
-                    <div style={{ width: n > 8 ? "58%" : "52%", borderRadius: "6px 6px 0 0", background: "var(--accent)", height: `${b.heightPct}%`, boxShadow: "0 2px 8px rgba(var(--accent-rgb),.35)", transition: "height .55s cubic-bezier(.22,1,.36,1)" }} />
+                    <div style={{ width: barW, borderRadius: "6px 6px 0 0", background: "var(--accent)", height: `${b.heightPct}%`, boxShadow: "0 2px 8px rgba(var(--accent-rgb),.35)", transition: "height .55s cubic-bezier(.22,1,.36,1)" }} />
                   </div>
                 ))}
               </div>
@@ -86,7 +89,7 @@ export default function ArticleCountChart({ reading }) {
               </div>
               {tip && (
                 <div style={{ position: "absolute", left: `${tip.centerPct}%`, top: `${tip.cumTopPct}%`, transform: "translate(-50%,calc(-100% - 14px))", background: "var(--tip-bg)", color: "var(--tip-text)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 13px", boxShadow: "0 10px 30px rgba(0,0,0,.18)", pointerEvents: "none", whiteSpace: "nowrap", zIndex: 5, backdropFilter: "var(--blur)" }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>{tip.label}</div>
+                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>{tip.full}</div>
                   <div style={{ display: "flex", gap: 7, alignItems: "center", fontSize: 13 }}><span style={{ width: 9, height: 9, borderRadius: 2, background: "var(--accent)" }} />Per {UNIT[period]}<b style={{ marginLeft: "auto", paddingLeft: 14 }}>{tip.count}</b></div>
                   <div style={{ display: "flex", gap: 7, alignItems: "center", fontSize: 13, marginTop: 4 }}><span style={{ width: 9, height: 9, borderRadius: 2, background: "var(--line)" }} />Cumulative<b style={{ marginLeft: "auto", paddingLeft: 14 }}>{tip.cum}</b></div>
                 </div>
@@ -99,9 +102,9 @@ export default function ArticleCountChart({ reading }) {
               ))}
             </div>
           </div>
-          <div style={{ display: "flex", gap: "2%", padding: "10px 44px 0 32px" }}>
+          <div style={{ display: "flex", gap, padding: "10px 32px 0 32px" }}>
             {bars.map((b, i) => (
-              <div key={i} style={{ flex: 1, textAlign: "center", fontSize: 12, color: "var(--xlabel,var(--muted))" }}>{b.label}</div>
+              <div key={i} style={{ flex: 1, textAlign: "center", fontSize: 12, color: "var(--xlabel,var(--muted))" }}>{b.showLabel ? b.label : ""}</div>
             ))}
           </div>
         </>
