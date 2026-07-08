@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchReadingLog, fetchImpulseLog, impulsesThisWeek, currentStreak, startOfWeek } from "../lib/data.js";
+import { fetchReadingLog, fetchImpulseLog, impulsesThisWeek, currentStreak } from "../lib/data.js";
 import StatCard from "../components/StatCard.jsx";
 import ArticleCountChart from "../components/ArticleCountChart.jsx";
 import GenreChart from "../components/GenreChart.jsx";
@@ -19,12 +19,6 @@ export default function Overview() {
       .then(([r, i]) => { setReading(r); setImpulses(i); })
       .catch((e) => setErr(e.message));
   }, []);
-
-  const readsThisWeek = useMemo(() => {
-    if (!reading) return 0;
-    const start = startOfWeek();
-    return reading.filter((r) => new Date(r.created_at) >= start).length;
-  }, [reading]);
 
   const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
@@ -46,7 +40,7 @@ export default function Overview() {
       <div className="grid stats">
         <StatCard value={impulsesThisWeek(impulses)} label="Impulses this week" delta="history →" deltaAccent onClick={() => nav("/impulses")} />
         <StatCard value={currentStreak(reading)} label="Day streak" />
-        <StatCard value={reading.length} label="Articles read" delta={readsThisWeek ? `+${readsThisWeek}` : null} deltaAccent />
+        <StatCard value={reading.length} label="Articles read" />
         <StatCard value={impulses.length} label="Impulses all-time" />
       </div>
 
