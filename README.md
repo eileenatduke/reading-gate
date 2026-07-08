@@ -1,4 +1,4 @@
-# Read First — the reading gate
+# Foyer
 
 Make yourself read and summarize a news article before a distracting site
 (Instagram, TikTok, YouTube…) unlocks — then track everything you've read in a web
