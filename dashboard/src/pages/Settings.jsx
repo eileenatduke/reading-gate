@@ -80,7 +80,7 @@ export default function Settings() {
       const toAdd = [...want].filter((d) => !have.has(d)).map((d) => ({ user_id: uid, domain: d }));
       if (toAdd.length) await supabase.from("blocklist").insert(toAdd);
 
-      setStatus("Saved. The extension picks up changes on its next refresh.");
+      setStatus("saved");
     } catch (e) {
       setErr(e.message);
     }
@@ -187,7 +187,12 @@ export default function Settings() {
 
       <div className="row" style={{ alignItems: "center" }}>
         <button className="btn" onClick={save}>Save changes</button>
-        {status && <span style={{ color: "var(--success)", fontSize: "var(--fs-sm)" }}>{status}</span>}
+        {status === "saved" && (
+          <span role="img" aria-label="Saved" title="Saved"
+            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%", background: "var(--accent)", color: "#fff", fontSize: 14, lineHeight: 1 }}>
+            ✓
+          </span>
+        )}
       </div>
     </>
   );
