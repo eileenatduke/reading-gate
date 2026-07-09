@@ -25,6 +25,17 @@ export const THEME_GROUPS = [
 export const DEFAULT_THEME = 'glassPurple';
 export function isValidTheme(k) { return Object.prototype.hasOwnProperty.call(THEMES, k); }
 
+// Relative luminance (WCAG) of a #rrggbb color — used to tell a dark accent apart
+// from a light/mid one when choosing a same-family link-hover color.
+function luminance(hex) {
+  const h = hex.replace('#', '');
+  const ch = (i) => {
+    const c = parseInt(h.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * ch(0) + 0.7152 * ch(2) + 0.0722 * ch(4);
+}
+
 // Circular swatch background (two-tone for solids that define swatch2).
 export function swatchBg(key) {
   const t = THEMES[key];
@@ -62,8 +73,17 @@ export function computeVars(key, { rimLight = 72, rimBR = 56 } = {}) {
   }
 
   const mix = (a, pct, b) => `color-mix(in srgb, ${a} ${pct}%, ${b})`;
+
+  // Link hover stays in the accent's own color family (never a hue jump to accent2).
+  // Normally we darken the accent toward the heading/title color; but when the accent
+  // is already very dark (≈ the title color), darkening is invisible, so we lighten it.
+  const linkHover = luminance(t.accent) < 0.15
+    ? mix(t.accent, 55, '#ffffff')
+    : t.text;
+
   return {
     '--app-bg': t.appBg,
+    '--link-hover': linkHover,
     '--surface': t.surface, '--surface-2': t.surface2, '--border': t.border,
     '--text': t.text, '--muted': t.muted, '--faint': t.faint,
     '--accent': t.accent, '--accent-rgb': t.accentRgb, '--accent2': t.accent2,

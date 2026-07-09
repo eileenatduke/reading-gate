@@ -82,7 +82,7 @@ button { font-family: inherit; }
 .chip { display: inline-flex; align-items: center; gap: 8px; padding: 7px 11px 7px 13px; border-radius: 20px;
   background: var(--surface-2); font-size: 13.5px; }
 .chip button { border: none; background: none; cursor: pointer; color: var(--muted); font-size: 1rem; }
-.chip button:hover { color: var(--accent2); }
+.chip button:hover { color: var(--link-hover, var(--text)); }
 .row { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
 
 /* ---- theme swatches (Settings) ---- */
