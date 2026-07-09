@@ -39,6 +39,9 @@ export default function Settings() {
     }).catch(() => {});
   }, []);
 
+  // The saved check only reflects the last successful save — any edit clears it.
+  useEffect(() => { setStatus(""); }, [pendingTheme, interests, domains, articlesRequired]);
+
   const clampReq = (n) => Math.max(1, Math.min(20, parseInt(n, 10) || 1));
 
   function toggle(g) {
