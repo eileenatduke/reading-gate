@@ -234,7 +234,7 @@ export function impulseTrend(impulses, reading = [], numWeeks = 8) {
       total,
       completed,
       bailed: total - completed,
-      rate: total ? Math.round((completed / total) * 100) : 0,
+      rate: total ? (completed / total) * 100 : 0,   // kept precise; rounded to 1dp at display
       reads: reads.get(key) || 0,
     });
   }
@@ -250,7 +250,8 @@ export function impulseTrend(impulses, reading = [], numWeeks = 8) {
   const metrics = [
     { key: "triggers", name: "Gate triggers",   value: last.total,      delta: diff(last.total, prev.total),           goodWhenDown: true,  series: weeks.map((w) => w.total) },
     { key: "reads",    name: "Articles read",   value: last.reads,      delta: diff(last.reads, prev.reads),           goodWhenDown: false, series: weeks.map((w) => w.reads) },
-    { key: "rate",     name: "Completion rate", value: `${last.rate}%`, delta: diff(last.rate, prev.rate), unit: "pp", goodWhenDown: false,
+    { key: "rate",     name: "Completion rate", value: `${last.rate.toFixed(1)}%`,
+      delta: prevHasData ? Math.round((last.rate - prev.rate) * 10) / 10 : null, unit: "pp", goodWhenDown: false,
       sub: "share of gate triggers where you finished the required reading", series: weeks.map((w) => w.rate) },
   ];
 
