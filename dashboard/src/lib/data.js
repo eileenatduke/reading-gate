@@ -198,7 +198,12 @@ export function impulseWeekly(impulses) {
 // bar chart — plus three metrics, each carrying a this-week value, the change vs last
 // week, and an N-week series for the sparkline. Empty weeks are kept as zeros so both
 // the bars and the trend line stay continuous.
-export function impulseTrend(impulses, numWeeks = 8) {
+//
+// Bars + "Gate triggers"/"Follow-through" come from impulse_log (one row per gate
+// trigger). "Read through" counts the articles you actually read from reading_log —
+// the ground truth — so it stays correct even if a gate trigger was never logged
+// (e.g. a visit where you had to log in first).
+export function impulseTrend(impulses, reading = [], numWeeks = 8) {
   const agg = new Map();
   for (const i of impulses) {
     const k = weekKey(new Date(i.created_at));
@@ -208,30 +213,39 @@ export function impulseTrend(impulses, numWeeks = 8) {
     agg.set(k, cur);
   }
 
+  const reads = new Map();
+  for (const r of reading) {
+    const k = weekKey(new Date(r.created_at));
+    reads.set(k, (reads.get(k) || 0) + 1);
+  }
+
   const start = startOfWeek();
   const weeks = [];
   for (let i = numWeeks - 1; i >= 0; i--) {
     const d = new Date(start);
     d.setDate(start.getDate() - i * 7);
-    const rec = agg.get(ymd(d)) || { total: 0, completed: 0 };
+    const key = ymd(d);
+    const rec = agg.get(key) || { total: 0, completed: 0 };
     const total = rec.total;
     const completed = rec.completed;
     weeks.push({
-      key: ymd(d),
+      key,
       label: `${d.getMonth() + 1}/${d.getDate()}`,
       total,
       completed,
       bailed: total - completed,
       rate: total ? Math.round((completed / total) * 100) : 0,
+      reads: reads.get(key) || 0,
     });
   }
 
-  const last = weeks[weeks.length - 1] || { total: 0, completed: 0, rate: 0 };
-  const prev = weeks[weeks.length - 2] || { total: 0, completed: 0, rate: 0 };
+  const empty = { total: 0, completed: 0, rate: 0, reads: 0 };
+  const last = weeks[weeks.length - 1] || empty;
+  const prev = weeks[weeks.length - 2] || empty;
   const metrics = [
-    { key: "triggers",  name: "Gate triggers",  value: last.total,           delta: last.total - prev.total,         goodWhenDown: true,  series: weeks.map((w) => w.total) },
-    { key: "completed", name: "Read through",   value: last.completed,       delta: last.completed - prev.completed, goodWhenDown: false, series: weeks.map((w) => w.completed) },
-    { key: "rate",      name: "Follow-through", value: `${last.rate}%`,      delta: last.rate - prev.rate, unit: "pp", goodWhenDown: false, series: weeks.map((w) => w.rate) },
+    { key: "triggers",  name: "Gate triggers",  value: last.total,      delta: last.total - prev.total,     goodWhenDown: true,  series: weeks.map((w) => w.total) },
+    { key: "reads",     name: "Read through",   value: last.reads,      delta: last.reads - prev.reads,     goodWhenDown: false, series: weeks.map((w) => w.reads) },
+    { key: "rate",      name: "Follow-through", value: `${last.rate}%`, delta: last.rate - prev.rate, unit: "pp", goodWhenDown: false, series: weeks.map((w) => w.rate) },
   ];
 
   return { weeks, metrics };
