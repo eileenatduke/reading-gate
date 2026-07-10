@@ -199,11 +199,11 @@ export function impulseWeekly(impulses) {
 // week, and an N-week series for the sparkline. Empty weeks are kept as zeros so both
 // the bars and the trend line stay continuous.
 //
-// Bars + "Gate triggers"/"Follow-through" come from impulse_log (one row per gate
-// trigger). "Read through" counts the articles you actually read from reading_log —
-// the ground truth — so it stays correct even if a gate trigger was never logged
-// (e.g. a visit where you had to log in first).
-export function impulseTrend(impulses, reading = [], numWeeks = 8) {
+// Everything comes from impulse_log (one row per gate trigger). The three tiles form
+// one coherent story about gate visits: Gates completed ÷ Gate triggers = Completion
+// rate, and the completed/bailed split is exactly what the bars show. (Reading volume
+// lives elsewhere on the dashboard, so it isn't repeated here.)
+export function impulseTrend(impulses, numWeeks = 8) {
   const agg = new Map();
   for (const i of impulses) {
     const k = weekKey(new Date(i.created_at));
@@ -211,12 +211,6 @@ export function impulseTrend(impulses, reading = [], numWeeks = 8) {
     cur.total++;
     if (i.completed) cur.completed++;
     agg.set(k, cur);
-  }
-
-  const reads = new Map();
-  for (const r of reading) {
-    const k = weekKey(new Date(r.created_at));
-    reads.set(k, (reads.get(k) || 0) + 1);
   }
 
   const start = startOfWeek();
@@ -235,24 +229,23 @@ export function impulseTrend(impulses, reading = [], numWeeks = 8) {
       completed,
       bailed: total - completed,
       rate: total ? (completed / total) * 100 : 0,   // kept precise; rounded to 1dp at display
-      reads: reads.get(key) || 0,
     });
   }
 
-  const empty = { total: 0, completed: 0, rate: 0, reads: 0 };
+  const empty = { total: 0, completed: 0, rate: 0 };
   const last = weeks[weeks.length - 1] || empty;
   const prev = weeks[weeks.length - 2] || empty;
   // "vs last" only means something if the prior week had activity. Otherwise this is a
   // cold start (the user's first week) and a delta vs an empty week would be a
   // misleading full-value jump — so leave it null and the UI shows "—".
-  const prevHasData = prev.total > 0 || prev.reads > 0;
+  const prevHasData = prev.total > 0;
   const diff = (a, b) => (prevHasData ? a - b : null);
   const metrics = [
-    { key: "triggers", name: "Gate triggers",   value: last.total,      delta: diff(last.total, prev.total),           goodWhenDown: true,  series: weeks.map((w) => w.total) },
-    { key: "reads",    name: "Articles read",   value: last.reads,      delta: diff(last.reads, prev.reads),           goodWhenDown: false, series: weeks.map((w) => w.reads) },
-    { key: "rate",     name: "Completion rate", value: `${last.rate.toFixed(1)}%`,
+    { key: "triggers",  name: "Gate triggers",   value: last.total,     delta: diff(last.total, prev.total),         goodWhenDown: true,  series: weeks.map((w) => w.total) },
+    { key: "completed", name: "Gates completed", value: last.completed, delta: diff(last.completed, prev.completed), goodWhenDown: false, series: weeks.map((w) => w.completed) },
+    { key: "rate",      name: "Completion rate", value: `${last.rate.toFixed(1)}%`,
       delta: prevHasData ? Math.round((last.rate - prev.rate) * 10) / 10 : null, unit: "pp", goodWhenDown: false,
-      sub: "share of gate triggers where you finished the required reading", series: weeks.map((w) => w.rate) },
+      sub: "gates completed ÷ gate triggers", series: weeks.map((w) => w.rate) },
   ];
 
   return { weeks, metrics };

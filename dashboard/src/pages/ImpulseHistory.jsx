@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchImpulseLog, fetchReadingLog, impulseTrend } from "../lib/data.js";
+import { fetchImpulseLog, impulseTrend } from "../lib/data.js";
 
 const PLOT_H = 210;                 // plot height in px (matches the "4e" design)
 const NUM_WEEKS = 8;
@@ -49,19 +49,16 @@ function deltaColor(m) {
 // it re-skins with whichever theme the user picks in Settings.
 export default function ImpulseHistory() {
   const [impulses, setImpulses] = useState(null);
-  const [reading, setReading] = useState([]);
   const [err, setErr] = useState("");
   const nav = useNavigate();
 
   useEffect(() => {
-    Promise.all([fetchImpulseLog(), fetchReadingLog()])
-      .then(([imp, rd]) => { setImpulses(imp); setReading(rd); })
-      .catch((e) => setErr(e.message));
+    fetchImpulseLog().then(setImpulses).catch((e) => setErr(e.message));
   }, []);
 
   const { weeks, metrics } = useMemo(
-    () => impulseTrend(impulses || [], reading, NUM_WEEKS),
-    [impulses, reading]
+    () => impulseTrend(impulses || [], NUM_WEEKS),
+    [impulses]
   );
 
   // Y-axis scale: four even steps above a nice max so the top gridline clears the data.
