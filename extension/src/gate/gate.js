@@ -15,6 +15,29 @@ let quality = 0;
 let preference = 0;
 let required = 1;      // minimum articles to read before the site can be accessed
 let sessionReads = 0;  // articles completed during this gate visit
+let impulseId = null;  // impulse_log row for this gate visit (created at trigger, or backfilled here)
+
+// Make sure this gate trigger is recorded in impulse_log. The background worker logs
+// it at trigger time, but only if a session exists then — so a visit where the user
+// had to log in first would go uncounted (and the doomscroll heatmap would miss it).
+// The gate page always ends up authenticated, so backfill the row here when the
+// background didn't, and hand the id back so completion marks the right row.
+async function ensureImpulse() {
+  if (impulseId) return;
+  try {
+    const res = await chrome.runtime.sendMessage({ type: "GET_PENDING_IMPULSE" });
+    if (res && res.impulseId) { impulseId = res.impulseId; return; }
+    const user = await currentUser();
+    if (!user) return;
+    const rows = await db("impulse_log").insert({ user_id: user.id, domain, completed: false });
+    if (rows && rows[0]) {
+      impulseId = rows[0].id;
+      await chrome.runtime.sendMessage({ type: "SET_PENDING_IMPULSE", impulseId }).catch(() => {});
+    }
+  } catch (e) {
+    // Best effort — never block reading on impulse logging.
+  }
+}
 
 function show(stateId) {
   ["login-state", "message-state", "loading-state", "gate-state", "choices-state"].forEach((id) => {
@@ -100,10 +123,10 @@ async function submit() {
 
     // Mark this gate trigger completed the moment the minimum is met.
     if (sessionReads === required) {
-      const { impulseId } = await chrome.runtime.sendMessage({ type: "GET_PENDING_IMPULSE" });
+      if (!impulseId) await ensureImpulse();
       if (impulseId) {
         await db("impulse_log").eq("id", impulseId).update({ completed: true });
-        await chrome.runtime.sendMessage({ type: "CLEAR_PENDING_IMPULSE" });
+        await chrome.runtime.sendMessage({ type: "CLEAR_PENDING_IMPULSE" }).catch(() => {});
       }
     }
 
@@ -196,7 +219,9 @@ async function init() {
     return;
   }
   sessionReads = 0;
-  await loadPrefs();       // theme + minimum-articles requirement
+  impulseId = null;
+  await ensureImpulse();    // record the trigger now (backfills if we just logged in)
+  await loadPrefs();        // theme + minimum-articles requirement
   await loadNextArticle();
 }
 

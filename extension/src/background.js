@@ -233,6 +233,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const tabId = sender.tab?.id;
         return sendResponse({ impulseId: tabId != null ? pendingImpulse[tabId] || null : null });
       }
+      case "SET_PENDING_IMPULSE": {
+        // The gate page logged the impulse itself (background couldn't at trigger
+        // time — e.g. no session yet). Register its id so completion still lands
+        // on the right row and we don't double-count.
+        const tabId = sender.tab?.id;
+        if (tabId != null && msg.impulseId != null) { pendingImpulse[tabId] = msg.impulseId; await persist(); }
+        return sendResponse({ ok: true });
+      }
       case "CLEAR_PENDING_IMPULSE": {
         const tabId = sender.tab?.id;
         if (tabId != null) { delete pendingImpulse[tabId]; await persist(); }
