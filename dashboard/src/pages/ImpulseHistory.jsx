@@ -29,14 +29,16 @@ function spark(series) {
 }
 
 function fmtDelta(m) {
+  if (m.delta == null) return "—";   // no prior-week baseline to compare against
   const unit = m.unit || "";
   if (m.delta === 0) return `±0${unit}`;
   return `${m.delta > 0 ? "+" : "−"}${Math.abs(m.delta)}${unit}`;
 }
 
 // Colour a delta by whether it moved in the favourable direction for that metric.
+// A null delta (cold start) and a flat delta are both neutral, never red.
 function deltaColor(m) {
-  if (m.delta === 0) return "var(--muted)";
+  if (m.delta == null || m.delta === 0) return "var(--muted)";
   const good = m.goodWhenDown ? m.delta < 0 : m.delta > 0;
   return good ? "var(--success)" : "var(--danger)";
 }
@@ -168,7 +170,10 @@ export default function ImpulseHistory() {
                       flex: 1, minHeight: 54, display: "flex", alignItems: "center", gap: 12,
                       borderBottom: i < metrics.length - 1 ? "1px solid var(--border)" : "none",
                     }}>
-                      <div style={{ flex: 1, minWidth: 0, font: "500 13px/1.25 'Instrument Sans', system-ui, sans-serif", color: "var(--text)" }}>{m.name}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ font: "500 13px/1.25 'Instrument Sans', system-ui, sans-serif", color: "var(--text)" }}>{m.name}</div>
+                        {m.sub && <div style={{ font: "400 10.5px/1.3 'Instrument Sans', system-ui, sans-serif", color: "var(--muted)", marginTop: 3 }}>{m.sub}</div>}
+                      </div>
                       <div style={{ width: 46, textAlign: "center", font: `19px ${SERIF}`, color: "var(--text)" }}>{m.value}</div>
                       <div style={{ width: 56, textAlign: "center", whiteSpace: "nowrap", font: `600 10px ${MONO}`, color: deltaColor(m) }}>{fmtDelta(m)}</div>
                       <div style={{ width: 76, display: "flex", justifyContent: "center" }}>

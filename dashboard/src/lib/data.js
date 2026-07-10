@@ -242,10 +242,16 @@ export function impulseTrend(impulses, reading = [], numWeeks = 8) {
   const empty = { total: 0, completed: 0, rate: 0, reads: 0 };
   const last = weeks[weeks.length - 1] || empty;
   const prev = weeks[weeks.length - 2] || empty;
+  // "vs last" only means something if the prior week had activity. Otherwise this is a
+  // cold start (the user's first week) and a delta vs an empty week would be a
+  // misleading full-value jump — so leave it null and the UI shows "—".
+  const prevHasData = prev.total > 0 || prev.reads > 0;
+  const diff = (a, b) => (prevHasData ? a - b : null);
   const metrics = [
-    { key: "triggers",  name: "Gate triggers",  value: last.total,      delta: last.total - prev.total,     goodWhenDown: true,  series: weeks.map((w) => w.total) },
-    { key: "reads",     name: "Read through",   value: last.reads,      delta: last.reads - prev.reads,     goodWhenDown: false, series: weeks.map((w) => w.reads) },
-    { key: "rate",      name: "Follow-through", value: `${last.rate}%`, delta: last.rate - prev.rate, unit: "pp", goodWhenDown: false, series: weeks.map((w) => w.rate) },
+    { key: "triggers", name: "Gate triggers",   value: last.total,      delta: diff(last.total, prev.total),           goodWhenDown: true,  series: weeks.map((w) => w.total) },
+    { key: "reads",    name: "Articles read",   value: last.reads,      delta: diff(last.reads, prev.reads),           goodWhenDown: false, series: weeks.map((w) => w.reads) },
+    { key: "rate",     name: "Completion rate", value: `${last.rate}%`, delta: diff(last.rate, prev.rate), unit: "pp", goodWhenDown: false,
+      sub: "share of gate triggers where you finished the required reading", series: weeks.map((w) => w.rate) },
   ];
 
   return { weeks, metrics };
