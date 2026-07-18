@@ -61,10 +61,10 @@ project settings. SPA routing rewrites are already configured
    key — `test` works for light use.)
 3. Back in the popup, **create an account / log in**.
 4. In **Settings**, pick your **interests** and add sites to your **blocklist**
-   (e.g. `instagram.com`). Optionally add **your own sources** — paste the RSS feed
-   URL of any publication you follow (even a paywalled one you subscribe to, like the
-   New York Times); its articles get mixed in and you read them on the publisher's own
-   site, so your subscription keeps working.
+   (e.g. `instagram.com`). Optionally add **your own sources** — just paste the site
+   address of any publication you follow (even a paywalled one you subscribe to, like
+   `nytimes.com`); the extension finds its feed automatically, mixes its articles in,
+   and you read them on the publisher's own site, so your subscription keeps working.
 5. Open a blocked site → the gate appears with a fresh article. Read it, summarize
    (≥70 words), rate quality + interest, and submit to unlock **this visit only**.
 
@@ -87,9 +87,10 @@ separate, extension-free profile — see [`docs/AI-EXEMPTION.md`](docs/AI-EXEMPT
 BBC + NPR RSS, the Guardian Open Platform API, and Yahoo (best-effort, with a
 BBC/Guardian fallback so Tech/Finance never go empty). Genre is derived for free from
 the feed/section. Only headline + blurb + a "Read on source" link-out — no full-text
-scraping. Users can also add **their own RSS feeds** in Settings (stored on
-`profiles.custom_feeds`); those are fetched alongside the built-in catalog, tagged
-`My Sources`, and kept in normal rotation.
+scraping. Users can also add **their own sources** in Settings (stored on
+`profiles.custom_feeds`) by pasting a homepage — the extension autodiscovers the RSS
+feed (`<link rel="alternate">`, then common feed paths). Those are fetched alongside
+the built-in catalog, tagged `My Sources`, and kept in normal rotation.
 
 ## Cost
 Everything runs on free tiers. Expected MVP running cost: **$0**.

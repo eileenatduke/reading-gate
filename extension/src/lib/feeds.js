@@ -33,14 +33,15 @@ export const GENRES = GENRE_GROUPS.flatMap((g) => g.genres);
 // The dashboard mirrors this in dashboard/src/lib/genres.js (keep in sync).
 export const MY_SOURCES_GENRE = "My Sources";
 
-// Turn a stored custom feed ({ name, url }) into a fetchable RSS source spec.
-// Falls back to the feed's hostname when the user didn't name it.
+// Turn a stored custom feed ({ name, url }) into a fetchable source spec. The URL may
+// be an actual feed OR just a homepage the user pasted — kind "custom" resolves either
+// (see fetchCustomSource). Falls back to the URL's hostname when the user didn't name it.
 export function customFeedSpec(feed) {
   let name = (feed?.name || "").trim();
   if (!name) {
-    try { name = new URL(feed.url).hostname.replace(/^www\./, ""); } catch { name = "My source"; }
+    try { name = new URL(withProtocol(feed.url)).hostname.replace(/^www\./, ""); } catch { name = "My source"; }
   }
-  return { source: name, kind: "rss", url: feed?.url };
+  return { source: name, kind: "custom", url: feed?.url };
 }
 
 // Feed-URL helpers.
@@ -174,6 +175,85 @@ export function normalizeArticleUrl(url) {
   return url.replace(/(https?:\/\/(?:www\.)?)bbc\.co\.uk/i, "$1bbc.com");
 }
 
+// ---------------------------------------------------------------------------
+// Feed autodiscovery — let a user paste a homepage instead of the raw feed URL.
+// The extension can fetch cross-origin pages (the dashboard can't, CORS), so all of
+// this runs here, at fetch time in the background service worker.
+// ---------------------------------------------------------------------------
+
+// Prepend https:// when the user typed a bare domain like "nytimes.com".
+export function withProtocol(u) {
+  const s = (u || "").trim();
+  return /^https?:\/\//i.test(s) ? s : "https://" + s.replace(/^\/+/, "");
+}
+
+function looksLikeFeed(text) {
+  return /<(rss|feed|rdf:RDF)[\s>]/i.test((text || "").slice(0, 1000));
+}
+
+// Pull the first RSS/Atom autodiscovery <link> out of a homepage's HTML, resolved to
+// an absolute URL. This is the standard <link rel="alternate" type="application/rss+xml">
+// tag most publishers put in their <head>. Returns null if none is present.
+export function discoverFeedUrl(html, baseUrl) {
+  const found = [];
+  for (const tag of html.match(/<link\b[^>]*>/gi) || []) {
+    if (!/rel=["']?[^"'>]*\balternate\b/i.test(tag)) continue;
+    if (!/type=["']?application\/(rss|atom)\+xml/i.test(tag)) continue;
+    const href = (tag.match(/href=["']([^"']+)["']/i) || [])[1];
+    if (!href) continue;
+    try { found.push({ url: new URL(href, baseUrl).href, isRss: /rss\+xml/i.test(tag) }); } catch { /* skip */ }
+  }
+  if (!found.length) return null;
+  return (found.find((f) => f.isRss) || found[0]).url; // prefer RSS over Atom
+}
+
+// Feed paths to try when a homepage has no autodiscovery link (WordPress, Substack,
+// Ghost, blogs). Ordered most-common first; we stop at the first that parses as a feed.
+const COMMON_FEED_PATHS = ["/feed", "/rss", "/feed.xml", "/rss.xml", "/index.xml", "/atom.xml", "/feeds/posts/default"];
+
+async function probeCommonFeedPaths(baseUrl) {
+  for (const p of COMMON_FEED_PATHS) {
+    let url;
+    try { url = new URL(p, baseUrl).href; } catch { continue; }
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (looksLikeFeed(text)) return text;
+    } catch { /* try next path */ }
+  }
+  return null;
+}
+
+// Fetch a user-supplied source that may be EITHER a feed URL or a homepage. If the URL
+// already returns a feed, parse it; otherwise treat the response as HTML and resolve
+// the feed via <link> autodiscovery, then by probing conventional feed paths.
+async function fetchCustomSource(inputUrl) {
+  const url = withProtocol(inputUrl);
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`custom ${url} HTTP ${res.status}`);
+  const text = await res.text();
+
+  if (looksLikeFeed(text)) {
+    const items = parseFeed(text);
+    if (items.length) return items;
+  }
+
+  const feedUrl = discoverFeedUrl(text, url);
+  if (feedUrl) {
+    const fres = await fetch(feedUrl, { cache: "no-store" });
+    if (fres.ok) {
+      const items = parseFeed(await fres.text());
+      if (items.length) return items;
+    }
+  }
+
+  const probed = await probeCommonFeedPaths(url);
+  if (probed) return parseFeed(probed);
+
+  throw new Error(`no feed found at ${url}`);
+}
+
 // Parse an RSS/Atom string into [{title,url,blurb}]
 export function parseFeed(xml) {
   const items = [];
@@ -191,6 +271,11 @@ export function parseFeed(xml) {
 
 // Fetch one source spec and tag every article with the given genre.
 export async function fetchSource(spec, genre) {
+  if (spec.kind === "custom") {
+    // User-supplied: URL may be a feed or a homepage — fetchCustomSource resolves both.
+    const items = await fetchCustomSource(spec.url);
+    return items.slice(0, 25).map((a) => ({ ...a, source: spec.source, genre }));
+  }
   if (spec.kind === "rss") {
     const res = await fetch(spec.url, { cache: "no-store" });
     if (!res.ok) throw new Error(`${spec.source} ${genre} HTTP ${res.status}`);

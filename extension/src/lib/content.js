@@ -45,7 +45,8 @@ async function fetchAll(interests, customFeeds = []) {
   }));
 
   // User's own feeds: fetch each, tag as "My Sources", round-robin between them.
-  const feeds = (customFeeds || []).filter((f) => f && /^https?:\/\//i.test(f.url || ""));
+  // The URL may be a homepage or a feed — fetchSource(kind:"custom") resolves either.
+  const feeds = (customFeeds || []).filter((f) => f && (f.url || "").trim());
   const customLists = await Promise.all(
     feeds.map((f) => fetchSource(customFeedSpec(f), MY_SOURCES_GENRE)
       .catch((e) => { console.warn("[content:custom]", e.message); return []; }))
