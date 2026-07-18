@@ -10,14 +10,19 @@ function normalizeDomain(d) {
     .replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
 }
 
-// A custom feed is just an RSS/Atom URL plus an optional display name. We accept any
-// http(s) URL; the extension validates it for real when it fetches (a bad feed simply
-// contributes no articles). Name defaults to the feed's hostname.
+// A custom source is just a site address plus an optional display name. The user can
+// paste a homepage ("nytimes.com") OR a raw feed URL — the extension figures out the
+// actual feed when it fetches (autodiscovery), so here we only need a plausible URL.
+// Name defaults to the site's hostname.
 function normalizeFeed(name, url) {
-  const u = (url || "").trim();
-  if (!/^https?:\/\/\S+$/i.test(u)) return null;
+  let u = (url || "").trim();
+  if (!u) return null;
+  if (!/^https?:\/\//i.test(u)) u = "https://" + u.replace(/^\/+/, "");
+  let host;
+  try { host = new URL(u).hostname; } catch { return null; }
+  if (!host.includes(".")) return null; // reject "asdf" but allow any real domain
   let n = (name || "").trim();
-  if (!n) { try { n = new URL(u).hostname.replace(/^www\./, ""); } catch { n = "My source"; } }
+  if (!n) n = host.replace(/^www\./, "");
   return { name: n, url: u };
 }
 
@@ -73,7 +78,7 @@ export default function Settings() {
 
   function addFeed() {
     const f = normalizeFeed(newFeedName, newFeedUrl);
-    if (!f) { setErr("Enter a valid feed URL starting with http:// or https://"); return; }
+    if (!f) { setErr("Enter a site address, like nytimes.com"); return; }
     setErr("");
     if (!customFeeds.some((x) => x.url === f.url)) setCustomFeeds([...customFeeds, f]);
     setNewFeedName(""); setNewFeedUrl("");
@@ -162,8 +167,9 @@ export default function Settings() {
         <h2>Your own sources</h2>
         <p className="sub">
           Subscribe to something that isn't on our list — the New York Times, WSJ, a favorite blog?
-          Paste its <b>RSS feed URL</b> and Reading Gate will mix its articles in with the rest.
-          You read the full article on the publisher's own site, so any subscription you have keeps working.
+          Just paste the <b>site's address</b> (like <code>nytimes.com</code>) and Reading Gate finds its
+          feed and mixes its articles in with the rest. You read the full article on the publisher's own
+          site, so any subscription you have keeps working.
         </p>
         <div className="row" style={{ marginBottom: 16 }}>
           {customFeeds.length === 0 && <span className="muted">No custom sources yet.</span>}
@@ -179,15 +185,15 @@ export default function Settings() {
             style={{ maxWidth: 220 }}
             onChange={(e) => setNewFeedName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFeed())} />
-          <input className="input" placeholder="https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml" value={newFeedUrl}
+          <input className="input" placeholder="nytimes.com" value={newFeedUrl}
             style={{ flex: 1, minWidth: 240 }}
             onChange={(e) => setNewFeedUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFeed())} />
           <button className="btn ghost" onClick={addFeed}>Add</button>
         </div>
         <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>
-          Most news sites publish a feed — search "<i>[publisher] RSS feed</i>". Paste the feed's address (it ends in
-          things like <code>.xml</code> or <code>/rss</code>), not the homepage.
+          Paste the site's address and we'll find its feed automatically. If a site doesn't publish one,
+          it just won't add any articles — nothing else breaks.
         </p>
       </div>
 
