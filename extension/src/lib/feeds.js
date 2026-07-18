@@ -140,15 +140,33 @@ function pickLink(block) {
   return atom ? atom[1] : "";
 }
 
+// Normalize a BBC link so non-UK readers can actually open it.
+//
+// BBC RSS feeds link to the UK edition on `www.bbc.co.uk`, and mix in UK-only media:
+//   • /iplayer  (TV)   — geo-locked to the UK, no international version
+//   • /sounds   (radio) — geo-locked to the UK, no international version
+// Opening either of those outside the UK shows "BBC iPlayer isn't available in your
+// region." Text articles fare better but still resolve to the UK edition, which can
+// region-gate. The fix: drop the UK-only media, and route everything else to the
+// international edition on `www.bbc.com` (same paths — verified they resolve there).
+//
+// Returns the rewritten URL, or null if the item should be dropped from the pool.
+export function normalizeArticleUrl(url) {
+  if (!/^https?:\/\/([a-z0-9.-]+\.)?bbc\.co\.uk\//i.test(url)) return url;
+  // UK-only media — no international equivalent, so exclude entirely.
+  if (/\/(iplayer|sounds)(\/|$|\?|#)/i.test(url)) return null;
+  return url.replace(/(https?:\/\/(?:www\.)?)bbc\.co\.uk/i, "$1bbc.com");
+}
+
 // Parse an RSS/Atom string into [{title,url,blurb}]
 export function parseFeed(xml) {
   const items = [];
   const blocks = xml.match(/<item[\s\S]*?<\/item>/gi) || xml.match(/<entry[\s\S]*?<\/entry>/gi) || [];
   for (const b of blocks) {
     const title = decode(pick(b, "title"));
-    const url = decode(pickLink(b));
+    const url = normalizeArticleUrl(decode(pickLink(b)));
     const blurb = decode(pick(b, "description") || pick(b, "summary") || pick(b, "content"));
-    if (title && /^https?:/i.test(url)) {
+    if (title && url && /^https?:/i.test(url)) {
       items.push({ title, url, blurb: blurb.slice(0, 400) });
     }
   }
