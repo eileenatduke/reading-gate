@@ -130,7 +130,6 @@ export default function Settings() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Theme</h2>
-        <p className="sub">Pick a look. It applies to the dashboard and the reading gate.</p>
         {THEME_GROUPS.map(({ label, keys }) => (
           <div key={label} style={{ marginBottom: 16 }}>
             <div className="group-heading">{label}</div>
@@ -157,7 +156,7 @@ export default function Settings() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Where your articles come from</h2>
-        <p className="sub">For transparency, here are all the publishers Reading Gate pulls news from. Which topics draw from which sources is chosen automatically.</p>
+        <p className="sub">For transparency, here are all the publishers Reading Gate pulls news from.</p>
         <div className="row">
           {SOURCES.map((s) => <span key={s} className="pill source">{s}</span>)}
         </div>
@@ -166,9 +165,8 @@ export default function Settings() {
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Custom sources</h2>
         <p className="sub">
-          Follow something that isn't on our list — the New York Times, WSJ, a favorite blog? Add it here
-          and its articles get mixed in with the rest. You read the full article on the publisher's own
-          site, so any subscription you have keeps working.
+          If you are subscribed to something that isn't on our feed, such as the New York Times, WSJ, a
+          favorite blog, add it here and Reading Gate will pull from those sites too.
         </p>
         <div className="row" style={{ marginBottom: 16 }}>
           {customFeeds.length === 0 && <span className="muted">No custom sources yet.</span>}
@@ -197,7 +195,6 @@ export default function Settings() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Interests</h2>
-        <p className="sub">Articles are drawn from these topics (plus a 1-in-10 wildcard).</p>
         {GENRE_GROUPS.map(({ group, genres }) => (
           <div key={group} style={{ marginBottom: 16 }}>
             <div className="group-heading">{group}</div>
@@ -217,7 +214,7 @@ export default function Settings() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Articles per unlock</h2>
-        <p className="sub">How many articles you must read before a blocked site will open. You can always keep reading past this at the gate.</p>
+        <p className="sub">How many articles you must read before a blocked site will open. You always have the option to keep reading more beyond this minimum requirement.</p>
         <div className="row" style={{ alignItems: "center", gap: 12 }}>
           <button className="btn ghost" aria-label="Fewer" onClick={() => setArticlesRequired((v) => clampReq(v - 1))} style={{ padding: "8px 16px", fontSize: 18, lineHeight: 1 }}>−</button>
           <input className="input" type="number" min="1" max="20" value={articlesRequired}
@@ -230,7 +227,7 @@ export default function Settings() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Blocked sites</h2>
-        <p className="sub">Opening any of these triggers the gate. Use a bare domain like <code>instagram.com</code>.</p>
+        <p className="sub">Paste in the URLs of websites you want to block.</p>
         <div className="row" style={{ marginBottom: 16 }}>
           {domains.length === 0 && <span className="muted">No sites yet.</span>}
           {domains.map((d, i) => (
