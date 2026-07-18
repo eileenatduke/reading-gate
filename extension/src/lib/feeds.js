@@ -27,6 +27,22 @@ export const GENRE_GROUPS = [
 // Flat list (default interest set when a user hasn't chosen any).
 export const GENRES = GENRE_GROUPS.flatMap((g) => g.genres);
 
+// Pseudo-genre for a user's own added feeds (Settings → "Your own sources"). It's not
+// a topic in the taxonomy — it just tags custom-feed articles so the recommender can
+// always keep them in rotation (see recommender.js) and the dashboard can label them.
+// The dashboard mirrors this in dashboard/src/lib/genres.js (keep in sync).
+export const MY_SOURCES_GENRE = "My Sources";
+
+// Turn a stored custom feed ({ name, url }) into a fetchable RSS source spec.
+// Falls back to the feed's hostname when the user didn't name it.
+export function customFeedSpec(feed) {
+  let name = (feed?.name || "").trim();
+  if (!name) {
+    try { name = new URL(feed.url).hostname.replace(/^www\./, ""); } catch { name = "My source"; }
+  }
+  return { source: name, kind: "rss", url: feed?.url };
+}
+
 // Feed-URL helpers.
 const bbc = (path) => `https://feeds.bbci.co.uk/${path}/rss.xml`;
 const npr = (id) => `https://feeds.npr.org/${id}/rss.xml`;

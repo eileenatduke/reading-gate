@@ -4,7 +4,7 @@
 
 import { db, currentUser } from "./sb.js";
 import { getConfig } from "./config.js";
-import { CATALOG, GENRES, fetchSource } from "./feeds.js";
+import { CATALOG, GENRES, MY_SOURCES_GENRE, fetchSource, customFeedSpec } from "./feeds.js";
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -29,8 +29,10 @@ function interleave(lists) {
 // Fetch the user's genres and return a DIVERSE, deduped article list: genres are
 // shuffled and round-robined, and sources within each genre are shuffled and
 // round-robined — so slicing the front of the list yields a spread of topics and
-// publishers rather than "the first genre from the first source".
-async function fetchAll(interests) {
+// publishers rather than "the first genre from the first source". Any custom feeds the
+// user added in Settings are fetched too and interleaved as their own "My Sources"
+// stream, so they always get a fair share of the pool regardless of chosen interests.
+async function fetchAll(interests, customFeeds = []) {
   const wanted = shuffle(interests && interests.length ? interests : GENRES);
 
   const perGenre = await Promise.all(wanted.map(async (genre) => {
@@ -42,7 +44,17 @@ async function fetchAll(interests) {
     return interleave(shuffle(lists)); // vary the source within the genre
   }));
 
-  const merged = interleave(perGenre); // vary the genre across the pool
+  // User's own feeds: fetch each, tag as "My Sources", round-robin between them.
+  const feeds = (customFeeds || []).filter((f) => f && /^https?:\/\//i.test(f.url || ""));
+  const customLists = await Promise.all(
+    feeds.map((f) => fetchSource(customFeedSpec(f), MY_SOURCES_GENRE)
+      .catch((e) => { console.warn("[content:custom]", e.message); return []; }))
+  );
+  const custom = interleave(shuffle(customLists));
+
+  // Interleave custom articles alongside the genre streams so they land near the front
+  // of the pool too, not just at the tail after slicing.
+  const merged = interleave(custom.length ? [custom, ...perGenre] : perGenre);
 
   // De-dup by URL.
   const seen = new Set();
@@ -64,7 +76,9 @@ export async function refillPool() {
 
   const [poolRows, profileRows, readRows] = await Promise.all([
     db("article_pool").select("url,served").eq("user_id", uid).run(),
-    db("profiles").select("interests").eq("user_id", uid).run(),
+    // select("*") (not an explicit column list) so an older DB without the
+    // custom_feeds column still returns interests instead of erroring the whole refill.
+    db("profiles").select("*").eq("user_id", uid).run(),
     db("reading_log").select("article_url").eq("user_id", uid).order("created_at", { ascending: false }).limit(500).run(),
   ]);
 
@@ -72,12 +86,13 @@ export async function refillPool() {
   if (unread >= cfg.POOL_TARGET) return { added: 0, reason: "full" };
 
   const interests = profileRows?.[0]?.interests || [];
+  const customFeeds = profileRows?.[0]?.custom_feeds || [];
   const known = new Set([
     ...(poolRows || []).map((r) => r.url),
     ...(readRows || []).map((r) => r.article_url),
   ]);
 
-  const fresh = (await fetchAll(interests)).filter((a) => !known.has(a.url));
+  const fresh = (await fetchAll(interests, customFeeds)).filter((a) => !known.has(a.url));
   if (!fresh.length) return { added: 0, reason: "no-fresh" };
 
   // Insert up to (target - unread) fresh rows. upsert on (user_id,url) to be safe.

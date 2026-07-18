@@ -10,7 +10,7 @@
 // "Served" count is tracked via reading_log; the 10th, 20th, ... pick is serendipitous.
 
 import { db, currentUser } from "./sb.js";
-import { GENRES } from "./feeds.js";
+import { GENRES, MY_SOURCES_GENRE } from "./feeds.js";
 import { refillPool } from "./content.js";
 
 // Per-genre average of preference_rating from the user's reading history.
@@ -56,7 +56,10 @@ export async function pickArticle() {
   const uid = user.id;
 
   const profile = (await db("profiles").select("interests").eq("user_id", uid).run())?.[0];
-  const interests = profile?.interests?.length ? profile.interests : GENRES.slice();
+  const chosen0 = profile?.interests?.length ? profile.interests : GENRES.slice();
+  // The user's own added feeds are always in rotation — the user explicitly wanted
+  // them, so treat "My Sources" as an interest rather than an outside-interest pick.
+  const interests = [...chosen0, MY_SOURCES_GENRE];
 
   // Ensure the pool has something to serve.
   let pool = await db("article_pool").select("*").eq("user_id", uid).is("served", "false").run();

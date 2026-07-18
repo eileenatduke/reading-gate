@@ -10,6 +10,17 @@ function normalizeDomain(d) {
     .replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
 }
 
+// A custom feed is just an RSS/Atom URL plus an optional display name. We accept any
+// http(s) URL; the extension validates it for real when it fetches (a bad feed simply
+// contributes no articles). Name defaults to the feed's hostname.
+function normalizeFeed(name, url) {
+  const u = (url || "").trim();
+  if (!/^https?:\/\/\S+$/i.test(u)) return null;
+  let n = (name || "").trim();
+  if (!n) { try { n = new URL(u).hostname.replace(/^www\./, ""); } catch { n = "My source"; } }
+  return { name: n, url: u };
+}
+
 export default function Settings() {
   const { theme, preview, commit, resetPreview } = useTheme();
   const [pendingTheme, setPendingTheme] = useState(theme);
@@ -20,8 +31,11 @@ export default function Settings() {
 
   const [interests, setInterests] = useState(new Set());
   const [domains, setDomains] = useState([]);
+  const [customFeeds, setCustomFeeds] = useState([]);
   const [articlesRequired, setArticlesRequired] = useState(1);
   const [newDomain, setNewDomain] = useState("");
+  const [newFeedName, setNewFeedName] = useState("");
+  const [newFeedUrl, setNewFeedUrl] = useState("");
   const [status, setStatus] = useState("");
   const [err, setErr] = useState("");
 
@@ -29,6 +43,7 @@ export default function Settings() {
     Promise.all([fetchProfile(), fetchBlocklist()])
       .then(([p, b]) => {
         setInterests(new Set(p?.interests || []));
+        setCustomFeeds(Array.isArray(p?.custom_feeds) ? p.custom_feeds : []);
         setDomains(b.map((r) => r.domain));
       })
       .catch((e) => setErr(e.message));
@@ -40,7 +55,7 @@ export default function Settings() {
   }, []);
 
   // The saved check only reflects the last successful save — any edit clears it.
-  useEffect(() => { setStatus(""); }, [pendingTheme, interests, domains, articlesRequired]);
+  useEffect(() => { setStatus(""); }, [pendingTheme, interests, domains, customFeeds, articlesRequired]);
 
   const clampReq = (n) => Math.max(1, Math.min(20, parseInt(n, 10) || 1));
 
@@ -56,6 +71,14 @@ export default function Settings() {
     setNewDomain("");
   }
 
+  function addFeed() {
+    const f = normalizeFeed(newFeedName, newFeedUrl);
+    if (!f) { setErr("Enter a valid feed URL starting with http:// or https://"); return; }
+    setErr("");
+    if (!customFeeds.some((x) => x.url === f.url)) setCustomFeeds([...customFeeds, f]);
+    setNewFeedName(""); setNewFeedUrl("");
+  }
+
   async function save() {
     setStatus(""); setErr("");
     try {
@@ -67,9 +90,9 @@ export default function Settings() {
       // Theme + minimum-articles → auth metadata in one write (shared with the gate).
       await supabase.auth.updateUser({ data: { theme: pendingTheme, articles_required: articlesRequired } });
 
-      // interests → profiles
+      // interests + custom feeds → profiles
       const { error: pErr } = await supabase.from("profiles")
-        .upsert({ user_id: uid, interests: [...interests] }, { onConflict: "user_id" });
+        .upsert({ user_id: uid, interests: [...interests], custom_feeds: customFeeds }, { onConflict: "user_id" });
       if (pErr) throw pErr;
 
       // blocklist → replace-all
@@ -133,6 +156,39 @@ export default function Settings() {
         <div className="row">
           {SOURCES.map((s) => <span key={s} className="pill source">{s}</span>)}
         </div>
+      </div>
+
+      <div className="card" style={{ marginBottom: 20 }}>
+        <h2>Your own sources</h2>
+        <p className="sub">
+          Subscribe to something that isn't on our list — the New York Times, WSJ, a favorite blog?
+          Paste its <b>RSS feed URL</b> and Reading Gate will mix its articles in with the rest.
+          You read the full article on the publisher's own site, so any subscription you have keeps working.
+        </p>
+        <div className="row" style={{ marginBottom: 16 }}>
+          {customFeeds.length === 0 && <span className="muted">No custom sources yet.</span>}
+          {customFeeds.map((f, i) => (
+            <span className="chip" key={f.url} title={f.url}>
+              {f.name}
+              <button aria-label={`Remove ${f.name}`} onClick={() => setCustomFeeds(customFeeds.filter((_, j) => j !== i))}>×</button>
+            </span>
+          ))}
+        </div>
+        <div className="row" style={{ gap: 8 }}>
+          <input className="input" placeholder="Name (optional), e.g. New York Times" value={newFeedName}
+            style={{ maxWidth: 220 }}
+            onChange={(e) => setNewFeedName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFeed())} />
+          <input className="input" placeholder="https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml" value={newFeedUrl}
+            style={{ flex: 1, minWidth: 240 }}
+            onChange={(e) => setNewFeedUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFeed())} />
+          <button className="btn ghost" onClick={addFeed}>Add</button>
+        </div>
+        <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>
+          Most news sites publish a feed — search "<i>[publisher] RSS feed</i>". Paste the feed's address (it ends in
+          things like <code>.xml</code> or <code>/rss</code>), not the homepage.
+        </p>
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
