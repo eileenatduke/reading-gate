@@ -164,11 +164,10 @@ export default function Settings() {
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
-        <h2>Your own sources</h2>
+        <h2>Custom sources</h2>
         <p className="sub">
-          Subscribe to something that isn't on our list — the New York Times, WSJ, a favorite blog?
-          Just paste the <b>site's address</b> (like <code>nytimes.com</code>) and Reading Gate finds its
-          feed and mixes its articles in with the rest. You read the full article on the publisher's own
+          Follow something that isn't on our list — the New York Times, WSJ, a favorite blog? Add it here
+          and its articles get mixed in with the rest. You read the full article on the publisher's own
           site, so any subscription you have keeps working.
         </p>
         <div className="row" style={{ marginBottom: 16 }}>
@@ -181,19 +180,18 @@ export default function Settings() {
           ))}
         </div>
         <div className="row" style={{ gap: 8 }}>
-          <input className="input" placeholder="Name (optional), e.g. New York Times" value={newFeedName}
+          <input className="input" placeholder="(News Source Name)" value={newFeedName}
             style={{ maxWidth: 220 }}
             onChange={(e) => setNewFeedName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFeed())} />
-          <input className="input" placeholder="nytimes.com" value={newFeedUrl}
+          <input className="input" placeholder="(News Source Website URL)" value={newFeedUrl}
             style={{ flex: 1, minWidth: 240 }}
             onChange={(e) => setNewFeedUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFeed())} />
           <button className="btn ghost" onClick={addFeed}>Add</button>
         </div>
         <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>
-          Paste the site's address and we'll find its feed automatically. If a site doesn't publish one,
-          it just won't add any articles — nothing else breaks.
+          If a site doesn't publish a feed, it just won't add any articles — nothing else breaks.
         </p>
       </div>
 
