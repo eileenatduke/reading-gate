@@ -188,9 +188,6 @@ export default function Settings() {
             onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFeed())} />
           <button className="btn ghost" onClick={addFeed}>Add</button>
         </div>
-        <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>
-          If a site doesn't publish a feed, it just won't add any articles — nothing else breaks.
-        </p>
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
