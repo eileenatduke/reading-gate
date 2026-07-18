@@ -14,6 +14,10 @@ export const GENRE_GROUPS = [
 
 export const GENRES = GENRE_GROUPS.flatMap((g) => g.genres);
 
+// Pseudo-genre tagging articles from a user's own added feeds (Settings → "Your own
+// sources"). Mirrors extension/src/lib/feeds.js → MY_SOURCES_GENRE (keep in sync).
+export const MY_SOURCES_GENRE = "My Sources";
+
 // Publishers the extension pulls from (mirrors the CATALOG sources in
 // extension/src/lib/feeds.js). Shown on Settings for transparency.
 export const SOURCES = [
