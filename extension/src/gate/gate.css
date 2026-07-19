@@ -56,8 +56,11 @@ body {
 
 .headline {
   font-family: var(--font-serif);
-  font-size: var(--fs-2xl); font-weight: 700; line-height: 1.2;
-  margin: 0 0 var(--sp-3);
+  /* Playfair Display is an editorial display serif — 400 matches the dashboard
+     headings; the -.035em left margin optically compensates its glyph
+     side-bearing so the headline lines up with the blurb beneath it. */
+  font-size: var(--fs-2xl); font-weight: 400; line-height: 1.2;
+  margin: 0 0 var(--sp-3) -.035em;
 }
 .blurb { color: var(--muted); margin: 0 0 var(--sp-5); }
 
