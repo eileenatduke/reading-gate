@@ -41,6 +41,9 @@ export default function Settings() {
   const [newDomain, setNewDomain] = useState("");
   const [newFeedName, setNewFeedName] = useState("");
   const [newFeedUrl, setNewFeedUrl] = useState("");
+  // True once we detect the DB is missing the custom_feeds column (migration 0002
+  // not applied). We still save everything else; custom sources persist once it's run.
+  const [feedsUnsupported, setFeedsUnsupported] = useState(false);
   const [status, setStatus] = useState("");
   const [err, setErr] = useState("");
 
@@ -95,9 +98,19 @@ export default function Settings() {
       // Theme + minimum-articles → auth metadata in one write (shared with the gate).
       await supabase.auth.updateUser({ data: { theme: pendingTheme, articles_required: articlesRequired } });
 
-      // interests + custom feeds → profiles
-      const { error: pErr } = await supabase.from("profiles")
-        .upsert({ user_id: uid, interests: [...interests], custom_feeds: customFeeds }, { onConflict: "user_id" });
+      // interests + custom feeds → profiles. If the DB hasn't had the custom_feeds
+      // migration (0002) applied, that column is missing and PostgREST rejects the whole
+      // upsert (code PGRST204). Detect that and retry without custom_feeds so theme,
+      // interests, and the blocklist still save — the rest of Settings keeps working.
+      const base = { user_id: uid, interests: [...interests] };
+      let { error: pErr } = await supabase.from("profiles")
+        .upsert({ ...base, custom_feeds: customFeeds }, { onConflict: "user_id" });
+      if (pErr && (pErr.code === "PGRST204" || /custom_feeds/i.test(pErr.message || ""))) {
+        setFeedsUnsupported(true);
+        ({ error: pErr } = await supabase.from("profiles").upsert(base, { onConflict: "user_id" }));
+      } else if (!pErr) {
+        setFeedsUnsupported(false);
+      }
       if (pErr) throw pErr;
 
       // blocklist → replace-all
@@ -188,6 +201,13 @@ export default function Settings() {
             onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFeed())} />
           <button className="btn ghost" onClick={addFeed}>Add</button>
         </div>
+        {feedsUnsupported && (
+          <p className="sub" style={{ margin: "12px 0 0", color: "var(--danger)" }}>
+            Custom sources can’t be saved until your Supabase database has the{" "}
+            <code>custom_feeds</code> update applied (migration <code>0002_custom_feeds.sql</code>).
+            Your other settings saved fine.
+          </p>
+        )}
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
