@@ -50,6 +50,29 @@ async function refresh() {
   }
 }
 
+async function doOAuth(provider) {
+  $("auth-err").textContent = "Opening sign-in…";
+  // Disable the OAuth buttons while a flow is in progress.
+  $("oauth-google").disabled = true;
+  $("oauth-outlook").disabled = true;
+  try {
+    // The background worker runs the flow so it survives the popup closing when the
+    // auth window steals focus. If the popup does close, the session is still saved;
+    // reopening the popup shows the signed-in dashboard.
+    const res = await chrome.runtime.sendMessage({ type: "OAUTH_SIGNIN", provider });
+    if (!res?.ok) { $("auth-err").textContent = res?.error || "Sign-in failed."; return; }
+    await chrome.runtime.sendMessage({ type: "REFRESH_BLOCKLIST" });
+    const user = res.user || (await currentUser());
+    if (user) await renderDash(user);
+    else showOnly("auth");
+  } catch (e) {
+    $("auth-err").textContent = e.message;
+  } finally {
+    $("oauth-google").disabled = false;
+    $("oauth-outlook").disabled = false;
+  }
+}
+
 async function doAuth(fn) {
   $("auth-err").textContent = "";
   const email = $("email").value.trim();
@@ -76,6 +99,8 @@ async function init() {
   $("to-prefs").addEventListener("click", async () => {
     chrome.tabs.create({ url: await dashboardUrl("/settings") });
   });
+  $("oauth-google").addEventListener("click", () => doOAuth("google"));
+  $("oauth-outlook").addEventListener("click", () => doOAuth("azure"));
   $("signin").addEventListener("click", () => doAuth(signIn));
   $("signup").addEventListener("click", () => doAuth(signUp));
   $("refresh").addEventListener("click", refresh);

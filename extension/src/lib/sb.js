@@ -85,6 +85,69 @@ export async function signOut() {
   await clearSession();
 }
 
+// OAuth sign-in (Google / Outlook-Azure) for the extension.
+//
+// A browser extension can't use the web redirect flow, so we drive it through
+// chrome.identity.launchWebAuthFlow: open Supabase's /authorize endpoint pointed
+// at the extension's own https://<id>.chromiumapp.org/ redirect, let the user
+// authenticate with the provider, then read the session Supabase hands back in
+// the final redirect URL's fragment. Run this from the background service worker
+// so it survives the popup closing when the auth window takes focus.
+export async function signInWithOAuth(provider) {
+  const cfg = await base();
+  const redirectTo = chrome.identity.getRedirectURL(); // https://<id>.chromiumapp.org/
+
+  const authUrl = new URL(`${cfg.SUPABASE_URL}/auth/v1/authorize`);
+  authUrl.searchParams.set("provider", provider);
+  authUrl.searchParams.set("redirect_to", redirectTo);
+  // Outlook/Microsoft accounts go through the Azure provider; ask for email.
+  if (provider === "azure") authUrl.searchParams.set("scopes", "email openid profile");
+
+  let redirectResult;
+  try {
+    redirectResult = await chrome.identity.launchWebAuthFlow({
+      url: authUrl.toString(),
+      interactive: true,
+    });
+  } catch (e) {
+    // Chrome throws when the user closes the window or denies access.
+    throw new Error(/did not approve|cancel/i.test(e?.message || "") ? "Sign-in was cancelled." : e.message);
+  }
+  if (!redirectResult) throw new Error("Sign-in was cancelled.");
+
+  // Supabase returns the session in the URL fragment (implicit flow).
+  const u = new URL(redirectResult);
+  const params = new URLSearchParams((u.hash || u.search || "").replace(/^[#?]/, ""));
+  const access_token = params.get("access_token");
+  const refresh_token = params.get("refresh_token");
+  if (!access_token || !refresh_token) {
+    throw new Error(params.get("error_description") || params.get("error") || "Sign-in failed.");
+  }
+
+  const expires_in = parseInt(params.get("expires_in") || "3600", 10);
+  const session = {
+    access_token,
+    refresh_token,
+    expires_at: Math.floor(Date.now() / 1000) + expires_in,
+    user: null,
+  };
+  await saveSession(session);
+
+  // Load the full user record (id, email, metadata) so callers get a real user.
+  try {
+    const res = await fetch(`${cfg.SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: cfg.SUPABASE_ANON_KEY, Authorization: `Bearer ${access_token}` },
+    });
+    if (res.ok) {
+      session.user = await res.json();
+      await saveSession(session);
+    }
+  } catch {
+    // Non-fatal: the session is valid; the user record refreshes on next read.
+  }
+  return session;
+}
+
 async function refresh(session) {
   const data = await authFetch("token?grant_type=refresh_token", {
     refresh_token: session.refresh_token,

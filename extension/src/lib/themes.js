@@ -16,7 +16,10 @@ export const THEMES = {
   solidMono:   { group:'solid', name:'Mono', appBg:'#f7f7f5', surface:'#ffffff', surface2:'#f0f0ee', border:'#e3e3e0', text:'#161615', muted:'#6a6a66', faint:'#a3a39e', accent:'#161615', accentRgb:'22,22,21', accent2:'#8a8a85', shadow:'0 20px 40px -24px rgba(0,0,0,.18)', blur:'none' },
 };
 
-export const DEFAULT_THEME = 'glassPurple';
+// New users default to Mono (black & white) on the gate, matching the dashboard.
+// Once a user picks a theme in the dashboard, it's saved to their account and the
+// gate follows it (shared via auth metadata).
+export const DEFAULT_THEME = 'solidMono';
 
 // Apply a theme's CSS variables to the document and mark the theme group.
 export function applyTheme(key) {
