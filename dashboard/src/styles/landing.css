@@ -9,8 +9,9 @@
 
    The hero is authored at a 1280x800 reference frame (like the prototype) and
    scaled to fit the viewport, so the composition stays pixel-faithful at any
-   size. Motion mirrors the prototype's five @keyframes (single 5.5s pass,
-   fill both); prefers-reduced-motion jumps straight to the resting state.
+   size. Fifteen frosted app-icon silhouettes float invisibly on the stage and
+   reveal near the cursor (proximity driven from Landing.jsx); clicking any one
+   "enters" the site — About fades in, the CTA row lifts, silhouettes hide.
 ---------------------------------------------------------------------------- */
 
 :root {
@@ -58,58 +59,49 @@
 }
 
 .rg-phrase {
-  position: absolute; top: 300px; max-width: 330px;
+  position: absolute; top: 320px; max-width: 330px;
   font-family: "Playfair Display", Georgia, serif;
   font-weight: 500; font-size: 46px; line-height: 1.14;
+  z-index: 2; pointer-events: none;
 }
 .rg-phrase.left  { left: 56px; }
 .rg-phrase.right { right: 56px; text-align: right; }
 
-/* Impact flash at the crash point. */
-.rg-flash {
-  position: absolute; top: 500px; left: 50%;
-  width: 250px; height: 140px; border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(255,255,255,.85) 0%, rgba(255,255,255,0) 62%);
-  transform: translateX(-50%) scale(.3); opacity: 0;
-  pointer-events: none; mix-blend-mode: screen;
-  animation: rgFlash 5.5s both;
+/* ---- Silhouettes: fifteen frosted app icons that reveal near the cursor ---- */
+.rg-silhouettes {
+  position: absolute; inset: 0; pointer-events: none;
 }
-
-/* Phone group — falls, then its nine shards burst and vanish. */
-.rg-phone-group {
-  position: absolute; left: 50%; top: 150px;
-  width: 220px; height: 437px; margin-left: -110px;
-  --kx: 1.4; --kr: 1.25;
-  filter: drop-shadow(0 22px 30px rgba(0,0,0,.5));
-  animation: rgDrop 5.5s both;
+/* Each silhouette floats invisibly (opacity driven from JS on pointer proximity)
+   and is individually clickable. Positional/depth styles come inline from
+   Landing.jsx; this rule carries the shared reset + the fade transition. */
+.rg-silhouette {
+  position: absolute; padding: 0; margin: 0;
+  font: inherit; color: inherit; -webkit-appearance: none; appearance: none;
+  opacity: 0; cursor: pointer; pointer-events: auto;
+  transition: opacity .28s ease;
 }
+.rg-silhouette:focus-visible { outline: none; }
 
-/* Each shard is the same phone render clipped to one wedge; stacked, the nine
-   wedges reassemble into the whole tilted phone. The image already carries the
-   metallic frame, the background-filled screen, the dashed stitch and the notch;
-   brightness lifts the dark shards a touch so they read on the dark hero. */
-.rg-shard {
-  position: absolute; inset: 0; width: 220px; height: 437px;
-  object-fit: fill;
-  filter: brightness(1.16) drop-shadow(0 5px 7px rgba(0,0,0,.6));
-  animation: rgBurst 5.5s both;
-}
-
-/* Centred About reveal (appears after the crash). */
+/* Centred About reveal — hidden until a silhouette is clicked (`entered`). */
 .rg-about-cta {
   position: absolute; top: 342px; left: 50%;
-  transform: translate(-50%, -50%) scale(.96); opacity: 0;
-  z-index: 4; animation: rgAboutIn 5.5s both;
+  transform: translate(-50%, -50%); opacity: 0; pointer-events: none;
+  z-index: 4; transition: opacity .6s ease;
   font-size: 15px; font-weight: 600; letter-spacing: .08em;
   padding: 17px 44px;
 }
 
-/* Bottom CTA row (lifts up into place after the crash). */
+/* Bottom CTA row — lifts into place once a silhouette is clicked. */
 .rg-cta-row {
   position: absolute; top: 700px; left: 0; right: 0;
   display: flex; justify-content: center; gap: 16px; z-index: 3;
-  animation: rgButtonsUp 5.5s both;
+  transition: transform .6s cubic-bezier(.2,.7,.3,1);
 }
+
+/* ---- Entered state: clicking a silhouette commits to the site ---- */
+.rg-stage.entered .rg-silhouette { opacity: 0 !important; pointer-events: none; }
+.rg-stage.entered .rg-about-cta  { opacity: 1; pointer-events: auto; }
+.rg-stage.entered .rg-cta-row    { transform: translateY(-120px); }
 
 /* ---- Pills (shared by hero + auth) ---- */
 .rg-pill {
@@ -126,40 +118,18 @@
 .rg-pill.solid:hover { background: #fff; opacity: .92; }
 .rg-pill:disabled { opacity: .5; cursor: default; }
 
-/* ---- Keyframes (ported from the prototype) ---- */
-@keyframes rgDrop {
-  0%   { transform: translateY(-250px) rotate(-5deg); animation-timing-function: cubic-bezier(.5,0,.85,.4); }
-  30%  { transform: translateY(0) rotate(3deg); }
-  100% { transform: translateY(0) rotate(3deg); }
-}
-@keyframes rgBurst {
-  0%,30% { transform: translate(0,0) rotate(0deg); opacity: 1; animation-timing-function: cubic-bezier(.15,.85,.35,1); }
-  48%    { transform: translate(calc(var(--dx)*var(--kx,1)*.85), calc(var(--dy)*var(--ky,1)*.15 - 95px)) rotate(calc(var(--rot)*var(--kr,1)*.7)); opacity: 0; }
-  100%   { transform: translate(calc(var(--dx)*var(--kx,1)*.85), calc(var(--dy)*var(--ky,1)*.15 - 95px)) rotate(calc(var(--rot)*var(--kr,1)*.7)); opacity: 0; }
-}
-@keyframes rgFlash {
-  0%,29% { opacity: 0; transform: translateX(-50%) scale(.3); }
-  31%    { opacity: .85; transform: translateX(-50%) scale(1); }
-  42%    { opacity: 0; transform: translateX(-50%) scale(1.7); }
-  100%   { opacity: 0; transform: translateX(-50%) scale(1.7); }
-}
-@keyframes rgAboutIn {
-  0%,60% { opacity: 0; transform: translate(-50%,-50%) scale(.96); }
-  74%    { opacity: 1; transform: translate(-50%,-50%) scale(1); }
-  100%   { opacity: 1; transform: translate(-50%,-50%) scale(1); }
-}
-@keyframes rgButtonsUp {
-  0%,60% { transform: translateY(0); }
-  74%    { transform: translateY(-120px); }
-  100%   { transform: translateY(-120px); }
+/* ---- Keyframes ---- */
+/* The idle float — each silhouette drifts up ~14px on its own duration/delay,
+   set inline per icon. */
+@keyframes rgIconFloat {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-14px); }
 }
 
-/* Reduced motion — skip the crash, render the resting state immediately. */
+/* Reduced motion — hold the silhouettes still; the reveal/enter interaction
+   (a soft opacity fade) is unaffected. */
 @media (prefers-reduced-motion: reduce) {
-  .rg-phone-group, .rg-flash { display: none; }
-  .rg-shard { animation: none; }
-  .rg-about-cta { animation: none; opacity: 1; transform: translate(-50%,-50%) scale(1); }
-  .rg-cta-row { animation: none; transform: translateY(-120px); }
+  .rg-silhouette { animation: none !important; }
 }
 
 /* ---------------------------------------------------------------------------
