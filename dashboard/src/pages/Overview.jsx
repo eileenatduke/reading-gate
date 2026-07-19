@@ -39,7 +39,7 @@ export default function Overview() {
           <div className="ov-statcol">
             <PaperStatCard value={reading.length} label="Articles read" />
             <PaperStatCard value={currentStreak(reading)} label="Day streak" />
-            <PaperStatCard value={impulsesThisWeek(impulses)} label="Impulses this week" hint="history →" />
+            <PaperStatCard value={impulsesThisWeek(impulses)} label="Impulses this week" />
             <PaperStatCard value={impulses.length} label="Impulses all-time" />
           </div>
           <PaperCrossoverChart impulses={impulses} />
