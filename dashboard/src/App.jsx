@@ -1,12 +1,10 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { isConfigured } from "./lib/supabase.js";
 import { useAuth } from "./lib/auth.jsx";
-import Nav from "./components/Nav.jsx";
+import Landing from "./pages/Landing.jsx";
+import About from "./pages/About.jsx";
 import Login from "./pages/Login.jsx";
-import Overview from "./pages/Overview.jsx";
-import Library from "./pages/Library.jsx";
-import Settings from "./pages/Settings.jsx";
-import ImpulseHistory from "./pages/ImpulseHistory.jsx";
+import Dashboard from "./Dashboard.jsx";
 
 function NotConfigured() {
   return (
@@ -22,39 +20,29 @@ function NotConfigured() {
   );
 }
 
+// Top-level routing:
+//   /            → Landing (marketing hero) when logged out; Dashboard when logged in
+//   /about       → About (public placeholder)
+//   /login       → Auth (Google / Outlook / email + password); redirects home if logged in
+//   everything else while logged in → Dashboard (its own nested routes)
 export default function App() {
   const { user, loading } = useAuth();
 
   if (!isConfigured) return <NotConfigured />;
   if (loading) return <div className="center-screen"><div className="loading">Loading…</div></div>;
-  if (!user) return <Login />;
 
   return (
-    <div className="app">
-      <GlassFilter />
-      <Nav />
-      <main className="main">
-        <Routes>
-          <Route path="/" element={<Overview />} />
-          <Route path="/library" element={<Library />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/impulses" element={<ImpulseHistory />} />
+    <Routes>
+      <Route path="/about" element={<About />} />
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+      {user ? (
+        <Route path="/*" element={<Dashboard />} />
+      ) : (
+        <>
+          <Route path="/" element={<Landing />} />
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-    </div>
-  );
-}
-
-// SVG displacement filter that gives the glass panels their subtle warp.
-function GlassFilter() {
-  return (
-    <svg width="0" height="0" style={{ position: "absolute", pointerEvents: "none" }} aria-hidden="true">
-      <filter id="glassWarp" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
-        <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves="2" seed="11" result="noise" />
-        <feGaussianBlur in="noise" stdDeviation="1" result="sn" />
-        <feDisplacementMap in="SourceGraphic" in2="sn" scale="18" xChannelSelector="R" yChannelSelector="G" />
-      </filter>
-    </svg>
+        </>
+      )}
+    </Routes>
   );
 }

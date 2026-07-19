@@ -25,7 +25,8 @@ export const THEME_GROUPS = [
   { label: 'Solid', keys: ['solidButter', 'solidHotpink', 'solidNavy', 'solidRuby', 'solidMono'] },
 ];
 
-export const DEFAULT_THEME = 'glassPurple';
+// New users default to Mono (black & white); they can pick any theme in Settings.
+export const DEFAULT_THEME = 'solidMono';
 export function isValidTheme(k) { return Object.prototype.hasOwnProperty.call(THEMES, k); }
 
 // Relative luminance (WCAG) of a #rrggbb color — used to tell a dark accent apart

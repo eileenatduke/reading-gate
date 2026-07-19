@@ -1,0 +1,279 @@
+/* ----------------------------------------------------------------------------
+   Landing hero, auth, and About — the pre-dashboard surface.
+
+   Unlike the dashboard (which follows the user's chosen theme via CSS vars),
+   these public pages have ONE fixed editorial theme: near-black #0e0e0d with
+   off-white #f4f4f2, Playfair Display for the marketing lines and Source Sans 3
+   for UI. Nothing here reads the theme tokens — the look is intentionally
+   constant, per the design handoff ("the landing page has 1 design/theme").
+
+   The hero is authored at a 1280x800 reference frame (like the prototype) and
+   scaled to fit the viewport, so the composition stays pixel-faithful at any
+   size. Motion mirrors the prototype's five @keyframes (single 5.5s pass,
+   fill both); prefers-reduced-motion jumps straight to the resting state.
+---------------------------------------------------------------------------- */
+
+:root {
+  --rg-ink: #0e0e0d;
+  --rg-paper: #f4f4f2;
+}
+
+.rg-landing,
+.rg-auth,
+.rg-about {
+  position: fixed;
+  inset: 0;
+  background: var(--rg-ink);
+  color: var(--rg-paper);
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.rg-landing a,
+.rg-auth a,
+.rg-about a { color: inherit; text-decoration: none; }
+
+/* ---- Hero stage: authored 1280x800, scaled to fit ---- */
+.rg-hero {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rg-stage {
+  position: relative;
+  width: 1280px;
+  height: 800px;
+  flex: 0 0 auto;
+  color: var(--rg-paper);
+  /* --rg-scale is set by Landing.jsx to fit the authored frame to the viewport. */
+  transform: scale(var(--rg-scale, 1));
+  transform-origin: center center;
+}
+
+.rg-wordmark {
+  position: absolute; top: 42px; left: 56px;
+  font-size: 24px; font-weight: 600; letter-spacing: 0;
+}
+
+.rg-phrase {
+  position: absolute; top: 300px; max-width: 330px;
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 500; font-size: 46px; line-height: 1.14;
+}
+.rg-phrase.left  { left: 56px; }
+.rg-phrase.right { right: 56px; text-align: right; }
+
+/* Impact flash at the crash point. */
+.rg-flash {
+  position: absolute; top: 500px; left: 50%;
+  width: 250px; height: 140px; border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,.85) 0%, rgba(255,255,255,0) 62%);
+  transform: translateX(-50%) scale(.3); opacity: 0;
+  pointer-events: none; mix-blend-mode: screen;
+  animation: rgFlash 5.5s both;
+}
+
+/* Phone group — falls, then its nine shards burst and vanish. */
+.rg-phone-group {
+  position: absolute; left: 50%; top: 150px;
+  width: 220px; height: 437px; margin-left: -110px;
+  --kx: 1.4; --kr: 1.25;
+  filter: drop-shadow(0 22px 30px rgba(0,0,0,.5));
+  animation: rgDrop 5.5s both;
+}
+
+/* Each shard is a full CSS-drawn phone clipped to one wedge; stacked, the nine
+   wedges reassemble into a whole phone (screen filled with the bg colour so only
+   the metallic frame reads on dark). */
+.rg-shard {
+  position: absolute; inset: 0; width: 220px; height: 437px;
+  border-radius: 30px;
+  background: linear-gradient(158deg, #17171a 0%, #0e0e0d 62%, #090909 100%);
+  box-shadow:
+    inset 0 0 0 2.5px #3a3a40,
+    inset 0 0 0 4px #050506,
+    inset 0 2px 3px rgba(255,255,255,.10),
+    inset 0 -8px 20px rgba(0,0,0,.5);
+  filter: brightness(1.16) drop-shadow(0 5px 7px rgba(0,0,0,.6));
+  animation: rgBurst 5.5s both;
+}
+/* Dynamic-island / notch, part of the reassembled phone. */
+.rg-shard::before {
+  content: ""; position: absolute; top: 12px; left: 50%;
+  width: 46%; height: 15px; margin-left: -23%;
+  background: #050506; border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+}
+
+/* Centred About reveal (appears after the crash). */
+.rg-about-cta {
+  position: absolute; top: 342px; left: 50%;
+  transform: translate(-50%, -50%) scale(.96); opacity: 0;
+  z-index: 4; animation: rgAboutIn 5.5s both;
+  font-size: 15px; font-weight: 600; letter-spacing: .08em;
+  padding: 17px 44px;
+}
+
+/* Bottom CTA row (lifts up into place after the crash). */
+.rg-cta-row {
+  position: absolute; top: 700px; left: 0; right: 0;
+  display: flex; justify-content: center; gap: 16px; z-index: 3;
+  animation: rgButtonsUp 5.5s both;
+}
+
+/* ---- Pills (shared by hero + auth) ---- */
+.rg-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  font-size: 14px; font-weight: 600; letter-spacing: .05em;
+  border-radius: 999px; padding: 16px 34px; cursor: pointer;
+  border: 1px solid var(--rg-paper); background: transparent; color: var(--rg-paper);
+  transition: background .18s ease, color .18s ease, opacity .18s ease;
+  white-space: nowrap;
+}
+.rg-pill:hover { background: rgba(244,244,242,.12); }
+.rg-pill.solid { background: var(--rg-paper); color: var(--rg-ink); border-color: var(--rg-paper); }
+.rg-pill.solid:hover { background: #fff; opacity: .92; }
+.rg-pill:disabled { opacity: .5; cursor: default; }
+
+/* ---- Keyframes (ported from the prototype) ---- */
+@keyframes rgDrop {
+  0%   { transform: translateY(-250px) rotate(-5deg); animation-timing-function: cubic-bezier(.5,0,.85,.4); }
+  30%  { transform: translateY(0) rotate(3deg); }
+  100% { transform: translateY(0) rotate(3deg); }
+}
+@keyframes rgBurst {
+  0%,30% { transform: translate(0,0) rotate(0deg); opacity: 1; animation-timing-function: cubic-bezier(.15,.85,.35,1); }
+  48%    { transform: translate(calc(var(--dx)*var(--kx,1)*.85), calc(var(--dy)*var(--ky,1)*.15 - 95px)) rotate(calc(var(--rot)*var(--kr,1)*.7)); opacity: 0; }
+  100%   { transform: translate(calc(var(--dx)*var(--kx,1)*.85), calc(var(--dy)*var(--ky,1)*.15 - 95px)) rotate(calc(var(--rot)*var(--kr,1)*.7)); opacity: 0; }
+}
+@keyframes rgFlash {
+  0%,29% { opacity: 0; transform: translateX(-50%) scale(.3); }
+  31%    { opacity: .85; transform: translateX(-50%) scale(1); }
+  42%    { opacity: 0; transform: translateX(-50%) scale(1.7); }
+  100%   { opacity: 0; transform: translateX(-50%) scale(1.7); }
+}
+@keyframes rgAboutIn {
+  0%,60% { opacity: 0; transform: translate(-50%,-50%) scale(.96); }
+  74%    { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  100%   { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+}
+@keyframes rgButtonsUp {
+  0%,60% { transform: translateY(0); }
+  74%    { transform: translateY(-120px); }
+  100%   { transform: translateY(-120px); }
+}
+
+/* Reduced motion — skip the crash, render the resting state immediately. */
+@media (prefers-reduced-motion: reduce) {
+  .rg-phone-group, .rg-flash { display: none; }
+  .rg-shard { animation: none; }
+  .rg-about-cta { animation: none; opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  .rg-cta-row { animation: none; transform: translateY(-120px); }
+}
+
+/* ---------------------------------------------------------------------------
+   Auth (Log in / Sign up) — same dark editorial surface, centred card.
+--------------------------------------------------------------------------- */
+.rg-auth, .rg-about { overflow-y: auto; }
+.rg-auth-scroll, .rg-about-scroll {
+  min-height: 100%;
+  display: grid; place-items: center; padding: 40px 24px;
+}
+.rg-auth-card { width: 100%; max-width: 380px; }
+
+.rg-back {
+  position: absolute; top: 36px; left: 40px; z-index: 2;
+  font-size: 14px; font-weight: 500; color: rgba(244,244,242,.7);
+}
+.rg-back:hover { color: var(--rg-paper); }
+
+.rg-auth-title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 40px; line-height: 1; font-weight: 500; margin: 0 0 6px;
+  letter-spacing: -.02em;
+}
+.rg-auth-sub { color: rgba(244,244,242,.6); font-size: 15px; margin: 0 0 28px; }
+
+.rg-oauth {
+  display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px;
+}
+.rg-oauth-btn {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: 100%; padding: 13px 18px;
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  border-radius: 999px; border: 1px solid rgba(244,244,242,.28);
+  background: transparent; color: var(--rg-paper);
+  transition: background .18s ease, border-color .18s ease;
+}
+.rg-oauth-btn:hover { background: rgba(244,244,242,.10); border-color: rgba(244,244,242,.5); }
+.rg-oauth-btn:disabled { opacity: .5; cursor: default; }
+.rg-oauth-btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
+
+.rg-divider {
+  display: flex; align-items: center; gap: 14px;
+  color: rgba(244,244,242,.4); font-size: 12px; letter-spacing: .08em;
+  text-transform: uppercase; margin: 22px 0;
+}
+.rg-divider::before, .rg-divider::after {
+  content: ""; flex: 1; height: 1px; background: rgba(244,244,242,.18);
+}
+
+.rg-field { margin-bottom: 14px; }
+.rg-label {
+  display: block; font-size: 13px; font-weight: 600;
+  color: rgba(244,244,242,.75); margin-bottom: 7px;
+}
+.rg-input {
+  width: 100%; font: inherit; font-size: 15px;
+  padding: 13px 15px; color: var(--rg-paper);
+  background: rgba(244,244,242,.06);
+  border: 1px solid rgba(244,244,242,.22); border-radius: 12px;
+  transition: border-color .18s ease, background .18s ease;
+}
+.rg-input::placeholder { color: rgba(244,244,242,.35); }
+.rg-input:focus {
+  outline: none; border-color: rgba(244,244,242,.7);
+  background: rgba(244,244,242,.09);
+}
+
+.rg-submit {
+  width: 100%; margin-top: 6px; padding: 14px 18px;
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  font-size: 15px; font-weight: 700; letter-spacing: .02em; cursor: pointer;
+  border-radius: 999px; border: none;
+  background: var(--rg-paper); color: var(--rg-ink);
+  transition: opacity .18s ease;
+}
+.rg-submit:hover { opacity: .9; }
+.rg-submit:disabled { opacity: .5; cursor: default; }
+
+.rg-switch {
+  text-align: center; font-size: 14px; margin-top: 20px;
+  color: rgba(244,244,242,.6);
+}
+.rg-switch button {
+  background: none; border: none; cursor: pointer; padding: 0;
+  font: inherit; font-weight: 600; color: var(--rg-paper);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+
+.rg-msg { font-size: 14px; margin: 0 0 16px; line-height: 1.4; }
+.rg-msg.err { color: #ff9d9d; }
+.rg-msg.ok  { color: #9de8b0; }
+
+/* ---------------------------------------------------------------------------
+   About — placeholder (content to be handed off later).
+--------------------------------------------------------------------------- */
+.rg-about-inner { max-width: 560px; text-align: center; }
+.rg-about-inner h1 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 500; font-size: 52px; line-height: 1.05; margin: 0 0 20px;
+  letter-spacing: -.02em;
+}
+.rg-about-inner p {
+  color: rgba(244,244,242,.62); font-size: 17px; line-height: 1.6; margin: 0 0 32px;
+}
