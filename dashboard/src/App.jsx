@@ -23,7 +23,7 @@ function NotConfigured() {
 // Top-level routing:
 //   /            → Landing (marketing hero) when logged out; Dashboard when logged in
 //   /about       → About (public placeholder)
-//   /login       → Auth (Google / Outlook / email + password); redirects home if logged in
+//   /login       → Auth (Google / email + password); redirects home if logged in
 //   everything else while logged in → Dashboard (its own nested routes)
 export default function App() {
   const { user, loading } = useAuth();

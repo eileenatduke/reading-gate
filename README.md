@@ -57,16 +57,16 @@ project settings. SPA routing rewrites are already configured
 one fixed dark theme. **Download Now** links to the extension (set
 `VITE_EXTENSION_URL` to your Chrome Web Store listing), **About** (`/about`) is a
 live placeholder awaiting copy, and **Log in / Sign up** (`/login`) offers
-**Google**, **Outlook**, and **email + password**. Once signed in, the dashboard
-loads — new users default to the **Mono (black & white)** theme and can pick any
-theme in **Settings**.
+**Google** and **email + password**. Once signed in, the dashboard loads — new
+users default to the **Mono (black & white)** theme and can pick any theme in
+**Settings**.
 
-> To enable the social buttons, turn on the matching providers in Supabase
-> (**Authentication → Providers**): **Google** and **Azure** (for Outlook /
-> Microsoft accounts). Add your dashboard URL to the provider's redirect list and
-> to Supabase's **URL Configuration → Redirect URLs**. Until a provider is
-> enabled, its button returns a "provider is not enabled" error; email + password
-> works out of the box.
+> To enable the Google button, turn on the **Google** provider in Supabase
+> (**Authentication → Providers**) with a Google OAuth client ID/secret, and add
+> the Supabase callback URL to the Google client's authorized redirect URIs. Until
+> it's enabled, the button returns a "provider is not enabled" error; email +
+> password works out of the box. (An Outlook/Azure button can be added later the
+> same way — it's config-only.)
 
 ### 3. Extension
 1. Chrome/Edge/Brave → `chrome://extensions` → enable **Developer mode** → **Load

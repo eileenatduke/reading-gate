@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase.js";
 
-// Brand glyphs for the OAuth buttons (inline so there's no asset/CSP dependency).
+// Brand glyph for the Google button (inline so there's no asset/CSP dependency).
 function GoogleIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -10,16 +10,6 @@ function GoogleIcon() {
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.99.66-2.26 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" />
       <path fill="#FBBC05" d="M5.84 14.11a6.6 6.6 0 0 1 0-4.22V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.84z" />
       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.05l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z" />
-    </svg>
-  );
-}
-function OutlookIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="#0A2767" d="M23 6.5v11c0 .55-.45 1-1 1h-8.5V5.5H22c.55 0 1 .45 1 1z" />
-      <path fill="#0364B8" d="M23 7l-9 5.5L9 9.5 23 7z" opacity=".9" />
-      <rect x="1" y="4" width="13" height="16" rx="1.2" fill="#0078D4" />
-      <path fill="#fff" d="M7.5 8.4c-1.9 0-3.2 1.5-3.2 3.6s1.3 3.6 3.2 3.6 3.2-1.5 3.2-3.6S9.4 8.4 7.5 8.4zm0 5.7c-1 0-1.7-.9-1.7-2.1s.7-2.1 1.7-2.1 1.7.9 1.7 2.1-.7 2.1-1.7 2.1z" />
     </svg>
   );
 }
@@ -55,14 +45,15 @@ export default function Login() {
     }
   }
 
-  async function oauth(provider) {
+  async function signInWithGoogle() {
     clear(); setBusy(true);
     try {
-      const opts = { redirectTo: window.location.origin };
-      if (provider === "azure") opts.scopes = "email openid profile";
-      const { error } = await supabase.auth.signInWithOAuth({ provider, options: opts });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
+      });
       if (error) throw error;
-      // Redirects away to the provider; nothing more to do here.
+      // Redirects away to Google; nothing more to do here.
     } catch (e2) {
       setErr(e2.message);
       setBusy(false);
@@ -85,11 +76,8 @@ export default function Login() {
           {msg && <p className="rg-msg ok">{msg}</p>}
 
           <div className="rg-oauth">
-            <button type="button" className="rg-oauth-btn" disabled={busy} onClick={() => oauth("google")}>
+            <button type="button" className="rg-oauth-btn" disabled={busy} onClick={signInWithGoogle}>
               <GoogleIcon /> Continue with Google
-            </button>
-            <button type="button" className="rg-oauth-btn" disabled={busy} onClick={() => oauth("azure")}>
-              <OutlookIcon /> Continue with Outlook
             </button>
           </div>
 
