@@ -16,7 +16,8 @@ function buildChart(weeks) {
   const n = weeks.length;
   const max = niceMax(Math.max(...weeks.map((w) => w.total), 1));
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(max * f));
-  const VBW = 560, VBH = 210, padT = 16, padB = 30, padL = 34, padR = 8;
+  // Wider left padding so the numeric ticks clear the rotated axis label.
+  const VBW = 560, VBH = 210, padT = 16, padB = 30, padL = 56, padR = 8;
   const plotW = VBW - padL - padR, plotH = VBH - padT - padB, baseY = padT + plotH;
   const slot = plotW / n, bw = Math.min(slot * 0.5, 30);
   const cx = (i) => padL + slot * i + slot / 2;
@@ -24,19 +25,40 @@ function buildChart(weeks) {
   ticks.forEach((t, i) => {
     const y = baseY - (t / max) * plotH;
     els.push(h("line", { key: "g" + i, x1: padL, y1: y, x2: padL + plotW, y2: y, strokeWidth: 1, strokeDasharray: t === 0 ? "0" : "3 4", style: { stroke: "var(--grid)" } }));
-    els.push(h("text", { key: "t" + i, x: padL - 8, y: y + 3.5, textAnchor: "end", fontSize: 10, fontFamily: "'Instrument Sans',sans-serif", style: { fill: "var(--muted)" } }, "" + t));
+    els.push(h("text", { key: "t" + i, x: padL - 12, y: y + 3.5, textAnchor: "end", fontSize: 10, fontFamily: "'Instrument Sans',sans-serif", style: { fill: "var(--muted)" } }, "" + t));
   });
   weeks.forEach((d, i) => {
     const tot = d.completed + d.bailed;
     if (tot > 0) {
-      const bh = (tot / max) * plotH, ch = (d.completed / max) * plotH;
-      els.push(h("rect", { key: "bb" + i, x: cx(i) - bw / 2, y: baseY - bh, width: bw, height: bh - ch, rx: 4, style: { fill: "var(--faint)" } }));
-      els.push(h("rect", { key: "cc" + i, x: cx(i) - bw / 2, y: baseY - ch, width: bw, height: Math.max(ch, 2), rx: 3, style: { fill: "var(--bar-main)" } }));
+      const bh = (tot / max) * plotH;
+      const ch = d.completed > 0 ? Math.max((d.completed / max) * plotH, 2) : 0;
+      const bH = bh - ch;
+      const x = cx(i) - bw / 2, rr = 4;
+      // One continuous bar, two colors: bailed on top (rounds the bar's top), completed
+      // at the bottom (rounds the bar's bottom); they meet on a flat edge. Corners round
+      // only where they're the true outer edge, so a stack reads as a single bar.
+      if (bH > 0) {
+        els.push(h("path", { key: "bb" + i, d: barPath(x, baseY - bh, bw, bH, rr, ch > 0 ? 0 : rr), style: { fill: "var(--faint)" } }));
+      }
+      if (ch > 0) {
+        els.push(h("path", { key: "cc" + i, d: barPath(x, baseY - ch, bw, ch, bH > 0 ? 0 : rr, rr), style: { fill: "var(--bar-main)" } }));
+      }
     }
     els.push(h("text", { key: "xl" + i, x: cx(i), y: baseY + 16, textAnchor: "middle", fontSize: 9.5, fontFamily: "'Instrument Sans',sans-serif", style: { fill: "var(--muted)" } }, d.label));
   });
   els.push(h("text", { key: "axl", x: 12, y: padT + plotH / 2, textAnchor: "middle", fontSize: 9, letterSpacing: ".08em", fontFamily: "'Instrument Sans',sans-serif", transform: "rotate(-90 12 " + (padT + plotH / 2) + ")", style: { fill: "var(--muted)" } }, "GATE TRIGGERS / WEEK"));
   return h("svg", { viewBox: "0 0 " + VBW + " " + VBH, width: "100%", style: { display: "block", height: "auto", overflow: "visible" } }, els);
+}
+
+// Rounded-rect path with independent top/bottom corner radii, so stacked segments can
+// round only their outer corners and meet flush in the middle.
+function barPath(x, y, w, hh, rTop, rBot) {
+  const rt0 = Math.min(rTop, w / 2), rb0 = Math.min(rBot, w / 2);
+  const lim = rt0 > 0 && rb0 > 0 ? hh / 2 : hh;
+  const rt = Math.max(0, Math.min(rt0, lim));
+  const rb = Math.max(0, Math.min(rb0, lim));
+  return `M ${x} ${y + rt} Q ${x} ${y} ${x + rt} ${y} L ${x + w - rt} ${y} Q ${x + w} ${y} ${x + w} ${y + rt} `
+    + `L ${x + w} ${y + hh - rb} Q ${x + w} ${y + hh} ${x + w - rb} ${y + hh} L ${x + rb} ${y + hh} Q ${x} ${y + hh} ${x} ${y + hh - rb} Z`;
 }
 
 function spark(vals) {

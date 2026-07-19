@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { fetchReadingLog, fetchImpulseLog, impulsesThisWeek, currentStreak } from "../lib/data.js";
 import PaperStatCard from "../components/paper/PaperStatCard.jsx";
 import PaperArticlesChart from "../components/paper/PaperArticlesChart.jsx";
@@ -14,7 +13,6 @@ export default function Overview() {
   const [reading, setReading] = useState(null);
   const [impulses, setImpulses] = useState([]);
   const [err, setErr] = useState("");
-  const nav = useNavigate();
 
   useEffect(() => {
     Promise.all([fetchReadingLog(), fetchImpulseLog()])
@@ -41,7 +39,7 @@ export default function Overview() {
           <div className="ov-statcol">
             <PaperStatCard value={reading.length} label="Articles read" />
             <PaperStatCard value={currentStreak(reading)} label="Day streak" />
-            <PaperStatCard value={impulsesThisWeek(impulses)} label="Impulses this week" hint="history →" onClick={() => nav("/impulses")} />
+            <PaperStatCard value={impulsesThisWeek(impulses)} label="Impulses this week" hint="history →" />
             <PaperStatCard value={impulses.length} label="Impulses all-time" />
           </div>
           <PaperCrossoverChart impulses={impulses} />
