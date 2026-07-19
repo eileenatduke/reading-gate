@@ -111,6 +111,34 @@ button { font-family: inherit; }
 .stars-inline { color: var(--accent); letter-spacing: 1px; }
 .stars-inline .off { color: var(--border); }
 
+/* ---- Overview: warm-paper design (Reading Gate Dashboard.dc.html) ---- */
+/* Full-bleeds over the themed .main padding so the paper background reaches the edges. */
+.overview-paper {
+  margin: -38px -46px -60px; min-height: 100vh; background: #eae5db;
+  padding: 40px 32px 64px; display: flex; justify-content: center;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
+}
+.overview-shell {
+  width: 100%; max-width: 1180px; background: #f4f2ec;
+  border: 1px solid #e2ddd2; border-radius: 28px; padding: 36px 40px 40px;
+}
+.overview-paper .ov-label {
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  color: #8b877d; font-weight: 600; margin: 0 0 12px;
+}
+.ov-progress { display: grid; grid-template-columns: 1fr 300px; gap: 16px; margin-bottom: 30px; align-items: stretch; }
+.ov-statcol { display: grid; grid-template-rows: repeat(4, 1fr); gap: 12px; }
+.ov-habits { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: stretch; }
+@media (max-width: 1024px) {
+  .ov-progress { grid-template-columns: 1fr; }
+  .ov-statcol { grid-template-rows: none; grid-template-columns: repeat(2, 1fr); }
+  .ov-habits { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .overview-paper { margin: -24px -18px -50px; padding: 28px 16px 44px; }
+  .overview-shell { padding: 24px 20px 28px; }
+}
+
 /* ---- misc ---- */
 .muted { color: var(--muted); }
 .faint { color: var(--faint); }

@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchReadingLog, fetchImpulseLog, impulsesThisWeek, currentStreak } from "../lib/data.js";
-import StatCard from "../components/StatCard.jsx";
-import ArticleCountChart from "../components/ArticleCountChart.jsx";
-import GenreChart from "../components/GenreChart.jsx";
-import Heatmap from "../components/Heatmap.jsx";
-import SerendipityCard from "../components/SerendipityCard.jsx";
-import SourceScorecard from "../components/SourceScorecard.jsx";
+import PaperStatCard from "../components/paper/PaperStatCard.jsx";
+import PaperArticlesChart from "../components/paper/PaperArticlesChart.jsx";
+import PaperCrossoverChart from "../components/paper/PaperCrossoverChart.jsx";
+import PaperGenreBars from "../components/paper/PaperGenreBars.jsx";
+import PaperImpulseHistory from "../components/paper/PaperImpulseHistory.jsx";
+import PaperHeatmap from "../components/paper/PaperHeatmap.jsx";
 
+// Overview — warm-paper design ported from the Claude Design project
+// "Reading Gate Dashboard.dc.html", wired to real Supabase data.
 export default function Overview() {
   const [reading, setReading] = useState(null);
   const [impulses, setImpulses] = useState([]);
@@ -26,35 +28,32 @@ export default function Overview() {
   if (reading === null) return <div className="loading">Loading…</div>;
 
   return (
-    <>
-      <div className="page-head">
-        <div>
-          <h1 className="page-title">Overview</h1>
-          <p className="page-sub">Your reading, at a glance.</p>
+    <div className="overview-paper">
+      <div className="overview-shell">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 26 }}>
+          <h1 style={{ margin: 0, fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 40, lineHeight: 1, color: "#1b1a17" }}>Overview</h1>
+          <div style={{ fontSize: 14, color: "#8b877d" }}>{today}</div>
         </div>
-        <div style={{ textAlign: "right", color: "var(--faint)", fontSize: 13 }}>
-          <div style={{ fontWeight: 600, color: "var(--muted)", fontSize: 14 }}>{today}</div>
+
+        <div className="ov-label">Your progress</div>
+        <div className="ov-progress">
+          <PaperArticlesChart reading={reading} />
+          <div className="ov-statcol">
+            <PaperStatCard value={reading.length} label="Articles read" />
+            <PaperStatCard value={currentStreak(reading)} label="Day streak" />
+            <PaperStatCard value={impulsesThisWeek(impulses)} label="Impulses this week" hint="history →" onClick={() => nav("/impulses")} />
+            <PaperStatCard value={impulses.length} label="Impulses all-time" />
+          </div>
+          <PaperCrossoverChart impulses={impulses} />
+          <PaperGenreBars reading={reading} />
+        </div>
+
+        <div className="ov-label">Habits</div>
+        <div className="ov-habits">
+          <PaperImpulseHistory impulses={impulses} />
+          <PaperHeatmap impulses={impulses} />
         </div>
       </div>
-
-      <div className="grid stats">
-        <StatCard value={impulsesThisWeek(impulses)} label="Impulses this week" delta="history →" deltaAccent onClick={() => nav("/impulses")} />
-        <StatCard value={currentStreak(reading)} label="Day streak" />
-        <StatCard value={reading.length} label="Articles read" />
-        <StatCard value={impulses.length} label="Impulses all-time" />
-      </div>
-
-      <ArticleCountChart reading={reading} />
-
-      <div className="grid bottom" style={{ marginBottom: 20 }}>
-        <GenreChart reading={reading} />
-        <Heatmap impulses={impulses} />
-      </div>
-
-      <div className="grid bottom" style={{ marginBottom: 20 }}>
-        <SerendipityCard reading={reading} />
-        <SourceScorecard reading={reading} />
-      </div>
-    </>
+    </div>
   );
 }

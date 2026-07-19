@@ -129,6 +129,45 @@ export function articleCountSeries(reading, period = "week") {
   });
 }
 
+// ---------- crossover: kept reading vs. went to site ----------
+// Buckets impulses into "kept" (completed the gate → read the article) vs "site"
+// (bailed → went to the distracting site), over the selected window. Mirrors the
+// article-count bucketing: week → 7 days, month → weeks of the month, year → 12 months.
+export function crossoverSeries(impulses, range = "week") {
+  const now = new Date();
+  const out = [];
+  const push = (label, d0, d1) => {
+    let kept = 0, site = 0;
+    for (const i of impulses) {
+      const t = new Date(i.created_at);
+      if (t >= d0 && t < d1) (i.completed ? kept++ : site++);
+    }
+    out.push({ label, kept, site });
+  };
+
+  if (range === "year") {
+    const y = now.getFullYear();
+    const short = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    for (let m = 0; m < 12; m++) push(short[m], new Date(y, m, 1), new Date(y, m + 1, 1));
+  } else if (range === "month") {
+    const y = now.getFullYear(), m = now.getMonth();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    let wk = 1;
+    for (let day = 1; day <= daysInMonth; day += 7, wk++) {
+      push("W" + wk, new Date(y, m, day), new Date(y, m, Math.min(day + 7, daysInMonth + 1)));
+    }
+  } else {
+    const start = startOfWeek(now);
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    for (let i = 0; i < 7; i++) {
+      const d0 = new Date(start); d0.setDate(start.getDate() + i);
+      const d1 = new Date(d0); d1.setDate(d0.getDate() + 1);
+      push(days[i], d0, d1);
+    }
+  }
+  return out;
+}
+
 // ---------- genre distribution ----------
 export function genreDistribution(reading) {
   const m = new Map();
