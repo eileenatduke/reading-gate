@@ -11,7 +11,9 @@ const TIME_LABELS = ["12a", "", "", "6a", "", "", "12p", "", "", "6p", "", ""];
 // but with CSS variables so it re-themes without a re-render.
 function ramp(r) {
   if (r <= 0.5) return `color-mix(in srgb, var(--accent) ${(r / 0.5 * 100).toFixed(1)}%, #ffffff)`;
-  return `color-mix(in srgb, var(--text) ${((r - 0.5) / 0.5 * 100).toFixed(1)}%, var(--accent))`;
+  // Dark end defaults to the heading color; solid themes set --heat-dark to a dark shade
+  // of the accent so the heatmap stays in one (brand) color family.
+  return `color-mix(in srgb, var(--heat-dark, var(--text)) ${((r - 0.5) / 0.5 * 100).toFixed(1)}%, var(--accent))`;
 }
 
 export default function PaperHeatmap({ impulses }) {

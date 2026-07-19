@@ -10,10 +10,13 @@ export const THEMES = {
   glassPurple: { group:'glass', name:'Blue violet', swatch:'#6c7ef0', appBg:'radial-gradient(720px 520px at 14% 6%, #eef0fe 0%, #eef0fe00 60%), radial-gradient(700px 560px at 92% 8%, #ffffff 0%, #ffffff00 58%), radial-gradient(760px 640px at 72% 100%, #dee2fd 0%, #dee2fd00 62%), linear-gradient(160deg,#f5f6ff 0%,#e9ecfe 100%)', surface:'rgba(222,226,253,.62)', surface2:'rgba(200,207,250,.5)', border:'rgba(255,255,255,.32)', text:'#28306a', muted:'#5a67a3', faint:'#97a1cf', accent:'#6c7ef0', accentRgb:'108,126,240', accent2:'#8a8ff2', grid:'rgba(40,48,106,.11)', shadow:'0 2px 5px -2px rgba(38,40,60,.14), 0 12px 24px -10px rgba(38,40,60,.22), 0 30px 56px -24px rgba(38,40,60,.30), inset 0 1.5px 0 rgba(255,255,255,.98), inset 0 0 0 1px rgba(255,255,255,.38), inset 0 16px 30px -18px rgba(255,255,255,.72), inset 0 -18px 30px -26px rgba(30,30,50,.12)', blur:'blur(6px) saturate(1.7)', tipBg:'rgba(255,255,255,.8)', tipText:'#28306a' },
   glassGreen:  { group:'glass', name:'Emerald', swatch:'#5ccf9c', appBg:'radial-gradient(720px 520px at 14% 6%, #e3f0e8 0%, #e3f0e800 60%), radial-gradient(700px 560px at 92% 8%, #f4f6f4 0%, #f4f6f400 58%), radial-gradient(760px 640px at 72% 100%, #d5ecdd 0%, #d5ecdd00 62%), linear-gradient(160deg,#eef4f0 0%,#e3ede7 100%)', surface:'rgba(182,231,207,.66)', surface2:'rgba(162,223,193,.56)', border:'rgba(255,255,255,.32)', text:'#1c4530', muted:'#5c8069', faint:'#96b8a2', accent:'#5ccf9c', accentRgb:'92,207,156', accent2:'#7ad0b5', grid:'rgba(28,69,48,.11)', shadow:'0 2px 5px -2px rgba(38,40,60,.14), 0 12px 24px -10px rgba(38,40,60,.22), 0 30px 56px -24px rgba(38,40,60,.30), inset 0 1.5px 0 rgba(255,255,255,.98), inset 0 0 0 1px rgba(255,255,255,.38), inset 0 16px 30px -18px rgba(255,255,255,.72), inset 0 -18px 30px -26px rgba(30,30,50,.12)', blur:'blur(6px) saturate(1.7)', tipBg:'rgba(255,255,255,.8)', tipText:'#1c4530' },
 
-  solidButter: { group:'solid', name:'Butter', swatch:'#ffedac', swatch2:'#3E2723', appBg:'linear-gradient(160deg,#fff2c2 0%,#ffedac 100%)', surface:'#fff7d6', surface2:'#ffe79a', border:'#e7d199', text:'#3E2723', muted:'#6f5850', faint:'#a08b7f', accent:'#3E2723', accentRgb:'62,39,35', accent2:'#5b3f37', grid:'rgba(62,39,35,.12)', shadow:'none', blur:'none', tipBg:'#fff7d6', tipText:'#3E2723' },
-  solidHotpink:{ group:'solid', name:'Hot pink', swatch:'#ffe1ef', swatch2:'#ff2d8e', appBg:'#ffe1ef', surface:'#ffffff', surface2:'#ffd6ec', border:'#ffbdde', text:'#5a1236', muted:'#a1476f', faint:'#d18aab', accent:'#ff2d8e', accentRgb:'255,45,142', accent2:'#a626d3', grid:'rgba(90,18,54,.1)', shadow:'none', blur:'none', tipBg:'#ffffff', tipText:'#5a1236' },
-  solidNavy:   { group:'solid', name:'Ice & blaze', swatch:'#bfedff', swatch2:'#fd6c01', appBg:'linear-gradient(160deg,#d4f2ff 0%,#bfedff 100%)', surface:'#eefaff', surface2:'#d4f0fb', border:'#a6dcf0', text:'#5a2600', muted:'#95643a', faint:'#c19a76', accent:'#fd6c01', accentRgb:'253,108,1', accent2:'#e35d00', grid:'rgba(90,38,0,.12)', shadow:'none', blur:'none', tipBg:'#ffffff', tipText:'#5a2600' },
-  solidRuby:   { group:'solid', name:'Deep ruby', swatch:'#dfffdb', swatch2:'#a30b3a', appBg:'linear-gradient(160deg,#eafff0 0%,#dfffdb 100%)', surface:'#f0fff0', surface2:'#d3f7cf', border:'#bfeaba', text:'#5c0722', muted:'#8a3b53', faint:'#bd8598', accent:'#a30b3a', accentRgb:'163,11,58', accent2:'#7d0a30', grid:'rgba(92,7,34,.12)', shadow:'none', blur:'none', tipBg:'#ffffff', tipText:'#5c0722' },
+  // Solid themes trimmed to four roles (dominant / ink / brand / standout). Ink is a
+  // neutral tuned to each theme (no competing third hue), `faint` is the muted secondary
+  // data color, and `heatDark` keeps the heatmap ramp in the brand family.
+  solidButter: { group:'solid', name:'Butter', swatch:'#ffedac', swatch2:'#B5661C', appBg:'linear-gradient(160deg,#fff2c2 0%,#ffedac 100%)', surface:'#fff7d6', surface2:'#ffe79a', border:'#e7d199', text:'#3E2723', muted:'#7c6a54', faint:'#d8bd84', accent:'#B5661C', accentRgb:'181,102,28', accent2:'#8f5015', grid:'rgba(62,39,35,.12)', heatDark:'#6E3D0C', shadow:'none', blur:'none', tipBg:'#fff7d6', tipText:'#3E2723' },
+  solidHotpink:{ group:'solid', name:'Hot pink', swatch:'#ffe1ef', swatch2:'#ff2d8e', appBg:'#ffe1ef', surface:'#ffffff', surface2:'#ffd6ec', border:'#ffbdde', text:'#5a1236', muted:'#9e4f74', faint:'#f3a6c6', accent:'#ff2d8e', accentRgb:'255,45,142', accent2:'#d81f6f', grid:'rgba(90,18,54,.1)', heatDark:'#a5115b', shadow:'none', blur:'none', tipBg:'#ffffff', tipText:'#5a1236' },
+  solidNavy:   { group:'solid', name:'Ice & blaze', swatch:'#bfedff', swatch2:'#fd6c01', appBg:'linear-gradient(160deg,#d4f2ff 0%,#bfedff 100%)', surface:'#eefaff', surface2:'#dceff9', border:'#a9dcef', text:'#123047', muted:'#4f7186', faint:'#a9cede', accent:'#fd6c01', accentRgb:'253,108,1', accent2:'#e35d00', grid:'rgba(18,48,71,.10)', heatDark:'#b24b00', shadow:'none', blur:'none', tipBg:'#ffffff', tipText:'#123047' },
+  solidRuby:   { group:'solid', name:'Deep ruby', swatch:'#dfffdb', swatch2:'#a30b3a', appBg:'linear-gradient(160deg,#eafff0 0%,#dfffdb 100%)', surface:'#f0fff0', surface2:'#dff5db', border:'#bfeaba', text:'#4a1024', muted:'#8a5266', faint:'#e6becb', accent:'#a30b3a', accentRgb:'163,11,58', accent2:'#7d0a30', grid:'rgba(74,16,36,.10)', heatDark:'#6e0726', shadow:'none', blur:'none', tipBg:'#ffffff', tipText:'#4a1024' },
   solidMono:   { group:'solid', name:'Mono', swatch:'#ffffff', swatch2:'#3f3f3f', appBg:'#f7f7f5', surface:'#ffffff', surface2:'#f0f0ee', border:'#e3e3e0', text:'#161615', muted:'#6a6a66', faint:'#a3a39e', accent:'#161615', accentRgb:'22,22,21', accent2:'#8a8a85', grid:'rgba(0,0,0,.08)', shadow:'none', blur:'none', tipBg:'#ffffff', tipText:'#161615' },
 };
 
@@ -92,11 +95,16 @@ export function computeVars(key, { rimLight = 72, rimBR = 56 } = {}) {
     '--line': glass ? '#ffffff' : mix(t.accent, 34, '#ffffff'),
     '--dot': glass ? mix(t.accent, 22, '#ffffff') : '#ffffff',
     '--bar-main': glass ? `color-mix(in srgb, ${t.accent} 70%, ${t.text} 30%)` : t.accent,
-    '--axis-left': glass ? t.text : t.accent,
-    '--axis-right': glass ? t.text : mix(t.accent, 55, t.text),
+    // Solid axis labels use the neutral ink (not the accent) to keep color minimal.
+    '--axis-left': glass ? t.text : t.muted,
+    '--axis-right': glass ? t.text : t.muted,
     '--hlabel': glass ? t.text : t.faint,
-    '--track': glass ? (key === 'glassPink' ? '#ffffff' : mix(t.accent, 12, '#ffffff')) : t.surface2,
+    // Solid genre tracks are a light tint of the brand so the bar stays one color.
+    '--track': glass ? (key === 'glassPink' ? '#ffffff' : mix(t.accent, 12, '#ffffff')) : mix(t.accent, 14, '#ffffff'),
     '--xlabel': glass ? t.text : t.muted,
+    // Heatmap ramp's dark endpoint: solid themes darken the accent (stay in one hue);
+    // glass themes keep the heading color, as before.
+    '--heat-dark': t.heatDark || t.text,
     ...rim,
   };
 }
