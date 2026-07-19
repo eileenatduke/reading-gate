@@ -1,17 +1,15 @@
-// "Kept reading vs. went to site" — ported from CrossoverChart.dc.html.
-// kept = completed gates (read the article); site = bailed (went to the distracting
-// site). Two smooth lines (share % or raw count) with a crossover marker, fed by the
-// real crossoverSeries helper over week / month / year.
+// "Kept reading vs. went to site" — layout from CrossoverChart.dc.html, colors from the
+// app theme. kept = completed gates (read the article); site = bailed (went to the
+// distracting site). Two smooth lines (share % or count) with a crossover marker, over
+// week / month / year. SVG colors use CSS variables via `style` so it follows the theme.
 import { useMemo, useState, createElement as h } from "react";
 import { crossoverSeries } from "../../lib/data.js";
-
-const INK = "#1b1a17", NEUTRAL = "#bdb8ab", MUTED = "#8b877d";
 
 function seg(active) {
   return {
     padding: "6px 13px", fontFamily: "'Instrument Sans',sans-serif", fontSize: 12.5, fontWeight: active ? 600 : 500,
-    border: "none", borderRadius: 999, cursor: "pointer", background: active ? INK : "transparent",
-    color: active ? "#fff" : MUTED, transition: "all .15s", lineHeight: 1.2, whiteSpace: "nowrap",
+    border: "none", borderRadius: 999, cursor: "pointer", background: active ? "var(--accent)" : "transparent",
+    color: active ? "#fff" : "var(--muted)", transition: "all .15s", lineHeight: 1.2, whiteSpace: "nowrap",
   };
 }
 
@@ -44,7 +42,6 @@ function smooth(pts) {
 }
 
 function buildPlot(data, mode) {
-  const grid = "rgba(40,35,20,.09)";
   const n = data.length;
   const VBW = 620, VBH = 250, padT = 16, padB = 28, padL = 26, padR = 30;
   const plotW = VBW - padL - padR, plotH = VBH - padT - padB, baseY = padT + plotH;
@@ -53,7 +50,7 @@ function buildPlot(data, mode) {
   const els = [];
   [0, 0.25, 0.5, 0.75, 1].forEach((f, gi) => {
     const y = padT + f * plotH;
-    els.push(h("line", { key: "g" + gi, x1: padL, y1: y, x2: padL + plotW, y2: y, stroke: grid, strokeWidth: 1 }));
+    els.push(h("line", { key: "g" + gi, x1: padL, y1: y, x2: padL + plotW, y2: y, strokeWidth: 1, style: { stroke: "var(--grid)" } }));
   });
 
   let keptPts, sitePts;
@@ -65,8 +62,8 @@ function buildPlot(data, mode) {
     keptPts = data.map((d, i) => ({ x: X(i), y: baseY - (d.kept / maxV) * plotH }));
     sitePts = data.map((d, i) => ({ x: X(i), y: baseY - (d.site / maxV) * plotH }));
   }
-  els.push(h("path", { key: "sl", d: smooth(sitePts), fill: "none", stroke: NEUTRAL, strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round" }));
-  els.push(h("path", { key: "kl", d: smooth(keptPts), fill: "none", stroke: INK, strokeWidth: 2.8, strokeLinecap: "round", strokeLinejoin: "round" }));
+  els.push(h("path", { key: "sl", d: smooth(sitePts), strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round", style: { fill: "none", stroke: "var(--faint)" } }));
+  els.push(h("path", { key: "kl", d: smooth(keptPts), strokeWidth: 2.8, strokeLinecap: "round", strokeLinejoin: "round", style: { fill: "none", stroke: "var(--bar-main)" } }));
 
   for (let i = 0; i < n - 1; i++) {
     const a = data[i].kept - data[i].site, b = data[i + 1].kept - data[i + 1].site;
@@ -74,7 +71,7 @@ function buildPlot(data, mode) {
       const fr = (-a) / (b - a);
       const cx = X(i) + fr * (X(i + 1) - X(i));
       const cy = keptPts[i].y + fr * (keptPts[i + 1].y - keptPts[i].y);
-      els.push(h("circle", { key: "xo", cx, cy, r: 5.5, fill: "#ffffff", stroke: INK, strokeWidth: 2.5 }));
+      els.push(h("circle", { key: "xo", cx, cy, r: 5.5, strokeWidth: 2.5, style: { fill: "var(--dot)", stroke: "var(--accent)" } }));
       break;
     }
   }
@@ -82,8 +79,8 @@ function buildPlot(data, mode) {
   const yl = mode === "share"
     ? [{ f: 0, t: "0" }, { f: 0.5, t: "50%" }, { f: 1, t: "100%" }]
     : (() => { const maxV = Math.max(...data.map((d) => Math.max(d.kept, d.site)), 1); return [{ f: 0, t: "0" }, { f: 1, t: "" + maxV }]; })();
-  yl.forEach((L, li) => els.push(h("text", { key: "yl" + li, x: padL - 8, y: baseY - L.f * plotH + 3, textAnchor: "end", fontSize: 9.5, fill: MUTED, fontFamily: "'Instrument Sans',sans-serif" }, L.t)));
-  data.forEach((d, i) => els.push(h("text", { key: "xl" + i, x: X(i), y: baseY + 15, textAnchor: "middle", fontSize: 9.5, fill: MUTED, fontFamily: "'Instrument Sans',sans-serif" }, d.label)));
+  yl.forEach((L, li) => els.push(h("text", { key: "yl" + li, x: padL - 8, y: baseY - L.f * plotH + 3, textAnchor: "end", fontSize: 9.5, fontFamily: "'Instrument Sans',sans-serif", style: { fill: "var(--muted)" } }, L.t)));
+  data.forEach((d, i) => els.push(h("text", { key: "xl" + i, x: X(i), y: baseY + 15, textAnchor: "middle", fontSize: 9.5, fontFamily: "'Instrument Sans',sans-serif", style: { fill: "var(--xlabel)" } }, d.label)));
 
   return h("svg", { viewBox: "0 0 " + VBW + " " + VBH, width: "100%", style: { display: "block", height: "auto", overflow: "visible", marginTop: "2px" } }, els);
 }
@@ -95,33 +92,30 @@ export default function PaperCrossoverChart({ impulses }) {
   const copy = useMemo(() => computeCopy(data, range), [data, range]);
 
   return (
-    <div style={{
-      background: "#ffffff", border: "1px solid #e7e3db", borderRadius: 22, padding: "24px 26px 22px",
-      fontFamily: "'Instrument Sans',system-ui,sans-serif", boxShadow: "0 1px 2px rgba(30,25,15,.03)",
-    }}>
+    <div className="card" style={{ padding: "24px 26px 22px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 4 }}>
         <div style={{ minWidth: 220 }}>
-          <h2 style={{ margin: "0 0 8px", fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: INK }}>Kept reading vs. went to site</h2>
-          <span style={{ display: "inline-block", fontSize: 12.5, fontWeight: 600, color: "#5c584e", background: "#efece4", border: "1px solid #e5e1d7", borderRadius: 999, padding: "4px 11px" }}>{copy.trendText}</span>
+          <h2 style={{ margin: "0 0 8px", fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Kept reading vs. went to site</h2>
+          <span style={{ display: "inline-block", fontSize: 12.5, fontWeight: 600, color: "var(--muted)", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 999, padding: "4px 11px" }}>{copy.trendText}</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-          <div style={{ display: "inline-flex", background: "#ece9e1", borderRadius: 999, padding: 3, gap: 2 }}>
+          <div style={{ display: "inline-flex", background: "var(--surface-2)", borderRadius: 999, padding: 3, gap: 2 }}>
             <button type="button" onClick={() => setMode("share")} style={seg(mode === "share")}>Share&nbsp;%</button>
             <button type="button" onClick={() => setMode("count")} style={seg(mode === "count")}>Count</button>
           </div>
-          <div style={{ display: "inline-flex", background: "#ece9e1", borderRadius: 999, padding: 3, gap: 2 }}>
+          <div style={{ display: "inline-flex", background: "var(--surface-2)", borderRadius: 999, padding: 3, gap: 2 }}>
             {["week", "month", "year"].map((r) => (
               <button key={r} type="button" onClick={() => setRange(r)} style={seg(range === r)}>{r[0].toUpperCase() + r.slice(1)}</button>
             ))}
           </div>
         </div>
       </div>
-      <div style={{ fontSize: 14.5, color: INK, lineHeight: 1.4, margin: "14px 0 2px", maxWidth: 460 }}>
-        {copy.headlineText} <span style={{ color: "#5c584e", fontWeight: 600, whiteSpace: "nowrap" }}>{copy.deltaText}</span>
+      <div style={{ fontSize: 14.5, color: "var(--text)", lineHeight: 1.4, margin: "14px 0 2px", maxWidth: 460 }}>
+        {copy.headlineText} <span style={{ color: "var(--muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{copy.deltaText}</span>
       </div>
-      <div style={{ display: "flex", gap: 18, alignItems: "center", margin: "14px 0 8px", fontSize: 13, color: MUTED }}>
-        <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 16, height: 3, borderRadius: 2, background: INK, display: "inline-block" }} />Kept reading</span>
-        <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 16, height: 3, borderRadius: 2, background: "#bdb8ab", display: "inline-block" }} />Went to site</span>
+      <div style={{ display: "flex", gap: 18, alignItems: "center", margin: "14px 0 8px", fontSize: 13, color: "var(--muted)" }}>
+        <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 16, height: 3, borderRadius: 2, background: "var(--bar-main)", display: "inline-block" }} />Kept reading</span>
+        <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 16, height: 3, borderRadius: 2, background: "var(--faint)", display: "inline-block" }} />Went to site</span>
       </div>
       <div>{buildPlot(data, mode)}</div>
     </div>

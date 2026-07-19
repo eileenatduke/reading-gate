@@ -31,8 +31,8 @@ export default function Overview() {
     <div className="overview-paper">
       <div className="overview-shell">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 26 }}>
-          <h1 style={{ margin: 0, fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 40, lineHeight: 1, color: "#1b1a17" }}>Overview</h1>
-          <div style={{ fontSize: 14, color: "#8b877d" }}>{today}</div>
+          <h1 style={{ margin: 0, fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 40, lineHeight: 1, color: "var(--text)" }}>Overview</h1>
+          <div style={{ fontSize: 14, color: "var(--muted)" }}>{today}</div>
         </div>
 
         <div className="ov-label">Your progress</div>

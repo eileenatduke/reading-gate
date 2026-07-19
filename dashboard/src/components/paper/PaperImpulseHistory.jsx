@@ -1,11 +1,9 @@
-// "Impulse history" (detail + trend) — ported from ImpulseHistory.dc.html.
-// Stacked weekly bars (completed vs bailed) + a metrics table with 8-week sparklines,
-// fed by the real impulseTrend helper. Bar axis scales to the data (design used a
-// fixed 52 cap).
+// "Impulse history" (detail + trend) — layout from ImpulseHistory.dc.html, colors from
+// the app theme. Stacked weekly bars (completed vs bailed) + a metrics table with
+// 8-week sparklines, fed by the real impulseTrend helper. SVG colors use CSS variables
+// via `style` so the panel follows the Settings theme.
 import { createElement as h } from "react";
 import { impulseTrend } from "../../lib/data.js";
-
-const INK = "#1b1a17", GREY = "#c6c1b4", MUTED = "#8b877d", RED = "#c1402f";
 
 function niceMax(m) {
   if (m <= 4) return Math.max(1, Math.ceil(m));
@@ -15,7 +13,6 @@ function niceMax(m) {
 }
 
 function buildChart(weeks) {
-  const grid = "rgba(40,35,20,.10)";
   const n = weeks.length;
   const max = niceMax(Math.max(...weeks.map((w) => w.total), 1));
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(max * f));
@@ -26,19 +23,19 @@ function buildChart(weeks) {
   const els = [];
   ticks.forEach((t, i) => {
     const y = baseY - (t / max) * plotH;
-    els.push(h("line", { key: "g" + i, x1: padL, y1: y, x2: padL + plotW, y2: y, stroke: grid, strokeWidth: 1, strokeDasharray: t === 0 ? "0" : "3 4" }));
-    els.push(h("text", { key: "t" + i, x: padL - 8, y: y + 3.5, textAnchor: "end", fontSize: 10, fill: MUTED, fontFamily: "'Instrument Sans',sans-serif" }, "" + t));
+    els.push(h("line", { key: "g" + i, x1: padL, y1: y, x2: padL + plotW, y2: y, strokeWidth: 1, strokeDasharray: t === 0 ? "0" : "3 4", style: { stroke: "var(--grid)" } }));
+    els.push(h("text", { key: "t" + i, x: padL - 8, y: y + 3.5, textAnchor: "end", fontSize: 10, fontFamily: "'Instrument Sans',sans-serif", style: { fill: "var(--muted)" } }, "" + t));
   });
   weeks.forEach((d, i) => {
     const tot = d.completed + d.bailed;
     if (tot > 0) {
       const bh = (tot / max) * plotH, ch = (d.completed / max) * plotH;
-      els.push(h("rect", { key: "bb" + i, x: cx(i) - bw / 2, y: baseY - bh, width: bw, height: bh - ch, rx: 4, fill: GREY }));
-      els.push(h("rect", { key: "cc" + i, x: cx(i) - bw / 2, y: baseY - ch, width: bw, height: Math.max(ch, 2), rx: 3, fill: INK }));
+      els.push(h("rect", { key: "bb" + i, x: cx(i) - bw / 2, y: baseY - bh, width: bw, height: bh - ch, rx: 4, style: { fill: "var(--faint)" } }));
+      els.push(h("rect", { key: "cc" + i, x: cx(i) - bw / 2, y: baseY - ch, width: bw, height: Math.max(ch, 2), rx: 3, style: { fill: "var(--bar-main)" } }));
     }
-    els.push(h("text", { key: "xl" + i, x: cx(i), y: baseY + 16, textAnchor: "middle", fontSize: 9.5, fill: MUTED, fontFamily: "'Instrument Sans',sans-serif" }, d.label));
+    els.push(h("text", { key: "xl" + i, x: cx(i), y: baseY + 16, textAnchor: "middle", fontSize: 9.5, fontFamily: "'Instrument Sans',sans-serif", style: { fill: "var(--muted)" } }, d.label));
   });
-  els.push(h("text", { key: "axl", x: 12, y: padT + plotH / 2, textAnchor: "middle", fontSize: 9, fill: MUTED, letterSpacing: ".08em", fontFamily: "'Instrument Sans',sans-serif", transform: "rotate(-90 12 " + (padT + plotH / 2) + ")" }, "GATE TRIGGERS / WEEK"));
+  els.push(h("text", { key: "axl", x: 12, y: padT + plotH / 2, textAnchor: "middle", fontSize: 9, letterSpacing: ".08em", fontFamily: "'Instrument Sans',sans-serif", transform: "rotate(-90 12 " + (padT + plotH / 2) + ")", style: { fill: "var(--muted)" } }, "GATE TRIGGERS / WEEK"));
   return h("svg", { viewBox: "0 0 " + VBW + " " + VBH, width: "100%", style: { display: "block", height: "auto", overflow: "visible" } }, els);
 }
 
@@ -51,29 +48,29 @@ function spark(vals) {
   for (let i = 1; i < n; i++) d += " L " + x(i) + " " + y(vals[i]);
   const area = d + " L " + x(n - 1) + " " + (H - pad) + " L " + x(0) + " " + (H - pad) + " Z";
   return h("svg", { viewBox: "0 0 " + W + " " + H, width: W, height: H, style: { display: "block" } }, [
-    h("path", { key: "a", d: area, fill: "rgba(27,26,23,.08)" }),
-    h("path", { key: "l", d, fill: "none", stroke: INK, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }),
+    h("path", { key: "a", d: area, style: { fill: "rgba(var(--accent-rgb),.12)" } }),
+    h("path", { key: "l", d, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", style: { fill: "none", stroke: "var(--accent)" } }),
   ]);
 }
 
 function fmtDelta(m) {
-  if (m.delta == null) return { text: "—", color: MUTED };
+  if (m.delta == null) return { text: "—", color: "var(--muted)" };
   const bad = m.goodWhenDown ? m.delta > 0 : m.delta < 0;
   const sign = m.delta >= 0 ? "+" : "";
-  return { text: sign + m.delta + (m.unit === "pp" ? "pp" : ""), color: bad ? RED : INK };
+  return { text: sign + m.delta + (m.unit === "pp" ? "pp" : ""), color: bad ? "var(--danger)" : "var(--text)" };
 }
 
 function buildMetrics(metrics) {
   const cols = "1.3fr .7fr .8fr 1fr";
   const labels = ["Gate triggers", "Read through", "Follow-through"];
-  const hd = (t, al) => h("div", { key: t, style: { fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: MUTED, fontWeight: 600, textAlign: al || "left" } }, t);
-  const head = h("div", { key: "h", style: { display: "grid", gridTemplateColumns: cols, gap: 10, alignItems: "center", paddingBottom: 10, borderBottom: "1px solid #e3ded4" } },
+  const hd = (t, al) => h("div", { key: t, style: { fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)", fontWeight: 600, textAlign: al || "left" } }, t);
+  const head = h("div", { key: "h", style: { display: "grid", gridTemplateColumns: cols, gap: 10, alignItems: "center", paddingBottom: 10, borderBottom: "1px solid var(--border)" } },
     [hd("Metric"), hd("This wk", "right"), hd("Vs last", "right"), hd("8-wk trend", "right")]);
   const body = metrics.map((m, i) => {
     const del = fmtDelta(m);
-    return h("div", { key: "r" + i, style: { display: "grid", gridTemplateColumns: cols, gap: 10, alignItems: "center", padding: "16px 0", borderBottom: i < metrics.length - 1 ? "1px solid #ece7dd" : "none" } }, [
-      h("div", { key: "m", style: { fontSize: 14, color: INK, fontWeight: 500, lineHeight: 1.15 } }, labels[i] || m.name),
-      h("div", { key: "v", style: { fontFamily: "'Instrument Serif',serif", fontSize: 27, color: INK, textAlign: "right", lineHeight: 1 } }, "" + m.value),
+    return h("div", { key: "r" + i, style: { display: "grid", gridTemplateColumns: cols, gap: 10, alignItems: "center", padding: "16px 0", borderBottom: i < metrics.length - 1 ? "1px solid var(--border)" : "none" } }, [
+      h("div", { key: "m", style: { fontSize: 14, color: "var(--text)", fontWeight: 500, lineHeight: 1.15 } }, labels[i] || m.name),
+      h("div", { key: "v", style: { fontFamily: "'Instrument Serif',serif", fontSize: 27, color: "var(--text)", textAlign: "right", lineHeight: 1 } }, "" + m.value),
       h("div", { key: "d", style: { fontSize: 13, fontWeight: 600, color: del.color, textAlign: "right" } }, del.text),
       h("div", { key: "s", style: { display: "flex", justifyContent: "flex-end" } }, spark(m.series)),
     ]);
@@ -85,23 +82,20 @@ export default function PaperImpulseHistory({ impulses }) {
   const { weeks, metrics } = impulseTrend(impulses, 8);
 
   return (
-    <div style={{
-      background: "#ffffff", border: "1px solid #e7e3db", borderRadius: 22, padding: "24px 26px 22px",
-      fontFamily: "'Instrument Sans',system-ui,sans-serif", boxShadow: "0 1px 2px rgba(30,25,15,.03)",
-    }}>
+    <div className="card" style={{ padding: "24px 26px 22px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
         <div style={{ maxWidth: 520 }}>
-          <h2 style={{ margin: 0, fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: INK }}>Impulse history</h2>
-          <div style={{ fontSize: 13.5, color: MUTED, marginTop: 5, lineHeight: 1.5 }}>Gate completion vs. bailing pattern over the past 8 weeks.</div>
+          <h2 style={{ margin: 0, fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Impulse history</h2>
+          <div style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 5, lineHeight: 1.5 }}>Gate completion vs. bailing pattern over the past 8 weeks.</div>
         </div>
-        <div style={{ display: "flex", gap: 16, alignItems: "center", fontSize: 13, color: "#5c584e" }}>
-          <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 12, height: 12, borderRadius: 3, background: INK, display: "inline-block" }} />Completed</span>
-          <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 12, height: 12, borderRadius: 3, background: "#c6c1b4", display: "inline-block" }} />Bailed</span>
+        <div style={{ display: "flex", gap: 16, alignItems: "center", fontSize: 13, color: "var(--muted)" }}>
+          <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 12, height: 12, borderRadius: 3, background: "var(--bar-main)", display: "inline-block" }} />Completed</span>
+          <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 12, height: 12, borderRadius: 3, background: "var(--faint)", display: "inline-block" }} />Bailed</span>
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <div style={{ width: "100%" }}>{buildChart(weeks)}</div>
-        <div style={{ width: "100%", background: "#f6f4ee", border: "1px solid #eae6dd", borderRadius: 16, padding: "18px 22px" }}>{buildMetrics(metrics)}</div>
+        <div style={{ width: "100%", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 16, padding: "18px 22px" }}>{buildMetrics(metrics)}</div>
       </div>
     </div>
   );
