@@ -9,7 +9,7 @@
 
    The hero is authored at a 1280x800 reference frame (like the prototype) and
    scaled to fit the viewport, so the composition stays pixel-faithful at any
-   size. Fifteen frosted app-icon silhouettes float invisibly on the stage and
+   size. Frosted app-icon silhouettes float invisibly on the stage and
    reveal near the cursor (proximity driven from Landing.jsx); clicking any one
    "enters" the site — About fades in, the CTA row lifts, silhouettes hide.
 ---------------------------------------------------------------------------- */
@@ -78,9 +78,15 @@
   position: absolute; padding: 0; margin: 0;
   font: inherit; color: inherit; -webkit-appearance: none; appearance: none;
   opacity: 0; cursor: pointer; pointer-events: auto;
-  transition: opacity .28s ease;
+  transition: opacity .28s ease, border-color .2s ease, box-shadow .2s ease;
 }
 .rg-silhouette:focus-visible { outline: none; }
+/* Direct hover — lift the outline to a crisp cool silver with a soft glow
+   (never warm). Overrides the inline border/shadow only while hovered. */
+.rg-silhouette:hover {
+  border-color: rgba(216,222,232,.95) !important;
+  box-shadow: 0 0 22px -2px rgba(202,214,234,.28) !important;
+}
 
 /* Centred About reveal — hidden until a silhouette is clicked (`entered`). */
 .rg-about-cta {

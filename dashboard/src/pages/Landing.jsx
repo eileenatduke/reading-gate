@@ -2,35 +2,56 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { EXTENSION_URL } from "../lib/config.js";
 
-// Interactive silhouette hero (prototype 7a). Fifteen frosted app-icon
-// silhouettes float invisibly on the dark stage; they fade in only near the
-// cursor, and each one is clickable. Clicking any silhouette "enters" the site:
-// the About pill fades in centre-stage, the CTA row lifts into place, and every
-// silhouette is hidden + disabled so only the three buttons stay interactive.
+// Interactive silhouette hero. Frosted app-icon silhouettes float invisibly on
+// the dark stage; they fade in only near the cursor, and each one is clickable.
+// Clicking any silhouette "enters" the site: the About pill fades in centre-
+// stage, the CTA row lifts into place, and every silhouette is hidden + disabled
+// so only the three buttons stay interactive.
 //
-// Values (positions, sizes, per-icon opacity/shadow depth, float timing) are the
-// hand-tuned handoff from the prototype — an irregular scatter across the
-// authored 1280x800 frame. Depth reads through border/gradient/shadow alpha,
-// which all track each icon's max opacity (op).
-const ICONS = [
-  { l: 803, t: 395, s: 75,  bw: 1.17, r: 18, ga: 0.029, sy: 7,  sb: 14, sa: 0.157, it: 0.097, ib: 0.086, op: 0.317, dur: 8.7, del: 0.1 },
-  { l: 385, t: 141, s: 87,  bw: 1.03, r: 21, ga: 0.005, sy: 5,  sb: 9,  sa: 0.027, it: 0.017, ib: 0.015, op: 0.170, dur: 8.9, del: 2.9 },
-  { l: 614, t: 379, s: 96,  bw: 1.33, r: 23, ga: 0.055, sy: 11, sb: 19, sa: 0.303, it: 0.187, ib: 0.165, op: 0.481, dur: 8.1, del: 2.3 },
-  { l: 754, t: 270, s: 98,  bw: 1.20, r: 24, ga: 0.034, sy: 8,  sb: 15, sa: 0.185, it: 0.114, ib: 0.101, op: 0.348, dur: 6.9, del: 0.3 },
-  { l: 513, t: 183, s: 134, bw: 1.19, r: 32, ga: 0.032, sy: 8,  sb: 14, sa: 0.176, it: 0.109, ib: 0.096, op: 0.338, dur: 8.9, del: 0.4 },
-  { l: 485, t: 544, s: 69,  bw: 1.08, r: 17, ga: 0.013, sy: 6,  sb: 11, sa: 0.071, it: 0.044, ib: 0.039, op: 0.220, dur: 7.4, del: 1.5 },
-  { l: 698, t: 494, s: 105, bw: 1.17, r: 25, ga: 0.028, sy: 7,  sb: 14, sa: 0.152, it: 0.094, ib: 0.083, op: 0.311, dur: 6.5, del: 1.2 },
-  { l: 485, t: 343, s: 95,  bw: 1.24, r: 23, ga: 0.039, sy: 9,  sb: 16, sa: 0.216, it: 0.134, ib: 0.118, op: 0.384, dur: 6.3, del: 0.3 },
-  { l: 738, t: 152, s: 65,  bw: 1.12, r: 16, ga: 0.020, sy: 6,  sb: 12, sa: 0.110, it: 0.068, ib: 0.060, op: 0.264, dur: 6.5, del: 1.5 },
-  { l: 573, t: 532, s: 75,  bw: 1.15, r: 18, ga: 0.025, sy: 7,  sb: 13, sa: 0.139, it: 0.086, ib: 0.076, op: 0.297, dur: 8.5, del: 0.9 },
-  { l: 379, t: 388, s: 88,  bw: 1.16, r: 21, ga: 0.026, sy: 7,  sb: 13, sa: 0.143, it: 0.088, ib: 0.078, op: 0.301, dur: 7.5, del: 1.4 },
-  { l: 374, t: 273, s: 77,  bw: 1.06, r: 18, ga: 0.010, sy: 5,  sb: 10, sa: 0.053, it: 0.033, ib: 0.029, op: 0.199, dur: 8.4, del: 1.8 },
-  { l: 840, t: 550, s: 78,  bw: 1.01, r: 19, ga: 0.001, sy: 4,  sb: 8,  sa: 0.008, it: 0.005, ib: 0.004, op: 0.149, dur: 5.7, del: 1.9 },
-  { l: 364, t: 564, s: 85,  bw: 1.01, r: 20, ga: 0.001, sy: 4,  sb: 8,  sa: 0.008, it: 0.005, ib: 0.004, op: 0.149, dur: 7.7, del: 1.2 },
-  { l: 859, t: 117, s: 58,  bw: 1.00, r: 14, ga: 0.000, sy: 4,  sb: 8,  sa: 0.000, it: 0.000, ib: 0.000, op: 0.140, dur: 8.6, del: 0.5 },
-];
+// The scatter fills the hero's empty space — corners, edges, and centre — while
+// staying clear of the wordmark, the two phrases, and the always-visible CTA row.
 
-const PAPER = "244,244,242";
+// Depth params (border weight, radius, gradient/shadow alphas, float timing) are
+// derived from each icon's size and max opacity so the whole set reads as one
+// consistent family however many icons there are.
+function makeIcon(l, t, s, op) {
+  const d = Math.max(0, op - 0.14); // depth above the faintest icons
+  return {
+    l, t, s, op,
+    bw: +(1 + d * 0.7).toFixed(2),
+    r: Math.round(s * 0.24),
+    ga: +(d * 0.16).toFixed(3),
+    sy: Math.round(4 + d * 20),
+    sb: Math.round(8 + d * 32),
+    sa: +(d * 0.9).toFixed(3),
+    it: +(d * 0.55).toFixed(3),
+    ib: +(d * 0.49).toFixed(3),
+    dur: 6 + (s % 4),              // 6–9s float, varied by size
+    del: +((l % 30) / 10).toFixed(1), // 0–2.9s stagger, varied by position
+  };
+}
+
+// [left, top, size, maxOpacity] on the authored 1280x800 frame. Every box is
+// kept out of: wordmark (x40–300,y25–85), left phrase (x40–400,y300–455),
+// right phrase (x880–1240,y300–455), and CTA row (x470–810,y555–750).
+const ICONS = [
+  // top band
+  [70, 110, 96, 0.34], [210, 175, 62, 0.20], [360, 120, 80, 0.30], [500, 150, 120, 0.42],
+  [660, 110, 72, 0.26], [760, 175, 98, 0.35], [900, 130, 84, 0.30], [1050, 150, 90, 0.33], [1165, 108, 58, 0.16],
+  // upper-centre
+  [600, 250, 100, 0.46], [470, 260, 88, 0.32], [740, 270, 95, 0.36],
+  // mid-left gap
+  [110, 480, 120, 0.42], [250, 560, 70, 0.22], [60, 600, 54, 0.16], [330, 500, 80, 0.28],
+  // centre playground (About is hidden until entered; icons hide on enter)
+  [500, 380, 95, 0.40], [620, 440, 105, 0.44], [690, 335, 78, 0.28], [560, 470, 75, 0.24], [820, 430, 88, 0.30],
+  // mid-right gap
+  [1010, 480, 100, 0.40], [1150, 560, 72, 0.22], [960, 600, 80, 0.26], [1185, 468, 56, 0.16],
+  // bottom band (flanking the CTA row)
+  [150, 660, 84, 0.30], [300, 705, 70, 0.22], [900, 660, 92, 0.32], [1050, 690, 76, 0.24], [1165, 650, 60, 0.16],
+].map(([l, t, s, op]) => makeIcon(l, t, s, op));
+
+// Cool silver — replaces the warm off-white so the reveal/outline reads silvery.
+const SILVER = "210,216,226";
 
 function iconStyle(ic) {
   return {
@@ -39,8 +60,8 @@ function iconStyle(ic) {
     width: ic.s,
     height: ic.s,
     borderRadius: ic.r,
-    border: `${ic.bw}px solid rgba(${PAPER},${ic.op})`,
-    background: `linear-gradient(150deg, rgba(${PAPER},${ic.ga}) 0%, rgba(${PAPER},0) 62%)`,
+    border: `${ic.bw}px solid rgba(${SILVER},${ic.op})`,
+    background: `linear-gradient(150deg, rgba(${SILVER},${ic.ga}) 0%, rgba(${SILVER},0) 62%)`,
     boxShadow: `0 ${ic.sy}px ${ic.sb}px rgba(0,0,0,${ic.sa}), inset 0 1px 0 rgba(255,255,255,${ic.it}), inset 0 -6px 14px rgba(0,0,0,${ic.ib})`,
     animation: `rgIconFloat ${ic.dur}s ease-in-out ${ic.del}s infinite alternate`,
   };
