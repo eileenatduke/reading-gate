@@ -5,7 +5,7 @@ import { fetchImpulseLog, impulseTrend } from "../lib/data.js";
 const PLOT_H = 210;                 // plot height in px (matches the "4e" design)
 const NUM_WEEKS = 8;
 const MONO = "ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace";
-const SERIF = "'Instrument Serif', Georgia, serif";
+const SERIF = "'Playfair Display', Georgia, serif";
 // Completed = the accent; bailed = a pale tint of it. Mixing toward opaque white keeps
 // the tint readable on both translucent glass and solid themes, whatever the accent hue.
 const COMPLETED = "var(--accent)";
@@ -168,8 +168,8 @@ export default function ImpulseHistory() {
                       borderBottom: i < metrics.length - 1 ? "1px solid var(--border)" : "none",
                     }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ font: "500 13px/1.25 'Instrument Sans', system-ui, sans-serif", color: "var(--text)" }}>{m.name}</div>
-                        {m.sub && <div style={{ font: "400 10.5px/1.3 'Instrument Sans', system-ui, sans-serif", color: "var(--muted)", marginTop: 3 }}>{m.sub}</div>}
+                        <div style={{ font: "500 13px/1.25 'Source Sans 3', system-ui, sans-serif", color: "var(--text)" }}>{m.name}</div>
+                        {m.sub && <div style={{ font: "400 10.5px/1.3 'Source Sans 3', system-ui, sans-serif", color: "var(--muted)", marginTop: 3 }}>{m.sub}</div>}
                       </div>
                       <div style={{ width: 46, textAlign: "center", font: `19px ${SERIF}`, color: "var(--text)" }}>{m.value}</div>
                       <div style={{ width: 56, textAlign: "center", whiteSpace: "nowrap", font: `600 10px ${MONO}`, color: deltaColor(m) }}>{fmtDelta(m)}</div>
@@ -194,7 +194,7 @@ export default function ImpulseHistory() {
 
 function Legend({ swatch, label }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 7, font: "500 12px 'Instrument Sans', system-ui, sans-serif", color: "var(--muted)" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 7, font: "500 12px 'Source Sans 3', system-ui, sans-serif", color: "var(--muted)" }}>
       <span style={{ width: 12, height: 12, borderRadius: 3, background: swatch }} />
       {label}
     </span>

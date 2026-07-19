@@ -25,7 +25,7 @@ function buildChart(weeks) {
   ticks.forEach((t, i) => {
     const y = baseY - (t / max) * plotH;
     els.push(h("line", { key: "g" + i, x1: padL, y1: y, x2: padL + plotW, y2: y, strokeWidth: 1, strokeDasharray: t === 0 ? "0" : "3 4", style: { stroke: "var(--grid)" } }));
-    els.push(h("text", { key: "t" + i, x: padL - 12, y: y + 3.5, textAnchor: "end", fontSize: 10, fontFamily: "'Instrument Sans',sans-serif", style: { fill: "var(--muted)" } }, "" + t));
+    els.push(h("text", { key: "t" + i, x: padL - 12, y: y + 3.5, textAnchor: "end", fontSize: 10, fontFamily: "'Source Sans 3',sans-serif", style: { fill: "var(--muted)" } }, "" + t));
   });
   weeks.forEach((d, i) => {
     const tot = d.completed + d.bailed;
@@ -44,9 +44,9 @@ function buildChart(weeks) {
         els.push(h("path", { key: "cc" + i, d: barPath(x, baseY - ch, bw, ch, bH > 0 ? 0 : rr, rr), style: { fill: "var(--bar-main)" } }));
       }
     }
-    els.push(h("text", { key: "xl" + i, x: cx(i), y: baseY + 16, textAnchor: "middle", fontSize: 9.5, fontFamily: "'Instrument Sans',sans-serif", style: { fill: "var(--muted)" } }, d.label));
+    els.push(h("text", { key: "xl" + i, x: cx(i), y: baseY + 16, textAnchor: "middle", fontSize: 9.5, fontFamily: "'Source Sans 3',sans-serif", style: { fill: "var(--muted)" } }, d.label));
   });
-  els.push(h("text", { key: "axl", x: 12, y: padT + plotH / 2, textAnchor: "middle", fontSize: 9, letterSpacing: ".08em", fontFamily: "'Instrument Sans',sans-serif", transform: "rotate(-90 12 " + (padT + plotH / 2) + ")", style: { fill: "var(--muted)" } }, "GATE TRIGGERS / WEEK"));
+  els.push(h("text", { key: "axl", x: 12, y: padT + plotH / 2, textAnchor: "middle", fontSize: 9, letterSpacing: ".08em", fontFamily: "'Source Sans 3',sans-serif", transform: "rotate(-90 12 " + (padT + plotH / 2) + ")", style: { fill: "var(--muted)" } }, "GATE TRIGGERS / WEEK"));
   return h("svg", { viewBox: "0 0 " + VBW + " " + VBH, width: "100%", style: { display: "block", height: "auto", overflow: "visible" } }, els);
 }
 
@@ -92,7 +92,7 @@ function buildMetrics(metrics) {
     const del = fmtDelta(m);
     return h("div", { key: "r" + i, style: { display: "grid", gridTemplateColumns: cols, gap: 10, alignItems: "center", padding: "16px 0", borderBottom: i < metrics.length - 1 ? "1px solid var(--border)" : "none" } }, [
       h("div", { key: "m", style: { fontSize: 14, color: "var(--text)", fontWeight: 500, lineHeight: 1.15 } }, labels[i] || m.name),
-      h("div", { key: "v", style: { fontFamily: "'Instrument Serif',serif", fontSize: 27, color: "var(--text)", textAlign: "right", lineHeight: 1 } }, "" + m.value),
+      h("div", { key: "v", style: { fontFamily: "'Playfair Display',serif", fontSize: 27, color: "var(--text)", textAlign: "right", lineHeight: 1 } }, "" + m.value),
       h("div", { key: "d", style: { fontSize: 13, fontWeight: 600, color: del.color, textAlign: "right" } }, del.text),
       h("div", { key: "s", style: { display: "flex", justifyContent: "flex-end" } }, spark(m.series)),
     ]);
@@ -107,7 +107,7 @@ export default function PaperImpulseHistory({ impulses }) {
     <div className="card" style={{ padding: "24px 26px 22px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
         <div style={{ maxWidth: 520 }}>
-          <h2 style={{ margin: 0, fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Impulse history</h2>
+          <h2 style={{ margin: 0, fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Impulse history</h2>
           <div style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 5, lineHeight: 1.5 }}>Gate completion vs. bailing pattern over the past 8 weeks.</div>
         </div>
         <div style={{ display: "flex", gap: 16, alignItems: "center", fontSize: 13, color: "var(--muted)" }}>

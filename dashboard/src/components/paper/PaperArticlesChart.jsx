@@ -9,14 +9,14 @@ const UNIT = { week: "day", month: "day", year: "month" };
 
 function seg(active) {
   return {
-    padding: "6px 14px", fontFamily: "'Instrument Sans',sans-serif", fontSize: 12.5, fontWeight: active ? 600 : 500,
+    padding: "6px 14px", fontFamily: "'Source Sans 3',sans-serif", fontSize: 12.5, fontWeight: active ? 600 : 500,
     border: "none", borderRadius: 999, cursor: "pointer", background: active ? "var(--accent)" : "transparent",
     color: active ? "#fff" : "var(--muted)", transition: "all .15s", lineHeight: 1.2, whiteSpace: "nowrap",
   };
 }
 
 function label(x, y, anchor, fill, text) {
-  return h("text", { key: "t" + x + "-" + y + "-" + text, x, y, textAnchor: anchor, fontSize: 10, fontFamily: "'Instrument Sans',sans-serif", style: { fill } }, text);
+  return h("text", { key: "t" + x + "-" + y + "-" + text, x, y, textAnchor: anchor, fontSize: 10, fontFamily: "'Source Sans 3',sans-serif", style: { fill } }, text);
 }
 
 function buildPlot(series) {
@@ -57,7 +57,7 @@ function buildPlot(series) {
 
   series.forEach((s, i) => {
     if (!s.showLabel) return;
-    els.push(h("text", { key: "xl" + i, x: cx(i), y: baseY + 16, textAnchor: "middle", fontSize: 10.5, fontFamily: "'Instrument Sans',sans-serif", style: { fill: "var(--xlabel)" } }, s.label));
+    els.push(h("text", { key: "xl" + i, x: cx(i), y: baseY + 16, textAnchor: "middle", fontSize: 10.5, fontFamily: "'Source Sans 3',sans-serif", style: { fill: "var(--xlabel)" } }, s.label));
   });
 
   return h("svg", { viewBox: "0 0 " + VBW + " " + VBH, width: "100%", style: { display: "block", height: "auto", overflow: "visible", marginTop: "8px" } }, els);
@@ -72,7 +72,7 @@ export default function PaperArticlesChart({ reading }) {
     <div className="card" style={{ padding: "24px 26px 20px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 6 }}>
         <div>
-          <h2 style={{ margin: 0, fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Articles read</h2>
+          <h2 style={{ margin: 0, fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Articles read</h2>
           <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Bars: read each {UNIT[range]}. Line: cumulative total.</div>
         </div>
         <div style={{ display: "inline-flex", background: "var(--surface-2)", borderRadius: 999, padding: 3, gap: 2 }}>

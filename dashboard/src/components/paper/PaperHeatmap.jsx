@@ -56,7 +56,7 @@ export default function PaperHeatmap({ impulses }) {
     <div className="card" style={{ height: "100%", padding: "24px 26px 22px", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
         <div>
-          <h2 style={{ margin: 0, fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 24, lineHeight: 1.05, color: "var(--text)" }}>Doomscroll heatmap</h2>
+          <h2 style={{ margin: 0, fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 24, lineHeight: 1.05, color: "var(--text)" }}>Doomscroll heatmap</h2>
           <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>When you scroll most, by day and hour.</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>

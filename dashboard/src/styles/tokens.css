@@ -8,7 +8,7 @@ body {
   background: var(--app-bg, #f7f7f5);
   background-attachment: fixed;
   color: var(--text, #161615);
-  font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'Source Sans 3', system-ui, -apple-system, sans-serif;
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   transition: background .5s ease, color .4s ease;
@@ -19,7 +19,7 @@ a:hover { color: var(--link-hover, var(--text)); }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
 
-.serif { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
+.serif { font-family: 'Playfair Display', Georgia, serif; font-weight: 400; }
 
 /* compatibility aliases for a few older inline references */
 :root { --danger: #d9534f; --success: var(--accent); --fs-sm: 13.5px; --sp-4: 16px; }

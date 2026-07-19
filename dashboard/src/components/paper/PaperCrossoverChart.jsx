@@ -7,7 +7,7 @@ import { crossoverSeries } from "../../lib/data.js";
 
 function seg(active) {
   return {
-    padding: "6px 13px", fontFamily: "'Instrument Sans',sans-serif", fontSize: 12.5, fontWeight: active ? 600 : 500,
+    padding: "6px 13px", fontFamily: "'Source Sans 3',sans-serif", fontSize: 12.5, fontWeight: active ? 600 : 500,
     border: "none", borderRadius: 999, cursor: "pointer", background: active ? "var(--accent)" : "transparent",
     color: active ? "#fff" : "var(--muted)", transition: "all .15s", lineHeight: 1.2, whiteSpace: "nowrap",
   };
@@ -79,8 +79,8 @@ function buildPlot(data, mode) {
   const yl = mode === "share"
     ? [{ f: 0, t: "0" }, { f: 0.5, t: "50%" }, { f: 1, t: "100%" }]
     : (() => { const maxV = Math.max(...data.map((d) => Math.max(d.kept, d.site)), 1); return [{ f: 0, t: "0" }, { f: 1, t: "" + maxV }]; })();
-  yl.forEach((L, li) => els.push(h("text", { key: "yl" + li, x: padL - 8, y: baseY - L.f * plotH + 3, textAnchor: "end", fontSize: 9.5, fontFamily: "'Instrument Sans',sans-serif", style: { fill: "var(--muted)" } }, L.t)));
-  data.forEach((d, i) => els.push(h("text", { key: "xl" + i, x: X(i), y: baseY + 15, textAnchor: "middle", fontSize: 9.5, fontFamily: "'Instrument Sans',sans-serif", style: { fill: "var(--xlabel)" } }, d.label)));
+  yl.forEach((L, li) => els.push(h("text", { key: "yl" + li, x: padL - 8, y: baseY - L.f * plotH + 3, textAnchor: "end", fontSize: 9.5, fontFamily: "'Source Sans 3',sans-serif", style: { fill: "var(--muted)" } }, L.t)));
+  data.forEach((d, i) => els.push(h("text", { key: "xl" + i, x: X(i), y: baseY + 15, textAnchor: "middle", fontSize: 9.5, fontFamily: "'Source Sans 3',sans-serif", style: { fill: "var(--xlabel)" } }, d.label)));
 
   return h("svg", { viewBox: "0 0 " + VBW + " " + VBH, width: "100%", style: { display: "block", height: "auto", overflow: "visible", marginTop: "2px" } }, els);
 }
@@ -95,7 +95,7 @@ export default function PaperCrossoverChart({ impulses }) {
     <div className="card" style={{ padding: "24px 26px 22px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 4 }}>
         <div style={{ minWidth: 220 }}>
-          <h2 style={{ margin: "0 0 8px", fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Kept reading vs. went to site</h2>
+          <h2 style={{ margin: "0 0 8px", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Kept reading vs. went to site</h2>
           <span style={{ display: "inline-block", fontSize: 12.5, fontWeight: 600, color: "var(--muted)", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 999, padding: "4px 11px" }}>{copy.trendText}</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>

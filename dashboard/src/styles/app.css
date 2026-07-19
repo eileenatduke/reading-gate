@@ -30,7 +30,7 @@ button { font-family: inherit; }
 
 .main { flex: 1; min-width: 0; padding: 38px 46px 60px; max-width: 1280px; }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 30px; gap: 20px; flex-wrap: wrap; }
-.page-title { font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 52px; line-height: 1.05; margin: 0 0 6px; letter-spacing: -.01em; }
+.page-title { font-family: 'Playfair Display', serif; font-weight: 400; font-size: 52px; line-height: 1.05; margin: 0 0 6px; letter-spacing: -.01em; }
 .page-sub { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
 
 /* ---- cards / panels ---- */
@@ -55,7 +55,7 @@ button { font-family: inherit; }
 .stat.clickable { cursor: pointer; }
 .stat:hover { transform: translateY(-3px); }
 .stat .top { display: flex; align-items: baseline; justify-content: space-between; }
-.stat .value { font-family: 'Instrument Serif', serif; font-size: 48px; line-height: 1; letter-spacing: -.02em; }
+.stat .value { font-family: 'Playfair Display', serif; font-size: 48px; line-height: 1; letter-spacing: -.02em; }
 .stat .delta { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
 .stat .label { margin-top: 12px; color: var(--muted); font-size: 14px; font-weight: 500; }
 
