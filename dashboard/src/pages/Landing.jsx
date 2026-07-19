@@ -73,15 +73,10 @@ export default function Landing() {
           <div className="rg-flash" data-anim="rgFlash 5.5s both" aria-hidden="true" />
 
           <div className="rg-phone-group" data-anim="rgDrop 5.5s both" aria-hidden="true">
-            {/* The same phone image drawn nine times, each clipped to one wedge;
-                stacked, the wedges reassemble into a whole phone, then each
-                bursts and vanishes independently. */}
             {SHARDS.map((s, i) => (
-              <img
+              <div
                 key={i}
                 className="rg-shard"
-                src="/rg-phone-blend.svg"
-                alt=""
                 data-anim={`rgBurst 5.5s ${s.d}s both`}
                 style={{
                   clipPath: `polygon(${s.clip})`,
