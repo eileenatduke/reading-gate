@@ -52,9 +52,7 @@ async function refresh() {
 
 async function doOAuth(provider) {
   $("auth-err").textContent = "Opening sign-in…";
-  // Disable the OAuth buttons while a flow is in progress.
-  $("oauth-google").disabled = true;
-  $("oauth-outlook").disabled = true;
+  $("oauth-google").disabled = true; // disable while a flow is in progress
   try {
     // The background worker runs the flow so it survives the popup closing when the
     // auth window steals focus. If the popup does close, the session is still saved;
@@ -69,7 +67,6 @@ async function doOAuth(provider) {
     $("auth-err").textContent = e.message;
   } finally {
     $("oauth-google").disabled = false;
-    $("oauth-outlook").disabled = false;
   }
 }
 
@@ -100,7 +97,6 @@ async function init() {
     chrome.tabs.create({ url: await dashboardUrl("/settings") });
   });
   $("oauth-google").addEventListener("click", () => doOAuth("google"));
-  $("oauth-outlook").addEventListener("click", () => doOAuth("azure"));
   $("signin").addEventListener("click", () => doAuth(signIn));
   $("signup").addEventListener("click", () => doAuth(signUp));
   $("refresh").addEventListener("click", refresh);
