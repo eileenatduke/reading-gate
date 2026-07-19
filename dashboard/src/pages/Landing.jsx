@@ -2,9 +2,15 @@ import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { EXTENSION_URL } from "../lib/config.js";
 
-// The nine shards: each is the same CSS phone clipped to one polygon wedge, with
-// its own scatter vector (--dx/--dy/--rot) and stagger. Values from the design
-// handoff — an irregular 3x3 tessellation of the 220x437 phone box.
+// The 3/4-tilted phone render. Drawn nine times (one per shard) and clipped to a
+// polygon wedge each, the copies reassemble into the whole phone before the
+// shatter scatters them. Screen is filled with the hero background so only the
+// metallic frame reads as a silhouette on dark.
+const PHONE_SRC = import.meta.env.BASE_URL + "rg-phone-blend.png";
+
+// The nine shards: each is the same phone image clipped to one polygon wedge,
+// with its own scatter vector (--dx/--dy/--rot) and stagger. Values from the
+// design handoff — an irregular 3x3 tessellation of the 220x437 phone box.
 const SHARDS = [
   { clip: "0% 0%, 37% 0%, 41% 25%, 0% 29%",       dx: -164, dy: 467, rot: -38, d: 0.046 },
   { clip: "37% 0%, 69% 0%, 65% 33%, 41% 25%",      dx: 36,   dy: 461, rot: -9,  d: 0.003 },
@@ -74,9 +80,11 @@ export default function Landing() {
 
           <div className="rg-phone-group" data-anim="rgDrop 5.5s both" aria-hidden="true">
             {SHARDS.map((s, i) => (
-              <div
+              <img
                 key={i}
                 className="rg-shard"
+                src={PHONE_SRC}
+                alt=""
                 data-anim={`rgBurst 5.5s ${s.d}s both`}
                 style={{
                   clipPath: `polygon(${s.clip})`,
