@@ -12,7 +12,7 @@ export default function PaperGenreBars({ reading }) {
   return (
     <div className="card" style={{ height: "100%", padding: "24px 26px 22px", display: "flex", flexDirection: "column" }}>
       <div style={{ marginBottom: 18 }}>
-        <h2 style={{ margin: 0, fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 24, lineHeight: 1.05, color: "var(--text)" }}>Genre distribution</h2>
+        <h2 style={{ margin: 0, fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 24, lineHeight: 1.05, color: "var(--text)" }}>Genre distribution</h2>
         <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Cumulative articles per genre.</div>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-start", gap: 20 }}>

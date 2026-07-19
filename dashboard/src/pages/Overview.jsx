@@ -29,7 +29,7 @@ export default function Overview() {
     <div className="overview-paper">
       <div className="overview-shell">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 26 }}>
-          <h1 style={{ margin: 0, fontFamily: "'Instrument Serif',Georgia,serif", fontWeight: 400, fontSize: 40, lineHeight: 1, color: "var(--text)" }}>Overview</h1>
+          <h1 style={{ margin: 0, fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 40, lineHeight: 1, color: "var(--text)" }}>Overview</h1>
           <div style={{ fontSize: 14, color: "var(--muted)" }}>{today}</div>
         </div>
 
