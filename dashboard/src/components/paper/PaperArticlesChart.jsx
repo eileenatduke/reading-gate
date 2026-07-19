@@ -72,7 +72,7 @@ export default function PaperArticlesChart({ reading }) {
     <div className="card" style={{ padding: "24px 26px 20px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 6 }}>
         <div>
-          <h2 style={{ margin: 0, fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Articles read</h2>
+          <h2 style={{ margin: "0 0 0 -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Articles read</h2>
           <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Bars: read each {UNIT[range]}. Line: cumulative total.</div>
         </div>
         <div style={{ display: "inline-flex", background: "var(--surface-2)", borderRadius: 999, padding: 3, gap: 2 }}>

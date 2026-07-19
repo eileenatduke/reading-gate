@@ -95,7 +95,7 @@ export default function PaperCrossoverChart({ impulses }) {
     <div className="card" style={{ padding: "24px 26px 22px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 4 }}>
         <div style={{ minWidth: 220 }}>
-          <h2 style={{ margin: "0 0 8px", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Kept reading vs. went to site</h2>
+          <h2 style={{ margin: "0 0 8px -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Kept reading vs. went to site</h2>
           <span style={{ display: "inline-block", fontSize: 12.5, fontWeight: 600, color: "var(--muted)", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 999, padding: "4px 11px" }}>{copy.trendText}</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>

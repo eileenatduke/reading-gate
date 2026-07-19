@@ -107,7 +107,7 @@ export default function PaperImpulseHistory({ impulses }) {
     <div className="card" style={{ padding: "24px 26px 22px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
         <div style={{ maxWidth: 520 }}>
-          <h2 style={{ margin: 0, fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Impulse history</h2>
+          <h2 style={{ margin: "0 0 0 -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Impulse history</h2>
           <div style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 5, lineHeight: 1.5 }}>Gate completion vs. bailing pattern over the past 8 weeks.</div>
         </div>
         <div style={{ display: "flex", gap: 16, alignItems: "center", fontSize: 13, color: "var(--muted)" }}>
