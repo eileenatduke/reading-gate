@@ -21,7 +21,7 @@ button { font-family: inherit; }
 .brand .name { font-weight: 700; font-size: 19px; letter-spacing: -.01em; }
 .nav a, .nav .navbtn {
   display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; cursor: pointer;
-  font-size: 15px; font-weight: 500; color: var(--muted); background: transparent; border: none; text-align: left;
+  font-size: 15px; font-weight: 600; color: var(--muted); background: transparent; border: none; text-align: left;
   transition: background .2s ease, color .2s ease;
 }
 .nav a:hover, .nav .navbtn:hover { color: var(--text); }
