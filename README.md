@@ -53,6 +53,21 @@ Deploy to Vercel or Netlify (free tier). Set the same two env vars in the host's
 project settings. SPA routing rewrites are already configured
 (`vercel.json` / `public/_redirects`).
 
+**Public pages & auth.** The site opens on a marketing **landing hero** (`/`) with
+one fixed dark theme. **Download Now** links to the extension (set
+`VITE_EXTENSION_URL` to your Chrome Web Store listing), **About** (`/about`) is a
+live placeholder awaiting copy, and **Log in / Sign up** (`/login`) offers
+**Google**, **Outlook**, and **email + password**. Once signed in, the dashboard
+loads — new users default to the **Mono (black & white)** theme and can pick any
+theme in **Settings**.
+
+> To enable the social buttons, turn on the matching providers in Supabase
+> (**Authentication → Providers**): **Google** and **Azure** (for Outlook /
+> Microsoft accounts). Add your dashboard URL to the provider's redirect list and
+> to Supabase's **URL Configuration → Redirect URLs**. Until a provider is
+> enabled, its button returns a "provider is not enabled" error; email + password
+> works out of the box.
+
 ### 3. Extension
 1. Chrome/Edge/Brave → `chrome://extensions` → enable **Developer mode** → **Load
    unpacked** → select the `extension/` folder.
