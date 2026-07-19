@@ -18,7 +18,7 @@ button { font-family: inherit; }
 }
 .brand { display: flex; align-items: center; gap: 10px; padding: 6px 10px 22px; }
 .brand .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
-.brand .name { font-weight: 700; font-size: 19px; letter-spacing: -.01em; }
+.brand .name { font-family: 'Playfair Display', Georgia, serif; font-weight: 500; font-size: 22px; letter-spacing: -.01em; }
 .nav a, .nav .navbtn {
   display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; cursor: pointer;
   font-size: 15px; font-weight: 600; color: var(--muted); background: transparent; border: none; text-align: left;
