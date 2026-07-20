@@ -75,9 +75,10 @@ const DOOMSCROLL_APPS = [
   { name: "YouTube", src: brand("youtube-icon"), bg: "#ffffff", fit: "contain" },
   { name: "LinkedIn", src: brand("linkedin-icon"), bg: "#ffffff", fit: "cover" },
   { name: "Snapchat", src: favicon("snapchat.com"), bg: "#fffc00", fit: "cover" },
-  // Clean flat red "N" (Simple Icons, Netflix red) — a white tile with the N
-  // centred, matching the YouTube/TikTok treatment.
-  { name: "Netflix", src: "https://api.iconify.design/simple-icons/netflix.svg?color=%23e50914", bg: "#ffffff", fit: "contain" },
+  // The real gradient Netflix N (dark side bars, brighter diagonal) on a
+  // transparent background, from Wikimedia — a white tile with the N centred,
+  // matching the YouTube/TikTok treatment. The flat one-tone N looked wrong.
+  { name: "Netflix", src: "https://upload.wikimedia.org/wikipedia/commons/1/18/Netflix_2016_N_logo.svg", bg: "#ffffff", fit: "contain" },
 ];
 
 // One research principle block (number, title, paragraphs, and the two-up compare
