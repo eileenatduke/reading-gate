@@ -58,16 +58,22 @@ const STATS = [
 ];
 
 // The apps people lose time to, shown as a row of their official icons above the
-// "trade" band. The icons are hotlinked from Google's favicon service (the real
-// brand icons, referenced not bundled) and normalized to uniform rounded tiles in
-// CSS so they all read at the same size and shape.
+// "trade" band. Icons are hotlinked (referenced, not bundled): the crisp full-color
+// brand marks come from Iconify's open "logos" set, and Instagram/Snapchat stay on
+// Google's favicon service. Each sits on a per-brand tile colour so it matches the
+// real app icon (e.g. red "N" on black for Netflix), and all tiles share one size
+// and shape. `fit: "cover"` fills the tile edge-to-edge (marks that carry their own
+// background); `fit: "contain"` centres a transparent glyph with padding.
+const favicon = (domain) => `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+const brand = (name) => `https://api.iconify.design/logos/${name}.svg`;
+
 const DOOMSCROLL_APPS = [
-  { name: "Instagram", domain: "instagram.com" },
-  { name: "TikTok", domain: "tiktok.com" },
-  { name: "YouTube", domain: "youtube.com" },
-  { name: "LinkedIn", domain: "linkedin.com" },
-  { name: "Snapchat", domain: "snapchat.com" },
-  { name: "Netflix", domain: "netflix.com" },
+  { name: "Instagram", src: favicon("instagram.com"), bg: "#ffffff", fit: "cover" },
+  { name: "TikTok", src: brand("tiktok-icon"), bg: "#000000", fit: "contain" },
+  { name: "YouTube", src: brand("youtube-icon"), bg: "#ffffff", fit: "contain" },
+  { name: "LinkedIn", src: brand("linkedin-icon"), bg: "#ffffff", fit: "cover" },
+  { name: "Snapchat", src: favicon("snapchat.com"), bg: "#fffc00", fit: "cover" },
+  { name: "Netflix", src: brand("netflix-icon"), bg: "#000000", fit: "contain" },
 ];
 
 export default function About() {
@@ -80,7 +86,10 @@ export default function About() {
           <div className="rg-ab-navlinks">
             <Link className="rg-ab-navlink is-current" to="/about" aria-current="page">About</Link>
             <Link className="rg-ab-navlink" to="/login">Log in</Link>
-            <a className="rg-ab-navcta" href={EXTENSION_URL} target="_blank" rel="noopener noreferrer">Add to Chrome</a>
+            <a className="rg-ab-navcta" href={EXTENSION_URL} target="_blank" rel="noopener noreferrer">
+              <img className="rg-ab-navcta-logo" src="https://api.iconify.design/logos/chrome.svg" alt="" aria-hidden="true" />
+              <span>Add to Chrome</span>
+            </a>
           </div>
         </nav>
 
@@ -108,13 +117,11 @@ export default function About() {
         {/* Apps people doomscroll on — a row of official app icons */}
         <div className="rg-ab-apps" aria-label="Apps people doomscroll on">
           {DOOMSCROLL_APPS.map((a) => (
-            <span className="rg-ab-app" key={a.domain}>
+            <span className="rg-ab-app" key={a.name} style={{ background: a.bg }}>
               <img
-                className="rg-ab-app-img"
-                src={`https://www.google.com/s2/favicons?domain=${a.domain}&sz=128`}
+                className={`rg-ab-app-img is-${a.fit}`}
+                src={a.src}
                 alt={`${a.name} icon`}
-                width="128"
-                height="128"
                 loading="lazy"
               />
             </span>

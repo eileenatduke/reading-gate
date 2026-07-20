@@ -227,17 +227,19 @@
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .rg-ab-wordmark { font-weight: 600; font-size: 18px; color: #fff; }
-.rg-ab-navlinks { display: flex; gap: 34px; font-size: 15px; }
+.rg-ab-navlinks { display: flex; align-items: center; gap: 34px; font-size: 15px; }
 .rg-ab-navlink { color: rgba(255,255,255,0.6); transition: color .18s ease; }
 .rg-ab-navlink:hover { color: #a5a5a5; }
 .rg-ab-navlink.is-current { color: #fff; }
 .rg-ab-navcta {
-  display: inline-flex; align-items: center;
-  padding: 9px 18px; border-radius: 999px;
-  background: #fff; color: #0d0d0d; font-weight: 600;
-  transition: background .18s ease, transform .18s ease;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border-radius: 999px; line-height: 1;
+  background: #fff; color: #0d0d0d; font-weight: 600; white-space: nowrap;
+  transition: background .18s ease;
 }
 .rg-ab-navcta:hover { background: #e6e6e6; }
+.rg-ab-navcta span { color: #0d0d0d; }
+.rg-ab-navcta-logo { width: 18px; height: 18px; display: block; flex: 0 0 auto; }
 
 /* ---- Hero ---- */
 .rg-ab-hero {
@@ -277,10 +279,11 @@
   flex: 0 0 auto;
   width: 56px; height: 56px;
   border-radius: 14px; overflow: hidden;
-  background: #fff;
   box-shadow: 0 2px 12px rgba(0,0,0,0.35);
 }
-.rg-ab-app-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rg-ab-app-img { width: 100%; height: 100%; display: block; box-sizing: border-box; }
+.rg-ab-app-img.is-cover { object-fit: cover; }
+.rg-ab-app-img.is-contain { object-fit: contain; padding: 16%; }
 
 /* ---- Trade statement — the only light/inverted band ---- */
 .rg-ab-trade { background: #fff; padding: 96px 40px; text-align: center; }
