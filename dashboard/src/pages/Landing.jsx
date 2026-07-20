@@ -164,7 +164,7 @@ export default function Landing() {
 
           <div className="rg-cta-row">
             <a className="rg-pill solid" href={EXTENSION_URL} target="_blank" rel="noopener noreferrer">
-              Download Now
+              Add to Chrome
             </a>
             <Link className="rg-pill" to="/login">Log in / Sign up</Link>
           </div>

@@ -231,6 +231,13 @@
 .rg-ab-navlink { color: rgba(255,255,255,0.6); transition: color .18s ease; }
 .rg-ab-navlink:hover { color: #a5a5a5; }
 .rg-ab-navlink.is-current { color: #fff; }
+.rg-ab-navcta {
+  display: inline-flex; align-items: center;
+  padding: 9px 18px; border-radius: 999px;
+  background: #fff; color: #0d0d0d; font-weight: 600;
+  transition: background .18s ease, transform .18s ease;
+}
+.rg-ab-navcta:hover { background: #e6e6e6; }
 
 /* ---- Hero ---- */
 .rg-ab-hero {
@@ -258,6 +265,22 @@
 .rg-ab-stat + .rg-ab-stat { border-left: 1px solid rgba(255,255,255,0.08); }
 .rg-ab-stat-num { font-family: "Playfair Display", Georgia, serif; font-size: 46px; color: #fff; }
 .rg-ab-stat-label { color: rgba(255,255,255,0.5); font-size: 14px; margin-top: 8px; }
+
+/* ---- Doomscroll app icons — uniform rounded tiles above the trade band ---- */
+.rg-ab-apps {
+  display: flex; justify-content: center; align-items: center;
+  flex-wrap: wrap; gap: 22px;
+  padding: 48px 40px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.rg-ab-app {
+  flex: 0 0 auto;
+  width: 56px; height: 56px;
+  border-radius: 14px; overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+}
+.rg-ab-app-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* ---- Trade statement — the only light/inverted band ---- */
 .rg-ab-trade { background: #fff; padding: 96px 40px; text-align: center; }
@@ -345,6 +368,9 @@
   .rg-ab-research-h { font-size: 32px; }
   .rg-ab-principles { padding: 24px 24px 40px; }
   .rg-ab-table-wrap { padding: 32px 24px 72px; }
+
+  .rg-ab-apps { padding: 36px 24px; gap: 16px; }
+  .rg-ab-app { width: 48px; height: 48px; border-radius: 12px; }
 
   /* Collapse the 3-up stat band and 1fr/1fr cards to a single column. */
   .rg-ab-stats { grid-template-columns: 1fr; }
