@@ -80,6 +80,30 @@ const DOOMSCROLL_APPS = [
   { name: "Netflix", src: brand("netflix-icon"), bg: "transparent", fit: "contain", bare: true },
 ];
 
+// One research principle block (number, title, paragraphs, and the two-up compare
+// cards). Extracted so the list can be split around the mid-page call to action.
+function renderPrinciple(p) {
+  return (
+    <article className="rg-ab-principle" key={p.n}>
+      <div className="rg-ab-principle-num">{p.n}</div>
+      <h3 className="rg-ab-principle-h">{p.title}</h3>
+      {p.body.map((para, i) => (
+        <p className="rg-ab-principle-p" key={i}>{para}</p>
+      ))}
+      <div className="rg-ab-compare">
+        <div className="rg-ab-card">
+          <div className="rg-ab-card-label">Most blockers</div>
+          <p className="rg-ab-card-p">{p.most}</p>
+        </div>
+        <div className="rg-ab-card is-ours">
+          <div className="rg-ab-card-label">Why our approach wins</div>
+          <p className="rg-ab-card-p">{p.ours}</p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default function About() {
   // The page scrolls inside the fixed .rg-about container (not the window), so we
   // watch that element's scrollTop to fade the sticky nav to a translucent, blurred
@@ -160,27 +184,32 @@ export default function About() {
           <h2 className="rg-ab-research-h">Reading Gate is rooted in psychology research.</h2>
         </section>
 
-        {/* Three principles */}
+        {/* Principles 01–02 */}
         <section className="rg-ab-principles">
-          {PRINCIPLES.map((p) => (
-            <article className="rg-ab-principle" key={p.n}>
-              <div className="rg-ab-principle-num">{p.n}</div>
-              <h3 className="rg-ab-principle-h">{p.title}</h3>
-              {p.body.map((para, i) => (
-                <p className="rg-ab-principle-p" key={i}>{para}</p>
-              ))}
-              <div className="rg-ab-compare">
-                <div className="rg-ab-card">
-                  <div className="rg-ab-card-label">Most blockers</div>
-                  <p className="rg-ab-card-p">{p.most}</p>
-                </div>
-                <div className="rg-ab-card is-ours">
-                  <div className="rg-ab-card-label">Why our approach wins</div>
-                  <p className="rg-ab-card-p">{p.ours}</p>
-                </div>
-              </div>
-            </article>
-          ))}
+          {PRINCIPLES.slice(0, 2).map(renderPrinciple)}
+        </section>
+
+        {/* Mid-page call to action — the light band between studies 02 and 03 */}
+        <section className="rg-ab-final">
+          <h2 className="rg-ab-final-h">Stop reading about it.<br />Start doing it.</h2>
+          <p className="rg-ab-final-p">
+            Reading Gate lives in your browser, turning every doomscroll into a chance to
+            learn something valuable. Free to use. Takes just 30 seconds to install.
+          </p>
+          <a
+            className="rg-ab-navcta rg-ab-navcta-lg rg-ab-navcta-dark"
+            href={EXTENSION_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img className="rg-ab-navcta-logo" src="https://api.iconify.design/logos/chrome.svg" alt="" aria-hidden="true" />
+            <span>Add to Chrome</span>
+          </a>
+        </section>
+
+        {/* Principle 03 */}
+        <section className="rg-ab-principles">
+          {PRINCIPLES.slice(2).map(renderPrinciple)}
         </section>
 
         {/* Comparison table */}

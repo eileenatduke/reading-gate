@@ -251,6 +251,13 @@
 .rg-ab-navcta:hover { background: #e6e6e6; }
 .rg-ab-navcta span { color: #0d0d0d; }
 .rg-ab-navcta-logo { width: 18px; height: 18px; display: block; flex: 0 0 auto; }
+/* Larger, dark variant of the same button — used in the mid-page CTA band so it
+   stands out against the light background. */
+.rg-ab-navcta-lg { padding: 16px 30px; font-size: 17px; gap: 10px; }
+.rg-ab-navcta-lg .rg-ab-navcta-logo { width: 22px; height: 22px; }
+.rg-ab-navcta-dark { background: var(--rg-ink); }
+.rg-ab-navcta-dark span { color: #fff; }
+.rg-ab-navcta-dark:hover { background: #000; }
 
 /* ---- Hero ---- */
 .rg-ab-hero {
@@ -309,6 +316,18 @@
 .rg-ab-trade-p {
   color: rgba(13,13,13,0.72); font-size: 19px; line-height: 1.65;
   margin: 0 auto; max-width: 560px;
+}
+
+/* ---- Mid-page CTA band (light) ---- */
+.rg-ab-final { background: var(--rg-paper); padding: 100px 40px; text-align: center; }
+.rg-ab-final-h {
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 500; font-size: 46px; line-height: 1.2; color: var(--rg-ink);
+  margin: 0 auto 24px; max-width: 620px;
+}
+.rg-ab-final-p {
+  color: rgba(14,14,13,0.7); font-size: 19px; line-height: 1.65;
+  margin: 0 auto 40px; max-width: 540px;
 }
 
 /* ---- Research intro ---- */
@@ -381,6 +400,8 @@
   .rg-ab-lede { font-size: 18px; }
   .rg-ab-trade { padding: 64px 24px; }
   .rg-ab-trade-h { font-size: 34px; }
+  .rg-ab-final { padding: 72px 24px; }
+  .rg-ab-final-h { font-size: 34px; }
   .rg-ab-research-intro { padding: 64px 24px 24px; }
   .rg-ab-research-h { font-size: 32px; }
   .rg-ab-principles { padding: 24px 24px 40px; }
