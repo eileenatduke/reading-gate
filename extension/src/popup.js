@@ -86,18 +86,6 @@ async function renderDash(user) {
   } catch { $("impulses").textContent = "–"; }
 }
 
-async function refresh() {
-  $("refresh").textContent = "Refreshing…";
-  try {
-    // Full reset: flush the unread queue and refill with a fresh, diverse batch.
-    await chrome.runtime.sendMessage({ type: "RESET_POOL" });
-    const user = await currentUser();
-    if (user) await renderDash(user);
-  } finally {
-    $("refresh").textContent = "Refresh articles";
-  }
-}
-
 async function doAuth(fn, { isSignup = false } = {}) {
   $("auth-err").textContent = "";
   const email = $("email").value.trim();
@@ -142,7 +130,6 @@ async function init() {
 
   $("signin").addEventListener("click", () => doAuth(signIn));
   $("signup").addEventListener("click", () => doAuth(signUp, { isSignup: true }));
-  $("refresh").addEventListener("click", refresh);
   $("signout").addEventListener("click", async () => {
     await signOut();
     await syncOpenDashboards({ signedOut: true });
