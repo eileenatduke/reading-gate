@@ -57,6 +57,19 @@ const STATS = [
   { big: "72%", label: "of those attempts failed" },
 ];
 
+// The apps people lose time to, shown as a row of their official icons above the
+// "trade" band. The icons are hotlinked from Google's favicon service (the real
+// brand icons, referenced not bundled) and normalized to uniform rounded tiles in
+// CSS so they all read at the same size and shape.
+const DOOMSCROLL_APPS = [
+  { name: "Instagram", domain: "instagram.com" },
+  { name: "TikTok", domain: "tiktok.com" },
+  { name: "YouTube", domain: "youtube.com" },
+  { name: "LinkedIn", domain: "linkedin.com" },
+  { name: "Snapchat", domain: "snapchat.com" },
+  { name: "Netflix", domain: "netflix.com" },
+];
+
 export default function About() {
   return (
     <div className="rg-about">
@@ -66,8 +79,8 @@ export default function About() {
           <Link className="rg-ab-wordmark" to="/">Reading Gate</Link>
           <div className="rg-ab-navlinks">
             <Link className="rg-ab-navlink is-current" to="/about" aria-current="page">About</Link>
-            <a className="rg-ab-navlink" href={EXTENSION_URL} target="_blank" rel="noopener noreferrer">Download</a>
             <Link className="rg-ab-navlink" to="/login">Log in</Link>
+            <a className="rg-ab-navcta" href={EXTENSION_URL} target="_blank" rel="noopener noreferrer">Add to Chrome</a>
           </div>
         </nav>
 
@@ -89,6 +102,22 @@ export default function About() {
               <div className="rg-ab-stat-num">{s.big}</div>
               <div className="rg-ab-stat-label">{s.label}</div>
             </div>
+          ))}
+        </div>
+
+        {/* Apps people doomscroll on — a row of official app icons */}
+        <div className="rg-ab-apps" aria-label="Apps people doomscroll on">
+          {DOOMSCROLL_APPS.map((a) => (
+            <span className="rg-ab-app" key={a.domain}>
+              <img
+                className="rg-ab-app-img"
+                src={`https://www.google.com/s2/favicons?domain=${a.domain}&sz=128`}
+                alt={`${a.name} icon`}
+                width="128"
+                height="128"
+                loading="lazy"
+              />
+            </span>
           ))}
         </div>
 
