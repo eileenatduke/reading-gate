@@ -266,10 +266,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 // ---- periodic content refresh ---------------------------------------------
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(async (details) => {
   const cfg = await getConfig();
   chrome.alarms.create("refill", { periodInMinutes: cfg.POOL_REFILL_MINUTES || 30 });
   await restore();
+
+  // On a fresh install (not an update or Chrome refresh), open the welcome tab so new
+  // users land on account creation instead of having to hunt for the toolbar icon.
+  if (details.reason === "install") {
+    try {
+      await chrome.tabs.create({ url: chrome.runtime.getURL("src/welcome.html") });
+    } catch {}
+  }
 });
 chrome.runtime.onStartup.addListener(restore);
 
