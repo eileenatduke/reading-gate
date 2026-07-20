@@ -59,12 +59,11 @@ const STATS = [
 ];
 
 // The apps people lose time to, shown as a row of their official icons above the
-// "trade" band. Icons are hotlinked (referenced, not bundled): the crisp full-color
-// brand marks come from Iconify's open "logos" set, and Instagram/Snapchat stay on
-// Google's favicon service. Each sits on a per-brand tile colour so it matches the
-// real app icon (e.g. red "N" on black for Netflix), and all tiles share one size
-// and shape. `fit: "cover"` fills the tile edge-to-edge (marks that carry their own
-// background); `fit: "contain"` centres a transparent glyph with padding.
+// "trade" band. Icons are hotlinked (referenced, not bundled) from Iconify's open
+// icon sets, with Instagram/Snapchat on Google's favicon service. Each sits on a
+// per-brand tile colour, and all tiles share one size and shape. `fit: "cover"`
+// fills the tile edge-to-edge (marks that carry their own background); `fit:
+// "contain"` centres a transparent glyph with padding.
 const favicon = (domain) => `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 const brand = (name) => `https://api.iconify.design/logos/${name}.svg`;
 
@@ -76,7 +75,9 @@ const DOOMSCROLL_APPS = [
   { name: "YouTube", src: brand("youtube-icon"), bg: "#ffffff", fit: "contain" },
   { name: "LinkedIn", src: brand("linkedin-icon"), bg: "#ffffff", fit: "cover" },
   { name: "Snapchat", src: favicon("snapchat.com"), bg: "#fffc00", fit: "cover" },
-  { name: "Netflix", src: brand("netflix-icon"), bg: "#ffffff", fit: "contain" },
+  // Clean flat red "N" (Simple Icons, Netflix red) — a white tile with the N
+  // centred, matching the YouTube/TikTok treatment.
+  { name: "Netflix", src: "https://api.iconify.design/simple-icons/netflix.svg?color=%23e50914", bg: "#ffffff", fit: "contain" },
 ];
 
 // One research principle block (number, title, paragraphs, and the two-up compare
