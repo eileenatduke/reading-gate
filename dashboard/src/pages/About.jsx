@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { EXTENSION_URL } from "../lib/config.js";
 
@@ -69,19 +70,35 @@ const brand = (name) => `https://api.iconify.design/logos/${name}.svg`;
 
 const DOOMSCROLL_APPS = [
   { name: "Instagram", src: favicon("instagram.com"), bg: "#ffffff", fit: "cover" },
-  { name: "TikTok", src: brand("tiktok-icon"), bg: "#000000", fit: "contain" },
+  // TikTok's note is a black glyph with cyan/red offset — on a white tile it reads
+  // as the official light-background TikTok icon and stands out against the dark page.
+  { name: "TikTok", src: brand("tiktok-icon"), bg: "#ffffff", fit: "contain" },
   { name: "YouTube", src: brand("youtube-icon"), bg: "#ffffff", fit: "contain" },
   { name: "LinkedIn", src: brand("linkedin-icon"), bg: "#ffffff", fit: "cover" },
   { name: "Snapchat", src: favicon("snapchat.com"), bg: "#fffc00", fit: "cover" },
-  { name: "Netflix", src: brand("netflix-icon"), bg: "#000000", fit: "contain" },
+  { name: "Netflix", src: brand("netflix-icon"), bg: "#ffffff", fit: "contain" },
 ];
 
 export default function About() {
+  // The page scrolls inside the fixed .rg-about container (not the window), so we
+  // watch that element's scrollTop to fade the sticky nav to a translucent, blurred
+  // bar once the user leaves the very top.
+  const scrollRef = useRef(null);
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => setScrolled(el.scrollTop > 8);
+    onScroll();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <div className="rg-about">
+    <div className="rg-about" ref={scrollRef}>
       <div className="rg-ab">
         {/* Nav */}
-        <nav className="rg-ab-nav">
+        <nav className={`rg-ab-nav${scrolled ? " is-scrolled" : ""}`}>
           <Link className="rg-ab-wordmark" to="/">Reading Gate</Link>
           <div className="rg-ab-navlinks">
             <Link className="rg-ab-navlink is-current" to="/about" aria-current="page">About</Link>
