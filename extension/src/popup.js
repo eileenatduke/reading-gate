@@ -74,9 +74,10 @@ async function renderDash(user) {
   $("dashboard-link").href = await dashboardBase();
 
   try {
-    const pool = await db("article_pool").select("id,served").eq("user_id", user.id).is("served", "false").run();
-    $("pool").textContent = pool ? pool.length : 0;
-  } catch { $("pool").textContent = "–"; }
+    const read = await db("reading_log").select("id").eq("user_id", user.id)
+      .gte("created_at", startOfWeekISO()).run();
+    $("read-week").textContent = read ? read.length : 0;
+  } catch { $("read-week").textContent = "–"; }
 
   try {
     const imp = await db("impulse_log").select("id").eq("user_id", user.id)
