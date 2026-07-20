@@ -82,6 +82,14 @@ body {
 }
 .read-btn { display: inline-flex; align-items: center; gap: var(--sp-2); }
 
+/* Row above the article card: reading progress on the left, dashboard link on the right. */
+.gate-top { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+.gate-top .progress { margin-bottom: 0; }
+.gate-top #go-dashboard { margin-left: auto; }
+
+/* Read + refresh actions share a row and wrap on narrow widths. */
+.card-actions { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+
 .section-label {
   font-size: var(--fs-sm); font-weight: 600; color: var(--text);
   margin-bottom: var(--sp-2); display: block;

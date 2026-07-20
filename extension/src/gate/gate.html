@@ -40,7 +40,10 @@
 
     <!-- The gate -->
     <div id="gate-state" class="hidden">
-      <div id="progress" class="progress hidden"></div>
+      <div class="gate-top">
+        <div id="progress" class="progress hidden"></div>
+        <button class="btn btn-ghost" id="go-dashboard">Go to dashboard ↗</button>
+      </div>
       <div class="card">
         <div class="pills">
           <span class="pill source" id="a-source"></span>
@@ -49,9 +52,12 @@
         </div>
         <h1 class="headline" id="a-title"></h1>
         <p class="blurb" id="a-blurb"></p>
-        <a class="btn btn-primary read-btn" id="a-read" target="_blank" rel="noopener">
-          Read on <span id="a-read-source"></span> ↗
-        </a>
+        <div class="card-actions">
+          <a class="btn btn-primary read-btn" id="a-read" target="_blank" rel="noopener">
+            Read on <span id="a-read-source"></span> ↗
+          </a>
+          <button class="btn btn-ghost" id="refresh-article">Not for you? Refresh article ↻</button>
+        </div>
       </div>
 
       <div class="card">

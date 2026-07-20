@@ -1,5 +1,5 @@
 import { getConfig } from "../lib/config.js";
-import { currentUser, db, signIn, signUp, getUserFresh } from "../lib/sb.js";
+import { currentUser, db, signIn, signUp, getUserFresh, getSession } from "../lib/sb.js";
 import { pickArticle } from "../lib/recommender.js";
 import { applyTheme, DEFAULT_THEME } from "../lib/themes.js";
 
@@ -47,9 +47,29 @@ function show(stateId) {
 
 async function message(text) {
   $("message-msg").textContent = text;
-  const cfg = await getConfig();
-  $("open-dashboard").href = cfg.DASHBOARD_URL || "https://reading-gate.vercel.app";
+  $("open-dashboard").href = await dashboardBase();
   show("message-state");
+}
+
+async function dashboardBase() {
+  const cfg = await getConfig();
+  return (cfg.DASHBOARD_URL || "https://reading-gate.vercel.app").replace(/\/$/, "");
+}
+
+// Open the web dashboard in a new tab, handing off the current session in the URL hash
+// so the user arrives already signed in (same approach as the popup). The hash keeps the
+// tokens off the wire; the dashboard adopts and strips them on load.
+async function openDashboard(path = "/login") {
+  const base = await dashboardBase();
+  const session = await getSession();
+  let url = base + path;
+  if (session?.access_token && session?.refresh_token) {
+    url += "#" + new URLSearchParams({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    }).toString();
+  }
+  window.open(url, "_blank", "noopener");
 }
 
 function wordCount(text) {
@@ -264,6 +284,12 @@ $("submit").addEventListener("click", submit);
 $("summary").addEventListener("input", updateCounter);
 $("access-btn").addEventListener("click", accessSite);
 $("more-btn").addEventListener("click", loadNextArticle);
+$("go-dashboard").addEventListener("click", () => openDashboard("/login"));
+// Swap the recommendation for a fresh one. loadNextArticle() replaces the global
+// `article`, and submit() logs whatever `article` currently is — so the reading_log
+// (and therefore the dashboard) records the genre/source of the article the user
+// actually read and summarized, not the one first offered.
+$("refresh-article").addEventListener("click", loadNextArticle);
 
 // Instant paint from the cached theme, then refine from the server in loadTheme().
 chrome.storage.local.get("gate_theme").then(({ gate_theme }) => applyTheme(gate_theme || DEFAULT_THEME));
