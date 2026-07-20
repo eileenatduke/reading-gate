@@ -3,6 +3,7 @@ import { isConfigured } from "./lib/supabase.js";
 import { useAuth } from "./lib/auth.jsx";
 import Landing from "./pages/Landing.jsx";
 import About from "./pages/About.jsx";
+import Privacy from "./pages/Privacy.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./Dashboard.jsx";
 
@@ -34,6 +35,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/about" element={<About />} />
+      <Route path="/privacy" element={<Privacy />} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       {user ? (
         <Route path="/*" element={<Dashboard />} />
