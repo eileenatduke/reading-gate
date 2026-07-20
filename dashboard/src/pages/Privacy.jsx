@@ -10,11 +10,13 @@ const UPDATED = "July 2026";
 export default function Privacy() {
   return (
     <div className="rg-about">
-      <Link className="rg-back" to="/">← Back</Link>
       <div className="rg-about-scroll">
         <article className="rg-legal">
-          <h1>Privacy Policy</h1>
-          <p className="rg-legal-meta">Last updated: {UPDATED}</p>
+          <header className="rg-legal-head">
+            <Link className="rg-legal-back" to="/">← Back</Link>
+            <h1>Privacy Policy</h1>
+            <p className="rg-legal-meta">Last updated: {UPDATED}</p>
+          </header>
 
           <p>
             Reading Gate is a browser extension and companion web dashboard that makes you read and
@@ -88,7 +90,7 @@ export default function Privacy() {
             )}
           </p>
 
-          <p style={{ marginTop: 36 }}>
+          <p className="rg-legal-foot">
             <Link className="rg-pill" to="/">Back to home</Link>
           </p>
         </article>
