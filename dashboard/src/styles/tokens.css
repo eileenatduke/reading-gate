@@ -16,8 +16,20 @@ body {
 a { color: var(--accent); text-decoration: none; }
 a:hover { color: var(--link-hover, var(--text)); }
 
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+/* Slim white scrollbar across the whole app (was theme-tinted via --border).
+   The transparent border + padding-box clip makes the thumb a thin, inset white
+   bar that doesn't touch the track ends. */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, .85);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: #fff; background-clip: padding-box; }
+/* Firefox */
+html { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .85) transparent; }
 
 .serif { font-family: 'Playfair Display', Georgia, serif; font-weight: 400; }
 
