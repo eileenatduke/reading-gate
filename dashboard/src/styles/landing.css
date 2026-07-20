@@ -299,12 +299,9 @@
   border-radius: 14px; overflow: hidden;
   box-shadow: 0 2px 12px rgba(0,0,0,0.35);
 }
-/* "Bare" tile — no square, no shadow; the icon floats on the page (e.g. Netflix's N). */
-.rg-ab-app.is-bare { box-shadow: none; overflow: visible; }
 .rg-ab-app-img { width: 100%; height: 100%; display: block; box-sizing: border-box; }
 .rg-ab-app-img.is-cover { object-fit: cover; }
 .rg-ab-app-img.is-contain { object-fit: contain; padding: 16%; }
-.rg-ab-app.is-bare .rg-ab-app-img.is-contain { padding: 4%; }
 
 /* ---- Trade statement — the only light/inverted band ---- */
 .rg-ab-trade { background: #fff; padding: 96px 40px; text-align: center; }
