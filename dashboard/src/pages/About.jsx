@@ -76,8 +76,7 @@ const DOOMSCROLL_APPS = [
   { name: "YouTube", src: brand("youtube-icon"), bg: "#ffffff", fit: "contain" },
   { name: "LinkedIn", src: brand("linkedin-icon"), bg: "#ffffff", fit: "cover" },
   { name: "Snapchat", src: favicon("snapchat.com"), bg: "#fffc00", fit: "cover" },
-  // Netflix reads as just the red "N" floating on the page — no tile behind it.
-  { name: "Netflix", src: brand("netflix-icon"), bg: "transparent", fit: "contain", bare: true },
+  { name: "Netflix", src: brand("netflix-icon"), bg: "#ffffff", fit: "contain" },
 ];
 
 // One research principle block (number, title, paragraphs, and the two-up compare
@@ -159,7 +158,7 @@ export default function About() {
         {/* Apps people doomscroll on — a row of official app icons */}
         <div className="rg-ab-apps" aria-label="Apps people doomscroll on">
           {DOOMSCROLL_APPS.map((a) => (
-            <span className={`rg-ab-app${a.bare ? " is-bare" : ""}`} key={a.name} style={{ background: a.bg }}>
+            <span className="rg-ab-app" key={a.name} style={{ background: a.bg }}>
               <img
                 className={`rg-ab-app-img is-${a.fit}`}
                 src={a.src}
