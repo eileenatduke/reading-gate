@@ -174,7 +174,8 @@ export default function About() {
           <h2 className="rg-ab-trade-h">Trade your doomscroll for a read.</h2>
           <p className="rg-ab-trade-p">
             Unlike traditional app blockers, Reading Gate replaces every doomscroll with a
-            valuable read, then unlocks your apps after you've learned something.
+            valuable read, then unlocks your apps after you've learned something. Become more
+            informed with every scroll.
           </p>
         </section>
 
