@@ -56,17 +56,13 @@ project settings. SPA routing rewrites are already configured
 **Public pages & auth.** The site opens on a marketing **landing hero** (`/`) with
 one fixed dark theme. **Download Now** links to the extension (set
 `VITE_EXTENSION_URL` to your Chrome Web Store listing), **About** (`/about`) is a
-live placeholder awaiting copy, and **Log in / Sign up** (`/login`) offers
-**Google** and **email + password**. Once signed in, the dashboard loads — new
-users default to the **Mono (black & white)** theme and can pick any theme in
-**Settings**.
+live placeholder awaiting copy, and **Log in / Sign up** (`/login`) uses
+**email + password**. Once signed in, the dashboard loads — new users default to
+the **Mono (black & white)** theme and can pick any theme in **Settings**.
 
-> To enable the Google button, turn on the **Google** provider in Supabase
-> (**Authentication → Providers**) with a Google OAuth client ID/secret, and add
-> the Supabase callback URL to the Google client's authorized redirect URIs. Until
-> it's enabled, the button returns a "provider is not enabled" error; email +
-> password works out of the box. (An Outlook/Azure button can be added later the
-> same way — it's config-only.)
+> Auth is email/password only (both the dashboard and the extension). Social
+> sign-in (Google/Outlook) can be added later by enabling the matching provider
+> in Supabase and wiring the button back in — it's config plus a small UI change.
 
 ### 3. Extension
 1. Chrome/Edge/Brave → `chrome://extensions` → enable **Developer mode** → **Load
