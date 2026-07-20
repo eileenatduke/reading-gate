@@ -29,6 +29,35 @@ async function openDashboard(path = "") {
   await chrome.tabs.create({ url });
 }
 
+// Push this popup's auth state into any already-open dashboard tabs, so the account shown on
+// the web dashboard always follows the one you're logged into here (the extension is the
+// single source of truth). On sign-in we hand off the session; on sign-out we tell the
+// dashboard to sign out too. Both use the URL hash, which the dashboard adopts and strips.
+async function syncOpenDashboards({ signedOut = false } = {}) {
+  const base = await dashboardBase();
+  let tabs = [];
+  try {
+    tabs = await chrome.tabs.query({ url: base + "/*" });
+  } catch { return; }
+  if (!tabs.length) return;
+
+  let hash = "";
+  if (signedOut) {
+    hash = "#signout=1";
+  } else {
+    const session = await getSession();
+    if (!session?.access_token || !session?.refresh_token) return;
+    hash = "#" + new URLSearchParams({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    }).toString();
+  }
+  const url = base + "/login" + hash;
+  for (const t of tabs) {
+    try { await chrome.tabs.update(t.id, { url }); } catch {}
+  }
+}
+
 function startOfWeekISO() {
   // Monday-start week, in UTC, without relying on Date.now-forbidden APIs (popups can use Date).
   const now = new Date();
@@ -78,6 +107,7 @@ async function doAuth(fn, { isSignup = false } = {}) {
     if (!session) { $("auth-err").textContent = "Check your email to confirm your account, then log in."; return; }
     await chrome.runtime.sendMessage({ type: "REFRESH_BLOCKLIST" });
     await chrome.runtime.sendMessage({ type: "REFILL_POOL" });
+    await syncOpenDashboards();
     if (isSignup) {
       // New account → show the onboarding page with a clear next step, instead of the
       // ambiguous three-button screen a first-timer can't parse. We deliberately do NOT
@@ -100,7 +130,7 @@ async function init() {
 
   // Preferences live on the web dashboard, not in the extension — open it already signed in.
   $("to-prefs").addEventListener("click", () => openDashboard("/settings"));
-  $("dashboard-link").addEventListener("click", (e) => { e.preventDefault(); openDashboard(""); });
+  $("dashboard-link").addEventListener("click", (e) => { e.preventDefault(); openDashboard("/login"); });
 
   // Onboarding panel (shown right after a new account is created).
   $("open-settings").addEventListener("click", () => openDashboard("/settings"));
@@ -112,7 +142,11 @@ async function init() {
   $("signin").addEventListener("click", () => doAuth(signIn));
   $("signup").addEventListener("click", () => doAuth(signUp, { isSignup: true }));
   $("refresh").addEventListener("click", refresh);
-  $("signout").addEventListener("click", async () => { await signOut(); showOnly("auth"); });
+  $("signout").addEventListener("click", async () => {
+    await signOut();
+    await syncOpenDashboards({ signedOut: true });
+    showOnly("auth");
+  });
 }
 
 init();

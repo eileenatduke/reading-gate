@@ -11,6 +11,16 @@ const AuthCtx = createContext({ user: null, loading: true });
 async function consumeSessionFromHash() {
   if (!window.location.hash) return;
   const params = new URLSearchParams(window.location.hash.slice(1));
+  const strip = () =>
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+
+  // The extension signed out → keep the dashboard consistent by signing out here too.
+  if (params.get("signout") === "1") {
+    try { await supabase.auth.signOut(); } catch { /* already logged out */ }
+    finally { strip(); }
+    return;
+  }
+
   const access_token = params.get("access_token");
   const refresh_token = params.get("refresh_token");
   if (!access_token || !refresh_token) return;
@@ -19,7 +29,7 @@ async function consumeSessionFromHash() {
   } catch {
     // Invalid/expired handoff — fall through to normal logged-out handling.
   } finally {
-    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    strip();
   }
 }
 
