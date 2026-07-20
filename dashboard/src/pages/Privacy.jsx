@@ -26,7 +26,7 @@ export default function Privacy() {
 
           <h2>What we collect</h2>
           <ul>
-            <li><strong>Account information</strong> — your email address when you create an account or sign in (including via Google sign-in).</li>
+            <li><strong>Account information</strong> — your email address when you create an account or sign in.</li>
             <li><strong>Reading activity</strong> — the summaries you write, the quality and interest ratings you give, and basic metadata about each article (title, source, genre, timestamp).</li>
             <li><strong>Gate activity</strong> — when the gate is triggered on a site you've chosen to block (the domain, a timestamp, and whether you completed the reading).</li>
             <li><strong>Your settings</strong> — the sites on your blocklist, your selected interests, any custom sources you add, your theme, and how many articles you require per unlock.</li>
@@ -61,7 +61,6 @@ export default function Privacy() {
             <li><strong>tabs</strong> and <strong>webNavigation</strong> — to detect when you open or navigate to a site you've blocked, so the gate can appear.</li>
             <li><strong>storage</strong> — to keep your settings, sign-in session, and gate state on your device.</li>
             <li><strong>alarms</strong> — to time the grace period when you leave a tab.</li>
-            <li><strong>identity</strong> — to let you sign in with Google through the browser's built-in flow.</li>
             <li><strong>host access</strong> — because you can block any site, the extension must be able to run on any site to enforce the gate and fetch public articles.</li>
           </ul>
 

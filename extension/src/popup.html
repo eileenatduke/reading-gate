@@ -17,14 +17,6 @@
     .row { display:flex; gap: var(--sp-2); }
     .row .btn { margin-bottom:0; }
     .muted { color: var(--text-muted); font-size: var(--fs-sm); }
-    .oauth { width:100%; font:inherit; font-weight:600; cursor:pointer; border:1px solid var(--border);
-      border-radius: var(--radius); padding: var(--sp-3); background: var(--surface); color: var(--text);
-      margin-bottom: var(--sp-2); display:flex; align-items:center; justify-content:center; gap: var(--sp-2); }
-    .oauth svg { width:16px; height:16px; flex:0 0 auto; }
-    .oauth:disabled { opacity:.55; cursor:default; }
-    .divider { display:flex; align-items:center; gap: var(--sp-2); color: var(--text-muted);
-      font-size: var(--fs-xs); text-transform:uppercase; letter-spacing:.06em; margin: var(--sp-3) 0; }
-    .divider::before, .divider::after { content:""; flex:1; height:1px; background: var(--border); }
     .err { color: var(--danger); font-size: var(--fs-sm); margin-bottom: var(--sp-2); min-height: 1em; }
     .stat { display:flex; justify-content:space-between; padding: var(--sp-2) 0; border-bottom:1px solid var(--border); }
     .stat b { font-size: var(--fs-lg); }
@@ -42,11 +34,6 @@
 
     <div id="auth" class="hidden">
       <div class="err" id="auth-err"></div>
-      <button class="oauth" id="oauth-google">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.99.66-2.26 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.11a6.6 6.6 0 0 1 0-4.22V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.05l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z"/></svg>
-        Continue with Google
-      </button>
-      <div class="divider">or</div>
       <input id="email" type="email" placeholder="Email" autocomplete="username" />
       <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
       <button class="btn" id="signin">Log in</button>

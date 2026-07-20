@@ -161,30 +161,6 @@
 }
 .rg-auth-sub { color: rgba(244,244,242,.6); font-size: 15px; margin: 0 0 28px; }
 
-.rg-oauth {
-  display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px;
-}
-.rg-oauth-btn {
-  display: flex; align-items: center; justify-content: center; gap: 12px;
-  width: 100%; padding: 13px 18px;
-  font-family: "Source Sans 3", system-ui, sans-serif;
-  font-size: 15px; font-weight: 600; cursor: pointer;
-  border-radius: 999px; border: 1px solid rgba(244,244,242,.28);
-  background: transparent; color: var(--rg-paper);
-  transition: background .18s ease, border-color .18s ease;
-}
-.rg-oauth-btn:hover { background: rgba(244,244,242,.10); border-color: rgba(244,244,242,.5); }
-.rg-oauth-btn:disabled { opacity: .5; cursor: default; }
-.rg-oauth-btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
-
-.rg-divider {
-  display: flex; align-items: center; gap: 14px;
-  color: rgba(244,244,242,.4); font-size: 12px; letter-spacing: .08em;
-  text-transform: uppercase; margin: 22px 0;
-}
-.rg-divider::before, .rg-divider::after {
-  content: ""; flex: 1; height: 1px; background: rgba(244,244,242,.18);
-}
 
 .rg-field { margin-bottom: 14px; }
 .rg-label {

@@ -9,7 +9,7 @@
 //  - Periodically refill each user's article pool.
 
 import { getConfig } from "./lib/config.js";
-import { db, currentUser, signInWithOAuth } from "./lib/sb.js";
+import { db, currentUser } from "./lib/sb.js";
 import { refillPool, resetPool } from "./lib/content.js";
 
 const NONE = chrome.windows.WINDOW_ID_NONE;
@@ -245,18 +245,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const tabId = sender.tab?.id;
         if (tabId != null) { delete pendingImpulse[tabId]; await persist(); }
         return sendResponse({ ok: true });
-      }
-      case "OAUTH_SIGNIN": {
-        // Run the interactive OAuth flow here (not the popup) so it completes even
-        // if the popup closes when the auth window takes focus.
-        try {
-          const session = await signInWithOAuth(msg.provider);
-          await loadBlocklist();
-          refillPool().catch(() => {});
-          return sendResponse({ ok: true, user: session.user });
-        } catch (e) {
-          return sendResponse({ ok: false, error: e.message });
-        }
       }
       case "REFRESH_BLOCKLIST": {
         await loadBlocklist();
