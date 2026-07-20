@@ -52,7 +52,7 @@ const COMPARISON = [
 ];
 
 const STATS = [
-  { big: "5h 16m", label: "avg. daily phone use — up 14% YoY" },
+  { big: "7h 11m", label: "avg. daily phone use — up 14% YoY" },
   { big: "78%", label: "of adults tried a detox" },
   { big: "72%", label: "of those attempts failed" },
 ];
