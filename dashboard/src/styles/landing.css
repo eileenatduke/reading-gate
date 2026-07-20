@@ -304,27 +304,27 @@
 .rg-ab-app-img.is-contain { object-fit: contain; padding: 16%; }
 
 /* ---- Trade statement — the only light/inverted band ---- */
-.rg-ab-trade { background: #fff; padding: 96px 40px; text-align: center; }
+.rg-ab-trade { background: var(--rg-paper); padding: 96px 40px; text-align: center; }
 .rg-ab-trade-h {
-  font-family: "Playfair Display", Georgia, serif;
-  font-weight: 500; font-size: 46px; line-height: 1.2; color: #0d0d0d;
-  margin: 0 auto 24px; max-width: 620px;
-}
-.rg-ab-trade-p {
-  color: rgba(13,13,13,0.72); font-size: 19px; line-height: 1.65;
-  margin: 0 auto; max-width: 560px;
-}
-
-/* ---- Mid-page CTA band (light) ---- */
-.rg-ab-final { background: var(--rg-paper); padding: 100px 40px; text-align: center; }
-.rg-ab-final-h {
   font-family: "Playfair Display", Georgia, serif;
   font-weight: 500; font-size: 46px; line-height: 1.2; color: var(--rg-ink);
   margin: 0 auto 24px; max-width: 620px;
 }
+.rg-ab-trade-p {
+  color: rgba(14,14,13,0.72); font-size: 19px; line-height: 1.65;
+  margin: 0 auto; max-width: 560px;
+}
+
+/* ---- Mid-page CTA band (light) ---- */
+.rg-ab-final { background: var(--rg-paper); padding: 60px 40px; text-align: center; }
+.rg-ab-final-h {
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 500; font-size: 46px; line-height: 1.2; color: var(--rg-ink);
+  margin: 0 auto 20px; max-width: 620px;
+}
 .rg-ab-final-p {
-  color: rgba(14,14,13,0.7); font-size: 19px; line-height: 1.65;
-  margin: 0 auto 40px; max-width: 540px;
+  color: rgba(14,14,13,0.72); font-size: 19px; line-height: 1.65;
+  margin: 0 auto 28px; max-width: 540px;
 }
 
 /* ---- Research intro ---- */
@@ -397,7 +397,7 @@
   .rg-ab-lede { font-size: 18px; }
   .rg-ab-trade { padding: 64px 24px; }
   .rg-ab-trade-h { font-size: 34px; }
-  .rg-ab-final { padding: 72px 24px; }
+  .rg-ab-final { padding: 48px 24px; }
   .rg-ab-final-h { font-size: 34px; }
   .rg-ab-research-intro { padding: 64px 24px 24px; }
   .rg-ab-research-h { font-size: 32px; }
