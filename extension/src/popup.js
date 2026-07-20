@@ -79,10 +79,11 @@ async function doAuth(fn, { isSignup = false } = {}) {
     await chrome.runtime.sendMessage({ type: "REFRESH_BLOCKLIST" });
     await chrome.runtime.sendMessage({ type: "REFILL_POOL" });
     if (isSignup) {
-      // New account → send them straight to set up preferences on the dashboard (already
-      // signed in), instead of the ambiguous three-button screen a first-timer can't parse.
+      // New account → show the onboarding page with a clear next step, instead of the
+      // ambiguous three-button screen a first-timer can't parse. We deliberately do NOT
+      // auto-open the dashboard here: opening a tab steals focus and closes the popup, so
+      // the message would never be seen. The user opens Settings from the button below.
       showOnly("onboard");
-      await openDashboard("/settings");
     } else {
       await renderDash(session.user);
     }
