@@ -272,7 +272,7 @@
 .rg-ab-h1 span { display: block; font-size: 68px; line-height: 1.06; }
 .rg-ab-h1 span:first-child { margin-bottom: 8px; }
 .rg-ab-lede {
-  color: rgba(255,255,255,0.7); font-size: 20px; line-height: 1.65; margin: 0;
+  color: rgba(255,255,255,0.7); font-size: 19px; line-height: 1.65; margin: 0;
 }
 
 /* ---- Stat band ---- */
@@ -333,7 +333,7 @@
 }
 .rg-ab-research-h {
   font-family: "Playfair Display", Georgia, serif;
-  font-weight: 500; font-size: 42px; color: #fff; margin: 0;
+  font-weight: 500; font-size: 46px; line-height: 1.2; color: #fff; margin: 0;
 }
 
 /* ---- Three research principles ---- */
@@ -394,13 +394,13 @@
   .rg-ab-navlink { white-space: nowrap; }
   .rg-ab-hero { padding: 72px 24px 56px; }
   .rg-ab-h1 span { font-size: 40px; }
-  .rg-ab-lede { font-size: 18px; }
+  .rg-ab-lede { font-size: 19px; }
   .rg-ab-trade { padding: 64px 24px; }
   .rg-ab-trade-h { font-size: 34px; }
   .rg-ab-final { padding: 48px 24px; }
   .rg-ab-final-h { font-size: 34px; }
   .rg-ab-research-intro { padding: 64px 24px 24px; }
-  .rg-ab-research-h { font-size: 32px; }
+  .rg-ab-research-h { font-size: 34px; }
   .rg-ab-principles { padding: 24px 24px 40px; }
   .rg-ab-table-wrap { padding: 32px 24px 72px; }
 
