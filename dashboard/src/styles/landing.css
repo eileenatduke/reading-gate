@@ -381,3 +381,26 @@
   .rg-ab-table { overflow-x: auto; }
   .rg-ab-tr { min-width: 560px; }
 }
+
+/* Legal / prose pages (Privacy) — left-aligned, readable column on the dark
+   editorial surface. */
+.rg-legal { max-width: 720px; width: 100%; text-align: left; }
+.rg-legal h1 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 500; font-size: 46px; line-height: 1.05; margin: 0 0 8px;
+  letter-spacing: -.02em;
+}
+.rg-legal-meta { color: rgba(244,244,242,.45); font-size: 14px; margin: 0 0 28px; }
+.rg-legal h2 {
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  font-size: 20px; font-weight: 600; color: var(--rg-paper);
+  margin: 30px 0 10px;
+}
+.rg-legal p, .rg-legal li {
+  color: rgba(244,244,242,.72); font-size: 16px; line-height: 1.65;
+}
+.rg-legal p { margin: 0 0 14px; }
+.rg-legal ul { margin: 0 0 14px; padding-left: 22px; }
+.rg-legal li { margin: 0 0 8px; }
+.rg-legal strong { color: var(--rg-paper); font-weight: 600; }
+.rg-legal a { color: var(--rg-paper); text-decoration: underline; text-underline-offset: 3px; }
