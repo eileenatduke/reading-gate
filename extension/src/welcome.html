@@ -30,7 +30,7 @@
     .brand { display:flex; align-items:center; gap: var(--sp-2); font-weight:700; font-size: var(--fs-lg); margin-bottom: var(--sp-5); }
     .brand .dot { width:12px; height:12px; border-radius:50%; background:var(--accent); }
     h1 { font-size: var(--fs-2xl); margin: 0 0 var(--sp-2); }
-    .lead { color: var(--text-muted); margin: 0 0 var(--sp-5); line-height: 1.5; }
+    .lead { color: var(--muted); margin: 0 0 var(--sp-5); line-height: 1.5; }
     label { display:block; font-size: var(--fs-sm); font-weight:600; margin-bottom: var(--sp-1); }
     input {
       width:100%; font:inherit; padding: var(--sp-3); margin-bottom: var(--sp-4);
@@ -44,12 +44,9 @@
       background: var(--accent); color:#fff;
     }
     .btn:disabled { opacity:.6; cursor:default; }
-    .toggle-link { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; }
-    .muted { color: var(--text-muted); font-size: var(--fs-sm); }
+    .toggle-link { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; text-decoration: underline; }
+    .switch { text-align:center; margin-top: var(--sp-4); font-size: var(--fs-sm); color: var(--muted); }
     .err { color: var(--danger); font-size: var(--fs-sm); margin-bottom: var(--sp-3); min-height: 1em; }
-    .note { color: var(--text-muted); font-size: var(--fs-xs); margin: var(--sp-4) 0 0; line-height: 1.5; }
-    .switch { text-align:center; margin-top: var(--sp-4); font-size: var(--fs-sm); }
-    .success-dot { color: var(--success); }
     .hidden { display:none; }
   </style>
 </head>
@@ -69,10 +66,6 @@
       <label for="password">Password</label>
       <input id="password" type="password" placeholder="At least 6 characters" autocomplete="new-password" />
       <button class="btn" id="submit">Create account</button>
-      <p class="note">
-        Single sign-on with Google or Microsoft is coming soon. For now, please use an
-        email and password.
-      </p>
       <div class="switch">
         <span id="switch-text">Already have an account?</span>
         <button class="toggle-link" id="switch-mode">Log in</button>

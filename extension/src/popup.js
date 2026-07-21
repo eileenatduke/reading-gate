@@ -1,5 +1,11 @@
 import { getConfig } from "./lib/config.js";
 import { signIn, signUp, signOut, currentUser, getSession, db } from "./lib/sb.js";
+import { applyTheme, DEFAULT_THEME } from "./lib/themes.js";
+
+// Paint the default Mono theme immediately so the popup opens in the brand look instead of
+// the raw token defaults. Once we know the signed-in user, we switch to whatever theme they
+// picked in Settings (see init); new users with no saved theme stay on Mono.
+applyTheme(DEFAULT_THEME);
 
 const $ = (id) => document.getElementById(id);
 const showOnly = (id) => {
@@ -114,6 +120,8 @@ async function doAuth(fn, { isSignup = false } = {}) {
 async function init() {
   $("version").textContent = "v" + chrome.runtime.getManifest().version;
   const user = await currentUser();
+  // Follow the user's chosen theme; new users (no saved theme) stay on the Mono default.
+  applyTheme(user?.user_metadata?.theme || DEFAULT_THEME);
   if (user) await renderDash(user);
   else showOnly("auth");
 

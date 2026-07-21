@@ -1,5 +1,11 @@
 import { getConfig } from "./lib/config.js";
 import { signIn, signUp, getSession, currentUser } from "./lib/sb.js";
+import { applyTheme, DEFAULT_THEME } from "./lib/themes.js";
+
+// The onboarding surface is always the default Mono (black & white) theme — the brand's
+// starting look. Downstream pages (dashboard, gate) then follow whatever theme the user
+// picks in Settings; until they pick one, they default to Mono too.
+applyTheme(DEFAULT_THEME);
 
 const $ = (id) => document.getElementById(id);
 const show = (id) => {
