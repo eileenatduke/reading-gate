@@ -32,19 +32,30 @@ export function ThemeProvider({ children }) {
   const themeRef = useRef(theme);
   useEffect(() => { themeRef.current = theme; }, [theme]);
 
-  // Reconcile with the theme saved in the user's auth metadata (shared with the gate).
+  // Keep the theme tied to the CURRENTLY signed-in account, reacting to auth changes rather
+  // than only reading once on mount. When a different account is handed off from the extension
+  // (consumeSessionFromHash → setSession fires onAuthStateChange), reset to that account's saved
+  // theme — or the Mono default if it never picked one. Reconciling once on mount was racy: it
+  // could read the previous account's session (which may itself have a saved theme) before the
+  // new session landed, leaking that account's theme — and a saved theme in this browser's
+  // localStorage — into the freshly onboarded account.
   useEffect(() => {
-    let cancelled = false;
-    supabase.auth.getUser().then(({ data }) => {
-      if (cancelled) return;
-      if (!data?.user) return;
-      const t = data.user.user_metadata?.theme;
-      // The account's saved theme is the source of truth. An account that has never picked
-      // one falls back to the Mono default — we must NOT inherit a theme left in this
-      // browser's localStorage by a different account (e.g. after onboarding a new user).
-      setThemeState(t && isValidTheme(t) ? t : DEFAULT_THEME);
-    }).catch(() => {});
-    return () => { cancelled = true; };
+    let lastUserId = null;
+    const reconcile = (session) => {
+      const u = session?.user;
+      if (!u) { lastUserId = null; return; }
+      if (u.id === lastUserId) return; // same account — don't clobber an in-progress preview
+      lastUserId = u.id;
+      const saved = u.user_metadata?.theme;
+      const next = saved && isValidTheme(saved) ? saved : DEFAULT_THEME;
+      setThemeState(next);
+      // Sync this browser's cache to the active account so a reload doesn't repaint the
+      // previous account's theme before we reconcile.
+      try { localStorage.setItem(KEY, next); } catch {}
+    };
+    supabase.auth.getSession().then(({ data }) => reconcile(data.session)).catch(() => {});
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => reconcile(session));
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   useEffect(() => { apply(theme); }, [theme]);
