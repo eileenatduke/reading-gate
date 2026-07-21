@@ -37,8 +37,12 @@ export function ThemeProvider({ children }) {
     let cancelled = false;
     supabase.auth.getUser().then(({ data }) => {
       if (cancelled) return;
-      const t = data?.user?.user_metadata?.theme;
-      if (t && isValidTheme(t)) setThemeState(t);
+      if (!data?.user) return;
+      const t = data.user.user_metadata?.theme;
+      // The account's saved theme is the source of truth. An account that has never picked
+      // one falls back to the Mono default — we must NOT inherit a theme left in this
+      // browser's localStorage by a different account (e.g. after onboarding a new user).
+      setThemeState(t && isValidTheme(t) ? t : DEFAULT_THEME);
     }).catch(() => {});
     return () => { cancelled = true; };
   }, []);

@@ -37,10 +37,10 @@
     .brand { font-weight:700; font-size: var(--fs-lg); margin-bottom: var(--sp-5); }
     /* Headings: Playfair Display (serif display), per the brand type guidelines. */
     h1 { font-family: var(--font-serif); font-weight: 600; font-size: var(--fs-2xl); line-height: 1.1; margin: 0 0 var(--sp-3); }
-    .lead { color: var(--muted); font-size: var(--fs-lg); margin: 0 0 var(--sp-5); line-height: 1.55; }
-    label { display:block; font-size: var(--fs-sm); font-weight:600; margin-bottom: var(--sp-1); }
+    .lead { color: var(--muted); font-size: var(--fs-lg); margin: 0 0 var(--sp-4); line-height: 1.55; }
+    label { display:block; font-size: var(--fs-base); font-weight:600; margin-bottom: var(--sp-1); }
     input {
-      width:100%; font:inherit; padding: var(--sp-3); margin-bottom: var(--sp-4);
+      width:100%; font:inherit; font-size: var(--fs-lg); padding: var(--sp-3); margin-bottom: var(--sp-4);
       border:1px solid var(--border); border-radius: var(--radius);
       background: var(--surface); color: var(--text); box-sizing:border-box;
     }
@@ -54,6 +54,8 @@
     .toggle-link { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; text-decoration: underline; }
     .switch { text-align:center; margin-top: var(--sp-4); font-size: var(--fs-base); color: var(--muted); }
     .err { color: var(--danger); font-size: var(--fs-sm); margin-bottom: var(--sp-3); min-height: 1em; }
+    /* Don't reserve empty vertical space above the email field when there's no error. */
+    .err:empty { min-height: 0; margin-bottom: 0; }
     .hidden { display:none; }
   </style>
 </head>
