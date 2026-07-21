@@ -3,6 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <title>Welcome to Reading Gate</title>
+  <!-- Brand fonts: Source Sans 3 (body/UI) + Playfair Display (headings), same source
+       as the dashboard so the type matches exactly. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="gate/tokens.css" />
   <style>
     html, body { height: 100%; }
@@ -27,10 +32,12 @@
       padding: var(--sp-6);
       box-sizing: border-box;
     }
-    .brand { display:flex; align-items:center; gap: var(--sp-2); font-weight:700; font-size: var(--fs-lg); margin-bottom: var(--sp-5); }
-    .brand .dot { width:12px; height:12px; border-radius:50%; background:var(--accent); }
-    h1 { font-size: var(--fs-2xl); margin: 0 0 var(--sp-2); }
-    .lead { color: var(--muted); margin: 0 0 var(--sp-5); line-height: 1.5; }
+    /* Body / UI text: Source Sans 3 (falls back to the system sans stack in --font-sans). */
+    body { font-family: var(--font-sans); }
+    .brand { font-weight:700; font-size: var(--fs-lg); margin-bottom: var(--sp-5); }
+    /* Headings: Playfair Display (serif display), per the brand type guidelines. */
+    h1 { font-family: var(--font-serif); font-weight: 600; font-size: var(--fs-2xl); line-height: 1.1; margin: 0 0 var(--sp-3); }
+    .lead { color: var(--muted); font-size: var(--fs-lg); margin: 0 0 var(--sp-5); line-height: 1.55; }
     label { display:block; font-size: var(--fs-sm); font-weight:600; margin-bottom: var(--sp-1); }
     input {
       width:100%; font:inherit; padding: var(--sp-3); margin-bottom: var(--sp-4);
@@ -45,14 +52,14 @@
     }
     .btn:disabled { opacity:.6; cursor:default; }
     .toggle-link { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; text-decoration: underline; }
-    .switch { text-align:center; margin-top: var(--sp-4); font-size: var(--fs-sm); color: var(--muted); }
+    .switch { text-align:center; margin-top: var(--sp-4); font-size: var(--fs-base); color: var(--muted); }
     .err { color: var(--danger); font-size: var(--fs-sm); margin-bottom: var(--sp-3); min-height: 1em; }
     .hidden { display:none; }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="brand"><span class="dot"></span> Reading Gate</div>
+    <div class="brand">Reading Gate</div>
 
     <!-- Step 1: create an account -->
     <div id="create">
