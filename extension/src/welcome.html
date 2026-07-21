@@ -3,6 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <title>Welcome to Reading Gate</title>
+  <!-- Brand fonts: Source Sans 3 (body/UI) + Playfair Display (headings), same source
+       as the dashboard so the type matches exactly. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="gate/tokens.css" />
   <style>
     html, body { height: 100%; }
@@ -27,13 +32,15 @@
       padding: var(--sp-6);
       box-sizing: border-box;
     }
-    .brand { display:flex; align-items:center; gap: var(--sp-2); font-weight:700; font-size: var(--fs-lg); margin-bottom: var(--sp-5); }
-    .brand .dot { width:12px; height:12px; border-radius:50%; background:var(--accent); }
-    h1 { font-size: var(--fs-2xl); margin: 0 0 var(--sp-2); }
-    .lead { color: var(--text-muted); margin: 0 0 var(--sp-5); line-height: 1.5; }
-    label { display:block; font-size: var(--fs-sm); font-weight:600; margin-bottom: var(--sp-1); }
+    /* Body / UI text: Source Sans 3 (falls back to the system sans stack in --font-sans). */
+    body { font-family: var(--font-sans); }
+    .brand { font-weight:700; font-size: var(--fs-lg); margin-bottom: var(--sp-5); }
+    /* Headings: Playfair Display (serif display), per the brand type guidelines. */
+    h1 { font-family: var(--font-serif); font-weight: 600; font-size: var(--fs-2xl); line-height: 1.1; margin: 0 0 var(--sp-3); }
+    .lead { color: var(--muted); font-size: var(--fs-lg); margin: 0 0 var(--sp-4); line-height: 1.55; }
+    label { display:block; font-size: var(--fs-base); font-weight:600; margin-bottom: var(--sp-1); }
     input {
-      width:100%; font:inherit; padding: var(--sp-3); margin-bottom: var(--sp-4);
+      width:100%; font:inherit; font-size: var(--fs-lg); padding: var(--sp-3); margin-bottom: var(--sp-4);
       border:1px solid var(--border); border-radius: var(--radius);
       background: var(--surface); color: var(--text); box-sizing:border-box;
     }
@@ -44,21 +51,20 @@
       background: var(--accent); color:#fff;
     }
     .btn:disabled { opacity:.6; cursor:default; }
-    .toggle-link { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; }
-    .muted { color: var(--text-muted); font-size: var(--fs-sm); }
+    .toggle-link { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; text-decoration: underline; }
+    .switch { text-align:center; margin-top: var(--sp-4); font-size: var(--fs-base); color: var(--muted); }
     .err { color: var(--danger); font-size: var(--fs-sm); margin-bottom: var(--sp-3); min-height: 1em; }
-    .note { color: var(--text-muted); font-size: var(--fs-xs); margin: var(--sp-4) 0 0; line-height: 1.5; }
-    .switch { text-align:center; margin-top: var(--sp-4); font-size: var(--fs-sm); }
-    .success-dot { color: var(--success); }
+    /* Don't reserve empty vertical space above the email field when there's no error. */
+    .err:empty { min-height: 0; margin-bottom: 0; }
     .hidden { display:none; }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="brand"><span class="dot"></span> Reading Gate</div>
+    <div class="brand">Reading Gate</div>
 
     <!-- Step 1: create an account -->
-    <div id="create">
+    <div id="create" class="hidden">
       <h1 id="create-title">Create your account</h1>
       <p class="lead" id="create-lead">
         Sign up with an email and password to get started.
@@ -69,10 +75,6 @@
       <label for="password">Password</label>
       <input id="password" type="password" placeholder="At least 6 characters" autocomplete="new-password" />
       <button class="btn" id="submit">Create account</button>
-      <p class="note">
-        Single sign-on with Google or Microsoft is coming soon. For now, please use an
-        email and password.
-      </p>
       <div class="switch">
         <span id="switch-text">Already have an account?</span>
         <button class="toggle-link" id="switch-mode">Log in</button>

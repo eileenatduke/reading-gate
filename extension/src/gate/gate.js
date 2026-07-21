@@ -180,6 +180,10 @@ async function loadPrefs() {
     if (meta.theme) {
       applyTheme(meta.theme);
       chrome.storage.local.set({ gate_theme: meta.theme });
+    } else {
+      // No saved theme → Mono default. Don't keep a theme cached from a different account.
+      applyTheme(DEFAULT_THEME);
+      chrome.storage.local.set({ gate_theme: DEFAULT_THEME });
     }
     const n = parseInt(meta.articles_required, 10);
     required = Number.isFinite(n) && n > 0 ? n : 1;
