@@ -21,14 +21,16 @@ async function dashboardBase() {
   return (cfg.DASHBOARD_URL || "https://reading-gate.vercel.app").replace(/\/$/, "");
 }
 
-// Open the web dashboard's Settings page in this same tab, handing off the current Supabase
-// session in the URL hash so the user arrives already signed in — no second login. The hash
-// (not the query string) keeps the tokens off the wire; the dashboard adopts and strips them
-// on load (see dashboard/src/lib/auth.jsx). Mirrors popup.js:openDashboard.
-async function goToSettings() {
+// Open a page on the web dashboard in this same tab, handing off the current Supabase session
+// in the URL hash so the user arrives already signed in — no second login. The hash (not the
+// query string) keeps the tokens off the wire; the dashboard adopts and strips them on load
+// (see dashboard/src/lib/auth.jsx). Mirrors popup.js:openDashboard.
+//   "/settings" — where new users go to set things up
+//   "/"         — the Overview page, where returning users land after logging in
+async function openDashboard(path) {
   const base = await dashboardBase();
   const session = await getSession();
-  let url = base + "/settings";
+  let url = base + path;
   if (session?.access_token && session?.refresh_token) {
     const frag = new URLSearchParams({
       access_token: session.access_token,
@@ -78,10 +80,16 @@ async function submit() {
       applyMode();
       return;
     }
-    // Prime the article pool and blocklist for the new account, same as the popup does.
+    // Prime the article pool and blocklist for the account, same as the popup does.
     try { await chrome.runtime.sendMessage({ type: "REFRESH_BLOCKLIST" }); } catch {}
     try { await chrome.runtime.sendMessage({ type: "REFILL_POOL" }); } catch {}
-    show("done");
+    if (isSignup) {
+      // New account → show the quick-setup step that points them to Settings.
+      show("done");
+    } else {
+      // Existing account → they already have settings; go straight to the Overview page.
+      await openDashboard("/");
+    }
   } catch (e) {
     $("create-err").textContent = e.message;
   } finally {
@@ -90,16 +98,16 @@ async function submit() {
 }
 
 async function init() {
-  // If this account is already signed in (e.g. the tab was reopened), skip straight to
-  // the "all set" step rather than asking them to sign up again.
+  // If this account is already signed in (e.g. the tab was reopened), they've onboarded
+  // already — send them straight to the dashboard Overview instead of the sign-up form.
   const user = await currentUser();
-  if (user) show("done");
-  else show("create");
+  if (user) { await openDashboard("/"); return; }
+  show("create");
 
   $("submit").addEventListener("click", submit);
   $("password").addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
   $("switch-mode").addEventListener("click", () => { isSignup = !isSignup; applyMode(); });
-  $("go-settings").addEventListener("click", goToSettings);
+  $("go-settings").addEventListener("click", () => openDashboard("/settings"));
 }
 
 init();
