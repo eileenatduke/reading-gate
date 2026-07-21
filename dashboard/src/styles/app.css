@@ -75,9 +75,10 @@ button { font-family: inherit; }
 .btn { font-weight: 600; cursor: pointer; border: none; border-radius: 12px; padding: 11px 20px;
   background: var(--accent); color: #fff; transition: filter .15s ease; }
 .btn:hover { filter: brightness(1.06); }
-.btn.ghost { background: var(--surface-2); color: var(--accent); border: 1px solid var(--border); }
-.input { font: inherit; padding: 11px 14px; border: 1px solid var(--border); border-radius: 12px;
-  background: var(--surface); color: var(--text); }
+.btn.ghost { background: var(--accent-weak); color: var(--accent); border: 1.5px solid var(--accent); }
+.input { font: inherit; padding: 11px 14px; border-radius: 12px;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  background: var(--surface-2); color: var(--text); }
 
 .toggle { cursor: pointer; user-select: none; padding: 7px 14px; border-radius: 20px; font-size: 13.5px;
   border: 1px solid var(--border); background: var(--surface-2); color: var(--text); transition: all .15s ease; }
@@ -97,8 +98,9 @@ button { font-family: inherit; }
 
 /* ---- library ---- */
 .filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-.filters input, .filters select { font: inherit; padding: 9px 13px; border: 1px solid var(--border); border-radius: 12px;
-  background: var(--surface); color: var(--text); }
+.filters input, .filters select { font: inherit; padding: 9px 13px; border-radius: 12px;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  background: var(--surface-2); color: var(--text); }
 .filters input[type="search"] { min-width: 240px; }
 .filters select {
   appearance: none; -webkit-appearance: none; -moz-appearance: none;
