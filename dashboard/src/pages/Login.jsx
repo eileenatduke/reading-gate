@@ -50,15 +50,13 @@ export default function Login() {
 
           <form onSubmit={submitEmail}>
             <div className="rg-field">
-              <label className="rg-label" htmlFor="rg-email">Email</label>
               <input id="rg-email" className="rg-input" type="email" required
-                placeholder="you@example.com" value={email} autoComplete="username"
+                placeholder="Email address" aria-label="Email address" value={email} autoComplete="username"
                 onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="rg-field">
-              <label className="rg-label" htmlFor="rg-pass">Password</label>
               <input id="rg-pass" className="rg-input" type="password" required minLength={6}
-                placeholder="••••••••" value={password}
+                placeholder="Password" aria-label="Password" value={password}
                 autoComplete={isSignup ? "new-password" : "current-password"}
                 onChange={(e) => setPassword(e.target.value)} />
             </div>
