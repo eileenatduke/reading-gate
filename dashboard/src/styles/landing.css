@@ -34,6 +34,22 @@
 .rg-auth a,
 .rg-about a { color: inherit; text-decoration: none; }
 
+/* Keep the overscroll gutter dark on every public surface. These pages are
+   fixed dark overlays; without this, elastic overscroll (the trackpad "rubber
+   band", or the scroll bounce on About/auth) briefly reveals the <body> behind
+   them — which still carries the signed-in dashboard's themed --app-bg (a shade
+   of green, pink, etc.). Pinning the document background to the editorial ink
+   and disabling the bounce removes that color flash for any saved theme. */
+html:has(.rg-landing),
+html:has(.rg-auth),
+html:has(.rg-about),
+html:has(.rg-landing) body,
+html:has(.rg-auth) body,
+html:has(.rg-about) body {
+  background: var(--rg-ink);
+  overscroll-behavior: none;
+}
+
 /* ---- Hero stage: authored 1280x800, scaled to fit ---- */
 .rg-hero {
   position: absolute;
