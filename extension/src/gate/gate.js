@@ -167,9 +167,14 @@ function showChoices() {
 }
 
 async function accessSite() {
-  // Grant the unlock (background records it BEFORE we navigate), then go.
-  await chrome.runtime.sendMessage({ type: "GRANT_UNLOCK", domain });
-  location.href = target || `https://${domain}`;
+  // Grant the unlock (background records it BEFORE we navigate), then send the user to the
+  // exact site they just unlocked. `target` is the blocked URL captured when the gate fired;
+  // fall back to the bare domain if it's missing or isn't a real web address (e.g. a
+  // chrome:// / extension page), so this button can only ever open the blocked site — never
+  // some unrelated page. The grant is best-effort: navigate even if the message fails.
+  try { await chrome.runtime.sendMessage({ type: "GRANT_UNLOCK", domain }); } catch {}
+  const dest = /^https?:\/\//i.test(target) ? target : `https://${domain}`;
+  location.href = dest;
 }
 
 // Load the user's prefs (theme + minimum articles) from auth metadata.
