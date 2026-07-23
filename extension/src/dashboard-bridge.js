@@ -50,4 +50,14 @@
   setInterval(mirrorToExtension, 2000);
   // Catch changes made in other tabs of the same origin.
   window.addEventListener("storage", mirrorToExtension);
+
+  // The dashboard posts this when the user saves a blocklist change. Relay it to the
+  // background worker so the extension re-fetches the blocklist immediately, instead of the
+  // edit waiting on the periodic refresh alarm (which left newly-added domains ungated).
+  window.addEventListener("message", (e) => {
+    if (e.source !== window) return;
+    const d = e.data;
+    if (!d || d.__readingGate !== true || d.type !== "BLOCKLIST_CHANGED") return;
+    try { chrome.runtime.sendMessage({ type: "REFRESH_BLOCKLIST" }); } catch { /* ext gone */ }
+  });
 })();

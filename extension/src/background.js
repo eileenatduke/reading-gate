@@ -78,9 +78,9 @@ async function loadBlocklist() {
 function normalizeDomain(d) {
   if (!d) return "";
   return d.trim().toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .replace(/\/.*$/, "");
+    .replace(/^https?:\/\//, "")     // scheme
+    .replace(/^www\./, "")           // leading www.
+    .replace(/[/?#:].*$/, "");       // path, query, hash, or port — keep only the bare host
 }
 
 function hostOf(url) {

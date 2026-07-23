@@ -7,7 +7,9 @@ import { THEME_GROUPS, THEMES, swatchBg } from "../lib/themes.js";
 
 function normalizeDomain(d) {
   return (d || "").trim().toLowerCase()
-    .replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
+    .replace(/^https?:\/\//, "")     // scheme
+    .replace(/^www\./, "")           // leading www.
+    .replace(/[/?#:].*$/, "");       // path, query, hash, or port — keep only the bare host
 }
 
 // A custom source is just a site address plus an optional display name. The user can
@@ -39,6 +41,7 @@ export default function Settings() {
   const [customFeeds, setCustomFeeds] = useState([]);
   const [articlesRequired, setArticlesRequired] = useState(1);
   const [newDomain, setNewDomain] = useState("");
+  const [domainErr, setDomainErr] = useState("");
   const [newFeedName, setNewFeedName] = useState("");
   const [newFeedUrl, setNewFeedUrl] = useState("");
   // True once we detect the DB is missing the custom_feeds column (migration 0002
@@ -75,8 +78,15 @@ export default function Settings() {
 
   function addDomain() {
     const d = normalizeDomain(newDomain);
-    if (d && !domains.includes(d)) setDomains([...domains, d]);
+    // Require a real host (must contain a dot). A bare word like "tiktok" would be stored but
+    // could never match a visited URL's hostname, so the site would silently never gate.
+    if (!d || !d.includes(".")) {
+      setDomainErr("Enter a full site address, like tiktok.com");
+      return;
+    }
+    if (!domains.includes(d)) setDomains([...domains, d]);
     setNewDomain("");
+    setDomainErr("");
   }
 
   function addFeed() {
@@ -123,6 +133,14 @@ export default function Settings() {
 
       const toAdd = [...want].filter((d) => !have.has(d)).map((d) => ({ user_id: uid, domain: d }));
       if (toAdd.length) await supabase.from("blocklist").insert(toAdd);
+
+      // Nudge the extension to re-fetch the blocklist right away, so a domain the user just
+      // added starts gating immediately instead of waiting for the extension's periodic
+      // refresh. The dashboard-bridge content script (running on this origin) relays this to
+      // the background worker; on pages without the extension installed it's a harmless no-op.
+      if (toAdd.length || toDelete.length) {
+        window.postMessage({ __readingGate: true, type: "BLOCKLIST_CHANGED" }, window.location.origin);
+      }
 
       setStatus("saved");
     } catch (e) {
@@ -256,10 +274,11 @@ export default function Settings() {
         </div>
         <div className="row">
           <input className="input" placeholder="tiktok.com" value={newDomain}
-            onChange={(e) => setNewDomain(e.target.value)}
+            onChange={(e) => { setNewDomain(e.target.value); if (domainErr) setDomainErr(""); }}
             onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addDomain())} />
           <button className="btn ghost" onClick={addDomain}>Add</button>
         </div>
+        {domainErr && <p className="sub" style={{ color: "var(--danger, #c0392b)", marginTop: 8 }}>{domainErr}</p>}
       </div>
 
       <div className="row" style={{ alignItems: "center" }}>
