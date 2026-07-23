@@ -171,6 +171,12 @@ export default function Settings() {
 
   if (err) return <div className="loading">Error: {err}</div>;
 
+  // Preset picks are shown (and toggled) by the "Popular sites" buttons, so keep them out of
+  // the list below — that list is only for sites the user typed in by hand. Presets stay in
+  // `domains` either way, so they're still saved and enforced.
+  const presetDomainSet = new Set(PRESET_SITES.map((p) => p.domain));
+  const additionalSites = domains.filter((d) => !presetDomainSet.has(d));
+
   return (
     <>
       <div className="page-head">
@@ -197,13 +203,13 @@ export default function Settings() {
             );
           })}
         </div>
-        <div className="group-heading" style={{ marginBottom: 8 }}>Your blocked sites</div>
+        <div className="group-heading" style={{ marginBottom: 8 }}>Additional sites</div>
         <div className="row" style={{ marginBottom: 16 }}>
-          {domains.length === 0 && <span className="muted">No sites yet.</span>}
-          {domains.map((d, i) => (
+          {additionalSites.length === 0 && <span className="muted">No sites yet.</span>}
+          {additionalSites.map((d) => (
             <span className="chip" key={d}>
               {d}
-              <button aria-label={`Remove ${d}`} onClick={() => setDomains(domains.filter((_, j) => j !== i))}>×</button>
+              <button aria-label={`Remove ${d}`} onClick={() => setDomains(domains.filter((x) => x !== d))}>×</button>
             </span>
           ))}
         </div>
