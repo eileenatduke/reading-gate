@@ -70,6 +70,11 @@ async function loadBlocklist() {
     const rows = await db("blocklist").select("domain").eq("user_id", user.id).run();
     blockDomains = (rows || []).map((r) => normalizeDomain(r.domain)).filter(Boolean);
     await chrome.storage.local.set({ blocklist_cache: blockDomains });
+    // The list may now include a domain the user just added while a tab is already sitting on
+    // it — or that loaded before this fetch finished (the earlier navigation was checked
+    // against a stale cache and slipped through). Re-check the active tab so the newly-blocked
+    // site gets gated right away instead of only on its next navigation.
+    if (activeTabId != null) evaluateActive(activeTabId);
   } catch (e) {
     // offline / not configured — keep cache
   }
@@ -271,9 +276,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 // ---- periodic content refresh ---------------------------------------------
-chrome.runtime.onInstalled.addListener(async (details) => {
+async function ensureAlarms() {
   const cfg = await getConfig();
   chrome.alarms.create("refill", { periodInMinutes: cfg.POOL_REFILL_MINUTES || 30 });
+  // Keep the blocklist fresh on a short cadence so a site the user just added on the web
+  // dashboard starts gating within about a minute — even when the dashboard→extension push
+  // can't reach us (e.g. the dashboard tab isn't open). loadBlocklist() re-checks the active
+  // tab, so a site already open when it becomes blocked gets gated without a reload.
+  chrome.alarms.create("blocklist", { periodInMinutes: 1 });
+}
+
+chrome.runtime.onInstalled.addListener(async (details) => {
+  await ensureAlarms();
   await restore();
 
   // On a fresh install (not an update or Chrome refresh), open the welcome tab so new
@@ -284,9 +298,16 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     } catch {}
   }
 });
-chrome.runtime.onStartup.addListener(restore);
+chrome.runtime.onStartup.addListener(async () => {
+  await ensureAlarms();
+  await restore();
+});
 
 chrome.alarms.onAlarm.addListener((a) => {
+  if (a.name === "blocklist") {
+    loadBlocklist().catch(() => {});
+    return;
+  }
   if (a.name === "refill") {
     // Re-sync the blocklist from Supabase too, so edits made on the web dashboard
     // reach the extension without needing a browser restart.
