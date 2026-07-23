@@ -78,9 +78,9 @@ async function loadBlocklist() {
 function normalizeDomain(d) {
   if (!d) return "";
   return d.trim().toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .replace(/\/.*$/, "");
+    .replace(/^https?:\/\//, "")     // scheme
+    .replace(/^www\./, "")           // leading www.
+    .replace(/[/?#:].*$/, "");       // path, query, hash, or port — keep only the bare host
 }
 
 function hostOf(url) {
@@ -217,7 +217,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const tabId = sender.tab?.id;
         if (tabId == null) return sendResponse({ ok: true });
         if (msg.hidden) markBlur(tabId);
-        else if (tabId === activeTabId && windowFocused) await evaluateActive(tabId);
+        // A page reporting itself visible is authoritative that the user is looking at it —
+        // more reliable than our cached `windowFocused` flag, which Chrome leaves stale when
+        // the OS focus is held by a Picture-in-Picture / screen-share window during a video
+        // call (onFocusChanged fires WINDOW_ID_NONE and never flips back until the call ends).
+        // Gate on the page's own signal so a blocked site opened mid-call isn't left ungated.
+        else if (tabId === activeTabId) await evaluateActive(tabId);
         return sendResponse({ ok: true });
       }
       case "GRANT_UNLOCK": {

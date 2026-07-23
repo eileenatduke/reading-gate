@@ -122,8 +122,13 @@ async function init() {
   const user = await currentUser();
   // Follow the user's chosen theme; new users (no saved theme) stay on the Mono default.
   applyTheme(user?.user_metadata?.theme || DEFAULT_THEME);
-  if (user) await renderDash(user);
-  else showOnly("auth");
+  if (user) {
+    await renderDash(user);
+    // Re-sync the blocklist every time the popup opens. Blocklist edits happen on the web
+    // dashboard, and without this the extension would only pick them up on the next 30-min
+    // refresh alarm — so a domain the user just added (e.g. a second site) wouldn't gate yet.
+    chrome.runtime.sendMessage({ type: "REFRESH_BLOCKLIST" }).catch(() => {});
+  } else showOnly("auth");
 
   // Preferences live on the web dashboard, not in the extension — open it already signed in.
   $("to-prefs").addEventListener("click", () => openDashboard("/settings"));
