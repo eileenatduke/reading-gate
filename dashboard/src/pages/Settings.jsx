@@ -12,6 +12,21 @@ function normalizeDomain(d) {
     .replace(/[/?#:].*$/, "");       // path, query, hash, or port — keep only the bare host
 }
 
+// One-tap presets for the most-requested sites, so users don't have to type them. Each is a
+// bare host that matches the extension's blocklist matcher (apex + any subdomain).
+const PRESET_SITES = [
+  { label: "Instagram", domain: "instagram.com" },
+  { label: "TikTok", domain: "tiktok.com" },
+  { label: "YouTube", domain: "youtube.com" },
+  { label: "LinkedIn", domain: "linkedin.com" },
+  { label: "Snapchat", domain: "snapchat.com" },
+  { label: "Netflix", domain: "netflix.com" },
+  { label: "Hulu", domain: "hulu.com" },
+  { label: "Disney+", domain: "disneyplus.com" },
+  { label: "Pinterest", domain: "pinterest.com" },
+  { label: "Reddit", domain: "reddit.com" },
+];
+
 // A custom source is just a site address plus an optional display name. The user can
 // paste a homepage ("nytimes.com") OR a raw feed URL — the extension figures out the
 // actual feed when it fetches (autodiscovery), so here we only need a plausible URL.
@@ -89,6 +104,12 @@ export default function Settings() {
     setDomainErr("");
   }
 
+  // Toggle a preset site on/off in the blocklist with a single click.
+  function togglePreset(domain) {
+    setDomains((cur) => (cur.includes(domain) ? cur.filter((d) => d !== domain) : [...cur, domain]));
+    if (domainErr) setDomainErr("");
+  }
+
   function addFeed() {
     const f = normalizeFeed(newFeedName, newFeedUrl);
     if (!f) { setErr("Enter a site address, like nytimes.com"); return; }
@@ -161,7 +182,22 @@ export default function Settings() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Blocked sites</h2>
-        <p className="sub">Paste in the URLs of websites you want to block.</p>
+        <p className="sub">Tap a popular site to block it, or paste in any other URL below.</p>
+        <div className="group-heading" style={{ marginBottom: 8 }}>Popular sites</div>
+        <div className="row" style={{ marginBottom: 16 }}>
+          {PRESET_SITES.map(({ label, domain }) => {
+            const on = domains.includes(domain);
+            return (
+              <div key={domain} className={"toggle" + (on ? " on" : "")}
+                role="checkbox" aria-checked={on} tabIndex={0}
+                onClick={() => togglePreset(domain)}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), togglePreset(domain))}>
+                {label}
+              </div>
+            );
+          })}
+        </div>
+        <div className="group-heading" style={{ marginBottom: 8 }}>Your blocked sites</div>
         <div className="row" style={{ marginBottom: 16 }}>
           {domains.length === 0 && <span className="muted">No sites yet.</span>}
           {domains.map((d, i) => (
