@@ -160,28 +160,36 @@ export default function Settings() {
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
-        <h2>Theme</h2>
-        {THEME_GROUPS.map(({ label, keys }) => (
-          <div key={label} style={{ marginBottom: 16 }}>
-            <div className="group-heading">{label}</div>
-            <div className="swatches">
-              {keys.map((k) => (
-                <button
-                  key={k}
-                  title={THEMES[k].name}
-                  aria-label={`${THEMES[k].name} theme`}
-                  aria-pressed={pendingTheme === k}
-                  onClick={() => { setPendingTheme(k); preview(k); }}
-                  className="swatch"
-                  style={{ background: swatchBg(k), boxShadow: pendingTheme === k ? "0 0 0 2px var(--accent)" : "0 0 0 1px rgba(0,0,0,.08)" }}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-        <div className="muted" style={{ fontSize: 13 }}>
-          Selected: <b style={{ color: "var(--text)" }}>{THEMES[pendingTheme].name}</b>
-          {pendingTheme !== theme && <span style={{ color: "var(--accent)" }}> · unsaved</span>}
+        <h2>Blocked sites</h2>
+        <p className="sub">Paste in the URLs of websites you want to block.</p>
+        <div className="row" style={{ marginBottom: 16 }}>
+          {domains.length === 0 && <span className="muted">No sites yet.</span>}
+          {domains.map((d, i) => (
+            <span className="chip" key={d}>
+              {d}
+              <button aria-label={`Remove ${d}`} onClick={() => setDomains(domains.filter((_, j) => j !== i))}>×</button>
+            </span>
+          ))}
+        </div>
+        <div className="row">
+          <input className="input" placeholder="tiktok.com" value={newDomain}
+            onChange={(e) => { setNewDomain(e.target.value); if (domainErr) setDomainErr(""); }}
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addDomain())} />
+          <button className="btn ghost" onClick={addDomain}>Add</button>
+        </div>
+        {domainErr && <p className="sub" style={{ color: "var(--danger, #c0392b)", marginTop: 8 }}>{domainErr}</p>}
+      </div>
+
+      <div className="card" style={{ marginBottom: 20 }}>
+        <h2>Articles per unlock</h2>
+        <p className="sub">How many articles you must read before a blocked site will open. You always have the option to keep reading more beyond this minimum requirement.</p>
+        <div className="row" style={{ alignItems: "center", gap: 12 }}>
+          <button className="btn ghost" aria-label="Fewer" onClick={() => setArticlesRequired((v) => clampReq(v - 1))} style={{ padding: "8px 16px", fontSize: 18, lineHeight: 1 }}>−</button>
+          <input className="input" type="number" min="1" max="20" value={articlesRequired}
+            onChange={(e) => setArticlesRequired(clampReq(e.target.value))}
+            style={{ width: 72, textAlign: "center" }} />
+          <button className="btn ghost" aria-label="More" onClick={() => setArticlesRequired((v) => clampReq(v + 1))} style={{ padding: "8px 16px", fontSize: 18, lineHeight: 1 }}>+</button>
+          <span className="muted" style={{ fontSize: 13 }}>{articlesRequired === 1 ? "article" : "articles"} to unlock a site</span>
         </div>
       </div>
 
@@ -248,37 +256,29 @@ export default function Settings() {
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
-        <h2>Articles per unlock</h2>
-        <p className="sub">How many articles you must read before a blocked site will open. You always have the option to keep reading more beyond this minimum requirement.</p>
-        <div className="row" style={{ alignItems: "center", gap: 12 }}>
-          <button className="btn ghost" aria-label="Fewer" onClick={() => setArticlesRequired((v) => clampReq(v - 1))} style={{ padding: "8px 16px", fontSize: 18, lineHeight: 1 }}>−</button>
-          <input className="input" type="number" min="1" max="20" value={articlesRequired}
-            onChange={(e) => setArticlesRequired(clampReq(e.target.value))}
-            style={{ width: 72, textAlign: "center" }} />
-          <button className="btn ghost" aria-label="More" onClick={() => setArticlesRequired((v) => clampReq(v + 1))} style={{ padding: "8px 16px", fontSize: 18, lineHeight: 1 }}>+</button>
-          <span className="muted" style={{ fontSize: 13 }}>{articlesRequired === 1 ? "article" : "articles"} to unlock a site</span>
+        <h2>Theme</h2>
+        {THEME_GROUPS.map(({ label, keys }) => (
+          <div key={label} style={{ marginBottom: 16 }}>
+            <div className="group-heading">{label}</div>
+            <div className="swatches">
+              {keys.map((k) => (
+                <button
+                  key={k}
+                  title={THEMES[k].name}
+                  aria-label={`${THEMES[k].name} theme`}
+                  aria-pressed={pendingTheme === k}
+                  onClick={() => { setPendingTheme(k); preview(k); }}
+                  className="swatch"
+                  style={{ background: swatchBg(k), boxShadow: pendingTheme === k ? "0 0 0 2px var(--accent)" : "0 0 0 1px rgba(0,0,0,.08)" }}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+        <div className="muted" style={{ fontSize: 13 }}>
+          Selected: <b style={{ color: "var(--text)" }}>{THEMES[pendingTheme].name}</b>
+          {pendingTheme !== theme && <span style={{ color: "var(--accent)" }}> · unsaved</span>}
         </div>
-      </div>
-
-      <div className="card" style={{ marginBottom: 20 }}>
-        <h2>Blocked sites</h2>
-        <p className="sub">Paste in the URLs of websites you want to block.</p>
-        <div className="row" style={{ marginBottom: 16 }}>
-          {domains.length === 0 && <span className="muted">No sites yet.</span>}
-          {domains.map((d, i) => (
-            <span className="chip" key={d}>
-              {d}
-              <button aria-label={`Remove ${d}`} onClick={() => setDomains(domains.filter((_, j) => j !== i))}>×</button>
-            </span>
-          ))}
-        </div>
-        <div className="row">
-          <input className="input" placeholder="tiktok.com" value={newDomain}
-            onChange={(e) => { setNewDomain(e.target.value); if (domainErr) setDomainErr(""); }}
-            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addDomain())} />
-          <button className="btn ghost" onClick={addDomain}>Add</button>
-        </div>
-        {domainErr && <p className="sub" style={{ color: "var(--danger, #c0392b)", marginTop: 8 }}>{domainErr}</p>}
       </div>
 
       <div className="row" style={{ alignItems: "center" }}>
