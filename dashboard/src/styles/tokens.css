@@ -4,6 +4,15 @@
 
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; padding: 0; }
+
+/* Responsive up-scaling for large monitors. The whole UI sizes in rem, so nudging the root
+   font-size enlarges everything proportionally on big screens — fixing the "looks tiny on a
+   large monitor" problem — while laptops stay at the designed 16px baseline. Percentages
+   (not px) so a user's own browser font-size preference is still respected. */
+html { font-size: 100%; }
+@media (min-width: 1600px) { html { font-size: 106.25%; } } /* ~17px */
+@media (min-width: 1920px) { html { font-size: 112.5%; } }  /* ~18px */
+@media (min-width: 2560px) { html { font-size: 125%; } }    /* ~20px */
 body {
   background: var(--app-bg, #f7f7f5);
   background-attachment: fixed;

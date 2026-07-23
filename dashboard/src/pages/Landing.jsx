@@ -72,14 +72,15 @@ export default function Landing() {
   const enteredRef = useRef(false);
   const [entered, setEntered] = useState(false);
 
-  // Scale the authored 1280x800 stage to fit the viewport (never upscaling past
-  // 1:1). Done in JS because CSS calc() can't derive a unitless scale factor
+  // Scale the authored 1280x800 stage to fit the viewport. It scales UP on large monitors
+  // (capped at 1.75x so it fills a big screen instead of sitting tiny in the middle) and
+  // down on small ones. Done in JS because CSS calc() can't derive a unitless scale factor
   // from a viewport length divided by the reference width.
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
     const fit = () => {
-      const s = Math.min(1, (window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800);
+      const s = Math.min(1.75, (window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 800);
       stage.style.setProperty("--rg-scale", s);
     };
     fit();
