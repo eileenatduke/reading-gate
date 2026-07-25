@@ -87,8 +87,8 @@ function buildMetrics(metrics) {
   const labels = ["Number of impulses", "Completed", "Follow-through"];
   // Short plain-language definition under each metric name so the numbers are unambiguous.
   const defs = [
-    "Times you tried to open a blocked site",
-    "Times you completed your reading goal",
+    "# of times you tried to open a blocked site",
+    "# of times you completed your reading goal",
     "Share of impulses you completed",
   ];
   const hd = (t, al) => h("div", { key: t, style: { fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)", fontWeight: 600, textAlign: al || "left" } }, t);
