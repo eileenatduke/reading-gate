@@ -83,15 +83,24 @@ function fmtDelta(m) {
 }
 
 function buildMetrics(metrics) {
-  const cols = "1.3fr .7fr .8fr 1fr";
-  const labels = ["Gate triggers", "Read through", "Follow-through"];
+  const cols = "1.9fr .55fr .7fr .85fr";
+  const labels = ["Number of impulses", "Read through", "Follow-through"];
+  // Short plain-language definition under each metric name so the numbers are unambiguous.
+  const defs = [
+    "Times you tried to open a blocked site",
+    "Times you finished your reading goal",
+    "Share of impulses you read through",
+  ];
   const hd = (t, al) => h("div", { key: t, style: { fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)", fontWeight: 600, textAlign: al || "left" } }, t);
   const head = h("div", { key: "h", style: { display: "grid", gridTemplateColumns: cols, gap: 10, alignItems: "center", paddingBottom: 10, borderBottom: "1px solid var(--border)" } },
     [hd("Metric"), hd("This wk", "right"), hd("Vs last", "right"), hd("8-wk trend", "right")]);
   const body = metrics.map((m, i) => {
     const del = fmtDelta(m);
     return h("div", { key: "r" + i, style: { display: "grid", gridTemplateColumns: cols, gap: 10, alignItems: "center", padding: "16px 0", borderBottom: i < metrics.length - 1 ? "1px solid var(--border)" : "none" } }, [
-      h("div", { key: "m", style: { fontSize: 14, color: "var(--text)", fontWeight: 500, lineHeight: 1.15 } }, labels[i] || m.name),
+      h("div", { key: "m" }, [
+        h("div", { key: "l", style: { fontSize: 14, color: "var(--text)", fontWeight: 500, lineHeight: 1.15 } }, labels[i] || m.name),
+        h("div", { key: "s", style: { fontSize: 11, color: "var(--muted)", marginTop: 3, lineHeight: 1.3 } }, defs[i]),
+      ]),
       h("div", { key: "v", style: { fontFamily: "'Playfair Display',serif", fontSize: 27, color: "var(--text)", textAlign: "right", lineHeight: 1 } }, "" + m.value),
       h("div", { key: "d", style: { fontSize: 13, fontWeight: 600, color: del.color, textAlign: "right" } }, del.text),
       h("div", { key: "s", style: { display: "flex", justifyContent: "flex-end" } }, spark(m.series)),
@@ -107,8 +116,8 @@ export default function PaperImpulseHistory({ impulses }) {
     <div className="card" style={{ padding: "24px 26px 22px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
         <div style={{ maxWidth: 520 }}>
-          <h2 style={{ margin: "0 0 0 -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Impulse history</h2>
-          <div style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 5, lineHeight: 1.5 }}>Of the times you tried to open a blocked site, how often you bailed before meeting your reading goal vs. completed it — past 8 weeks.</div>
+          <h2 style={{ margin: "0 0 0 -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Did you finish the reading?</h2>
+          <div style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 5, lineHeight: 1.5 }}>Of the times you tried to open a blocked site, how often you X'd out before completing your reading goal vs. completed it.</div>
         </div>
         <div style={{ display: "flex", gap: 16, alignItems: "center", fontSize: 13, color: "var(--muted)" }}>
           <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 12, height: 12, borderRadius: 3, background: "var(--bar-main)", display: "inline-block" }} />Completed</span>
