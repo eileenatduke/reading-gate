@@ -141,11 +141,14 @@ async function submit() {
     });
     sessionReads++;
 
-    // Mark this gate trigger completed the moment the minimum is met.
+    // Mark this gate trigger completed the moment the minimum is met, and default its
+    // outcome to "closed" — the user did the reading and hasn't gone to the site. The
+    // choice buttons below overwrite this if they keep reading or head to the site; if
+    // they just close the tab, "closed" stands (still a resisted impulse).
     if (sessionReads === required) {
       if (!impulseId) await ensureImpulse();
       if (impulseId) {
-        await db("impulse_log").eq("id", impulseId).update({ completed: true });
+        await db("impulse_log").eq("id", impulseId).update({ completed: true, outcome: "closed" });
         await chrome.runtime.sendMessage({ type: "CLEAR_PENDING_IMPULSE" }).catch(() => {});
       }
     }
@@ -166,7 +169,28 @@ function showChoices() {
   show("choices-state");
 }
 
+// The user met their goal and chose to read more instead of going to the site — record
+// that resisting choice (overwriting the default "closed" outcome), then load the next
+// article. Best-effort: never block reading on impulse logging.
+async function keepReading() {
+  try {
+    if (!impulseId) await ensureImpulse();
+    if (impulseId) await db("impulse_log").eq("id", impulseId).update({ outcome: "kept_reading" });
+  } catch (e) {
+    // ignore — the outcome just stays whatever it was
+  }
+  await loadNextArticle();
+}
+
 async function accessSite() {
+  // Record that they caved to the site BEFORE navigating, so the "went to site" outcome is
+  // captured even as we leave the page (this overwrites "closed"/"kept_reading").
+  try {
+    if (!impulseId) await ensureImpulse();
+    if (impulseId) await db("impulse_log").eq("id", impulseId).update({ outcome: "went_to_site" });
+  } catch (e) {
+    // best effort — never block navigation on logging
+  }
   // Grant the unlock (background records it BEFORE we navigate), then send the user to the
   // exact site they just unlocked. `target` is the blocked URL captured when the gate fired;
   // fall back to the bare domain if it's missing or isn't a real web address (e.g. a
@@ -292,7 +316,7 @@ $("password").addEventListener("keydown", (e) => { if (e.key === "Enter") $("log
 $("submit").addEventListener("click", submit);
 $("summary").addEventListener("input", updateCounter);
 $("access-btn").addEventListener("click", accessSite);
-$("more-btn").addEventListener("click", loadNextArticle);
+$("more-btn").addEventListener("click", keepReading);
 $("go-dashboard").addEventListener("click", () => openDashboard("/login"));
 // Swap the recommendation for a fresh one. loadNextArticle() replaces the global
 // `article`, and submit() logs whatever `article` currently is — so the reading_log

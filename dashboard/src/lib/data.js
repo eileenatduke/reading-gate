@@ -129,20 +129,29 @@ export function articleCountSeries(reading, period = "week") {
   });
 }
 
-// ---------- crossover: kept reading vs. went to site ----------
-// Buckets impulses into "kept" (completed the gate → read the article) vs "site"
-// (bailed → went to the distracting site), over the selected window. Mirrors the
-// article-count bucketing: week → 7 days, month → weeks of the month, year → 12 months.
+// ---------- crossover: what you did after meeting your reading goal ----------
+// Among gates the user COMPLETED (met their reading goal), split each time bucket by
+// what they did next: went to the site (caved to the impulse), kept reading (chose more
+// articles), or closed the tab (left without going to the site). The last two are both
+// "resisted" — the only path to the distracting site is the "access site" button. Gates
+// that were never completed (failed) are excluded, so the denominator is "times you met
+// your goal". Rows without a recorded outcome (legacy, pre-outcome-column) are skipped
+// rather than guessed at. Buckets mirror the article chart: week → 7 days, month → weeks
+// of the month, year → 12 months.
 export function crossoverSeries(impulses, range = "week") {
   const now = new Date();
   const out = [];
   const push = (label, d0, d1) => {
-    let kept = 0, site = 0;
+    let site = 0, reading = 0, closed = 0;
     for (const i of impulses) {
+      if (!i.completed || !i.outcome) continue;   // failed the gate, or no recorded choice
       const t = new Date(i.created_at);
-      if (t >= d0 && t < d1) (i.completed ? kept++ : site++);
+      if (t < d0 || t >= d1) continue;
+      if (i.outcome === "went_to_site") site++;
+      else if (i.outcome === "kept_reading") reading++;
+      else closed++;                              // "closed" — met the goal, then left
     }
-    out.push({ label, kept, site });
+    out.push({ label, site, reading, closed });
   };
 
   if (range === "year") {
