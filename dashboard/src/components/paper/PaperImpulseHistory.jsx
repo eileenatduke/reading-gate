@@ -84,12 +84,12 @@ function fmtDelta(m) {
 
 function buildMetrics(metrics) {
   const cols = "1.9fr .55fr .7fr .85fr";
-  const labels = ["Number of impulses", "Read through", "Follow-through"];
+  const labels = ["Number of impulses", "Completed", "Follow-through"];
   // Short plain-language definition under each metric name so the numbers are unambiguous.
   const defs = [
-    "Times you tried to open a blocked site",
-    "Times you finished your reading goal",
-    "Share of impulses you read through",
+    "# of times you tried to open a blocked site",
+    "# of times you completed your reading goal",
+    "Share of impulses you completed",
   ];
   const hd = (t, al) => h("div", { key: t, style: { fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)", fontWeight: 600, textAlign: al || "left" } }, t);
   const head = h("div", { key: "h", style: { display: "grid", gridTemplateColumns: cols, gap: 10, alignItems: "center", paddingBottom: 10, borderBottom: "1px solid var(--border)" } },
@@ -116,12 +116,12 @@ export default function PaperImpulseHistory({ impulses }) {
     <div className="card" style={{ padding: "24px 26px 22px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
         <div style={{ maxWidth: 520 }}>
-          <h2 style={{ margin: "0 0 0 -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Did you finish the reading?</h2>
+          <h2 style={{ margin: "0 0 0 -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Did you complete the reading?</h2>
           <div style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 5, lineHeight: 1.5 }}>Of the times you tried to open a blocked site, how often you X'd out before completing your reading goal vs. completed it.</div>
         </div>
         <div style={{ display: "flex", gap: 16, alignItems: "center", fontSize: 13, color: "var(--muted)" }}>
+          <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 12, height: 12, borderRadius: 3, background: "var(--faint)", display: "inline-block" }} />X'd out</span>
           <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 12, height: 12, borderRadius: 3, background: "var(--bar-main)", display: "inline-block" }} />Completed</span>
-          <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 12, height: 12, borderRadius: 3, background: "var(--faint)", display: "inline-block" }} />Bailed</span>
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>

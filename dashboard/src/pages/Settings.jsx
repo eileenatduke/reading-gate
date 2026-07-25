@@ -223,8 +223,8 @@ export default function Settings() {
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
-        <h2>Articles per unlock</h2>
-        <p className="sub">How many articles you must read before a blocked site will open. You always have the option to keep reading more beyond this minimum requirement.</p>
+        <h2>Reading goal</h2>
+        <p className="sub">How many articles you must read before a blocked site unlocks. You can always keep reading beyond it.</p>
         <div className="row" style={{ alignItems: "center", gap: 12 }}>
           <button className="btn ghost" aria-label="Fewer" onClick={() => setArticlesRequired((v) => clampReq(v - 1))} style={{ padding: "8px 16px", fontSize: 18, lineHeight: 1 }}>−</button>
           <input className="input" type="number" min="1" max="20" value={articlesRequired}
