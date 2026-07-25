@@ -16,13 +16,12 @@ export const THEMES = {
   solidButter: { group:'solid', name:'Butter', swatch:'#ffedac', swatch2:'#B5661C', appBg:'linear-gradient(160deg,#fff2c2 0%,#ffedac 100%)', surface:'#fff7d6', surface2:'#ffe79a', border:'#e7d199', text:'#3E2723', muted:'#7c6a54', faint:'#d8bd84', accent:'#B5661C', accentRgb:'181,102,28', accent2:'#8f5015', grid:'rgba(62,39,35,.12)', heatDark:'#6E3D0C', shadow:'none', blur:'none', tipBg:'#fff7d6', tipText:'#3E2723' },
   solidHotpink:{ group:'solid', name:'Hot pink', swatch:'#ffe1ef', swatch2:'#ff2d8e', appBg:'#ffe1ef', surface:'#ffffff', surface2:'#ffd6ec', border:'#ffbdde', text:'#5a1236', muted:'#9e4f74', faint:'#f3a6c6', accent:'#ff2d8e', accentRgb:'255,45,142', accent2:'#d81f6f', grid:'rgba(90,18,54,.1)', heatDark:'#a5115b', shadow:'none', blur:'none', tipBg:'#ffffff', tipText:'#5a1236' },
   solidNavy:   { group:'solid', name:'Ice & blaze', swatch:'#bfedff', swatch2:'#fd6c01', appBg:'linear-gradient(160deg,#d4f2ff 0%,#bfedff 100%)', surface:'#eefaff', surface2:'#dceff9', border:'#a9dcef', text:'#123047', muted:'#4f7186', faint:'#a9cede', accent:'#fd6c01', accentRgb:'253,108,1', accent2:'#e35d00', grid:'rgba(18,48,71,.10)', heatDark:'#b24b00', shadow:'none', blur:'none', tipBg:'#ffffff', tipText:'#123047' },
-  solidRuby:   { group:'solid', name:'Deep ruby', swatch:'#dfffdb', swatch2:'#a30b3a', appBg:'linear-gradient(160deg,#eafff0 0%,#dfffdb 100%)', surface:'#f0fff0', surface2:'#dff5db', border:'#bfeaba', text:'#4a1024', muted:'#8a5266', faint:'#e6becb', accent:'#a30b3a', accentRgb:'163,11,58', accent2:'#7d0a30', grid:'rgba(74,16,36,.10)', heatDark:'#6e0726', shadow:'none', blur:'none', tipBg:'#ffffff', tipText:'#4a1024' },
   solidMono:   { group:'solid', name:'Mono', swatch:'#ffffff', swatch2:'#3f3f3f', appBg:'#f7f7f5', surface:'#ffffff', surface2:'#f0f0ee', border:'#e3e3e0', text:'#161615', muted:'#6a6a66', faint:'#a3a39e', accent:'#161615', accentRgb:'22,22,21', accent2:'#8a8a85', grid:'rgba(0,0,0,.08)', shadow:'none', blur:'none', tipBg:'#ffffff', tipText:'#161615' },
 };
 
 export const THEME_GROUPS = [
   { label: 'Liquid pastel', keys: ['glassPink', 'glassTeal', 'glassBlue', 'glassPurple', 'glassGreen'] },
-  { label: 'Solid', keys: ['solidButter', 'solidHotpink', 'solidNavy', 'solidRuby', 'solidMono'] },
+  { label: 'Solid', keys: ['solidButter', 'solidHotpink', 'solidNavy', 'solidMono'] },
 ];
 
 // New users default to Mono (black & white); they can pick any theme in Settings.
@@ -68,19 +67,24 @@ function hslToHex(hue, s, l) {
   return '#' + to(r) + to(g) + to(b);
 }
 
-// The "went to site" / alert red. Cool or near-grey accents keep the standard alert red
-// (#d9534f) — it already stands apart. But when the accent is itself warm (red / orange /
-// pink), that same red muddies against it, so push the alert's lightness away from the
-// accent's: a deep red against light-or-mid warm accents, a bright coral-red against dark
-// ones. That keeps the "bad" bar obviously distinct from the accent-colored "good" bars in
-// every theme, while still reading as red = alert.
-const DANGER_BASE = '#d9534f';
-export function dangerColor(accent) {
-  const { h, s, l } = rgbToHsl(accent);
-  if (s < 0.15) return DANGER_BASE;               // near-grey accent (Mono) → plain alert red
-  const warm = h >= 330 || h <= 50;               // red / orange / pink hue range
-  if (!warm) return DANGER_BASE;                  // cool accent → plain alert red
-  return hslToHex(3, 0.72, l < 0.45 ? 0.64 : 0.36);
+// Is the accent itself warm (red / orange / pink)? Those hues sit next to the alert red,
+// so a warm accent can't also carry the "resisting" bars without the whole chart reading
+// as one warm blob. Near-grey accents (Mono) count as neutral, not warm.
+function isWarmAccent(hex) {
+  const { h, s } = rgbToHsl(hex);
+  if (s < 0.15) return false;
+  return h >= 330 || h <= 50;
+}
+
+// The two "resisting" shades for the Resisting-the-impulse chart — kept reading (strong)
+// and closed tab (soft). They must group together AND sit far from the alert red. When the
+// accent is cool it's already far from red, so reuse the accent-derived bar colors. When the
+// accent is warm it would blur into the red, so swap the pair to two shades of the accent's
+// cool complement (e.g. orange → blue) — as far from red as the wheel allows.
+function resistColors(t, barMain) {
+  if (!isWarmAccent(t.accent)) return { strong: barMain, soft: t.faint };
+  const comp = (rgbToHsl(t.accent).h + 180) % 360;
+  return { strong: hslToHex(comp, 0.52, 0.46), soft: hslToHex(comp, 0.46, 0.73) };
 }
 
 // Circular swatch background (two-tone for solids that define swatch2).
@@ -128,18 +132,24 @@ export function computeVars(key, { rimLight = 72, rimBR = 56 } = {}) {
     ? mix(t.accent, 55, '#ffffff')
     : t.text;
 
+  const barMain = glass ? `color-mix(in srgb, ${t.accent} 70%, ${t.text} 30%)` : t.accent;
+  const resist = resistColors(t, barMain);
+
   return {
     '--app-bg': t.appBg,
     '--link-hover': linkHover,
     '--surface': t.surface, '--surface-2': t.surface2, '--border': t.border,
     '--text': t.text, '--muted': t.muted, '--faint': t.faint,
     '--accent': t.accent, '--accent-rgb': t.accentRgb, '--accent2': t.accent2,
-    '--danger': dangerColor(t.accent),
     '--grid': t.grid, '--shadow': shadow, '--blur': t.blur,
     '--tip-bg': t.tipBg, '--tip-text': t.tipText,
     '--line': glass ? '#ffffff' : mix(t.accent, 34, '#ffffff'),
     '--dot': glass ? mix(t.accent, 22, '#ffffff') : '#ffffff',
-    '--bar-main': glass ? `color-mix(in srgb, ${t.accent} 70%, ${t.text} 30%)` : t.accent,
+    '--bar-main': barMain,
+    // Resisting-the-impulse chart: the two "not the site" bars, kept in one cool family
+    // that stays clear of the alert red (see resistColors).
+    '--resist-strong': resist.strong,
+    '--resist-soft': resist.soft,
     // Solid axis labels use the neutral ink (not the accent) to keep color minimal.
     '--axis-left': glass ? t.text : t.muted,
     '--axis-right': glass ? t.text : t.muted,

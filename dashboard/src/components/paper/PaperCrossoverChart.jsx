@@ -47,11 +47,12 @@ function barPath(x, y, w, hh, rTop, rBot) {
     + `L ${x + w} ${y + hh - rb} Q ${x + w} ${y + hh} ${x + w - rb} ${y + hh} L ${x + rb} ${y + hh} Q ${x} ${y + hh} ${x} ${y + hh - rb} Z`;
 }
 
-// Bottom → top: kept reading, then closed (both resisting, same accent family), then went
-// to site (the alert color) as the slice you want shrinking toward zero at the top.
+// Bottom → top: kept reading, then closed tab (two shades of one cool family, kept clear of
+// the red so they read as "resisted" together), then went to site (the alert red) as the
+// slice you want shrinking toward zero at the top.
 const SEGS = [
-  { key: "reading", color: "var(--bar-main)" },
-  { key: "closed", color: "var(--faint)" },
+  { key: "reading", color: "var(--resist-strong)" },
+  { key: "closed", color: "var(--resist-soft)" },
   { key: "site", color: "var(--danger)" },
 ];
 
@@ -117,7 +118,7 @@ export default function PaperCrossoverChart({ impulses }) {
         <div style={{ minWidth: 240, maxWidth: 460 }}>
           <h2 style={{ margin: "0 0 8px -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Resisting the impulse</h2>
           <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.5, marginBottom: 8 }}>
-            Of the times you met your reading goal, how often you went to the site vs. resisted — by reading more or closing the tab.
+            Of the times you met your reading goal, how often you went to the site (accessed site) vs. resisted (kept reading or closed the tab).
           </div>
           <span style={{ display: "inline-block", fontSize: 12.5, fontWeight: 600, color: "var(--muted)", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 999, padding: "4px 11px" }}>{copy.trendText}</span>
         </div>
@@ -138,8 +139,8 @@ export default function PaperCrossoverChart({ impulses }) {
       </div>
       <div style={{ display: "flex", gap: 18, alignItems: "center", margin: "14px 0 8px", fontSize: 13, color: "var(--muted)", flexWrap: "wrap" }}>
         {legendDot("var(--danger)", "Went to site")}
-        {legendDot("var(--bar-main)", "Kept reading")}
-        {legendDot("var(--faint)", "Closed tab")}
+        {legendDot("var(--resist-strong)", "Kept reading")}
+        {legendDot("var(--resist-soft)", "Closed tab")}
       </div>
       <div>{buildPlot(data, mode)}</div>
     </div>

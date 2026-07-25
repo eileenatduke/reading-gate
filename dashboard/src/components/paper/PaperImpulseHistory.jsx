@@ -108,7 +108,7 @@ export default function PaperImpulseHistory({ impulses }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
         <div style={{ maxWidth: 520 }}>
           <h2 style={{ margin: "0 0 0 -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Impulse history</h2>
-          <div style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 5, lineHeight: 1.5 }}>Gate completion vs. bailing pattern over the past 8 weeks.</div>
+          <div style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 5, lineHeight: 1.5 }}>Of the times you tried to open a blocked site, how often you bailed before meeting your reading goal vs. completed it — past 8 weeks.</div>
         </div>
         <div style={{ display: "flex", gap: 16, alignItems: "center", fontSize: 13, color: "var(--muted)" }}>
           <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 12, height: 12, borderRadius: 3, background: "var(--bar-main)", display: "inline-block" }} />Completed</span>
