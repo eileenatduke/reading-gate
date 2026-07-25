@@ -1,7 +1,8 @@
-// "Kept reading vs. went to site" — layout from CrossoverChart.dc.html, colors from the
-// app theme. kept = completed gates (read the article); site = bailed (went to the
-// distracting site). Two smooth lines (share % or count) with a crossover marker, over
-// week / month / year. SVG colors use CSS variables via `style` so it follows the theme.
+// "Resisting the impulse" — of the times you met your reading goal, what you did next:
+// went to the site (caved), kept reading, or closed the tab. The last two are both
+// "resisted"; only "went to site" indulges the impulse. Rendered as a 3-segment stacked
+// bar per time bucket (week / month / year), either as share % (each bar = 100%) or raw
+// count. SVG colors use CSS variables via `style` so it follows the app theme.
 import { useMemo, useState, createElement as h } from "react";
 import { crossoverSeries } from "../../lib/data.js";
 
@@ -13,76 +14,95 @@ function seg(active) {
   };
 }
 
-const share = (x) => (x.kept + x.site ? x.kept / (x.kept + x.site) : 0);
+const total = (x) => x.site + x.reading + x.closed;
+// "Resisted" = kept reading or closed the tab (anything but going to the site).
+const resistShare = (x) => (total(x) ? (x.reading + x.closed) / total(x) : 0);
 
 function computeCopy(data, range) {
-  const n = data.length;
-  const last = data[n - 1], prev = data[n - 2] || data[n - 1], first = data[0];
-  const lp = Math.round(share(last) * 100);
-  const delta = lp - Math.round(share(prev) * 100);
-  const tr = Math.round((share(last) - share(first)) * 100);
+  const withData = data.filter((d) => total(d) > 0);
   const word = range === "week" ? "week" : range === "month" ? "month" : "year";
+  if (!withData.length) {
+    return { headlineText: "No completed gates in this " + word + " yet.", deltaText: "", trendText: "—", empty: true };
+  }
+  const last = withData[withData.length - 1], first = withData[0];
+  const prev = withData[withData.length - 2] || last;
+  const lp = Math.round(resistShare(last) * 100);
+  const delta = lp - Math.round(resistShare(prev) * 100);
+  const tr = Math.round((resistShare(last) - resistShare(first)) * 100);
   return {
-    headlineText: lp + "% of the time this " + word + ", you chose to keep reading.",
-    deltaText: (delta >= 0 ? "▲ " : "▼ ") + Math.abs(delta) + " pts vs. last " + word,
+    headlineText: lp + "% of the time this " + word + ", you resisted going to the site.",
+    deltaText: withData.length > 1 ? (delta >= 0 ? "▲ " : "▼ ") + Math.abs(delta) + " pts vs. last " + word : "",
     trendText: (tr >= 0 ? "▲ " : "▼ ") + Math.abs(tr) + " pts vs. your first " + word,
   };
 }
 
-function smooth(pts) {
-  if (pts.length < 2) return pts.length ? "M " + pts[0].x + " " + pts[0].y : "";
-  let d = "M " + pts[0].x + " " + pts[0].y;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
-    const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6;
-    const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6;
-    d += " C " + c1x + " " + c1y + ", " + c2x + " " + c2y + ", " + p2.x + " " + p2.y;
-  }
-  return d;
+// Rounded-rect path with independent top/bottom corner radii, so stacked segments round
+// only their true outer corners and meet flush in the middle (mirrors PaperImpulseHistory).
+function barPath(x, y, w, hh, rTop, rBot) {
+  const rt0 = Math.min(rTop, w / 2), rb0 = Math.min(rBot, w / 2);
+  const lim = rt0 > 0 && rb0 > 0 ? hh / 2 : hh;
+  const rt = Math.max(0, Math.min(rt0, lim));
+  const rb = Math.max(0, Math.min(rb0, lim));
+  return `M ${x} ${y + rt} Q ${x} ${y} ${x + rt} ${y} L ${x + w - rt} ${y} Q ${x + w} ${y} ${x + w} ${y + rt} `
+    + `L ${x + w} ${y + hh - rb} Q ${x + w} ${y + hh} ${x + w - rb} ${y + hh} L ${x + rb} ${y + hh} Q ${x} ${y + hh} ${x} ${y + hh - rb} Z`;
 }
+
+// Bottom → top: kept reading, then closed (both resisting, same accent family), then went
+// to site (the alert color) as the slice you want shrinking toward zero at the top.
+const SEGS = [
+  { key: "reading", color: "var(--bar-main)" },
+  { key: "closed", color: "var(--faint)" },
+  { key: "site", color: "var(--danger)" },
+];
 
 function buildPlot(data, mode) {
   const n = data.length;
-  const VBW = 620, VBH = 250, padT = 16, padB = 28, padL = 26, padR = 30;
+  const VBW = 620, VBH = 250, padT = 16, padB = 28, padL = 34, padR = 16;
   const plotW = VBW - padL - padR, plotH = VBH - padT - padB, baseY = padT + plotH;
-  const slot = plotW / n;
-  const X = (i) => padL + slot * i + slot / 2;
+  const slot = plotW / n, bw = Math.min(slot * 0.52, 34);
+  const cx = (i) => padL + slot * i + slot / 2;
+  const maxTotal = Math.max(...data.map(total), 1);
   const els = [];
+
   [0, 0.25, 0.5, 0.75, 1].forEach((f, gi) => {
     const y = padT + f * plotH;
-    els.push(h("line", { key: "g" + gi, x1: padL, y1: y, x2: padL + plotW, y2: y, strokeWidth: 1, style: { stroke: "var(--grid)" } }));
+    els.push(h("line", { key: "g" + gi, x1: padL, y1: y, x2: padL + plotW, y2: y, strokeWidth: 1, strokeDasharray: gi === 4 ? "0" : "3 4", style: { stroke: "var(--grid)" } }));
   });
 
-  let keptPts, sitePts;
-  if (mode === "share") {
-    keptPts = data.map((d, i) => ({ x: X(i), y: baseY - share(d) * plotH }));
-    sitePts = data.map((d, i) => ({ x: X(i), y: baseY - (d.kept + d.site ? d.site / (d.kept + d.site) : 0) * plotH }));
-  } else {
-    const maxV = Math.max(...data.map((d) => Math.max(d.kept, d.site)), 1);
-    keptPts = data.map((d, i) => ({ x: X(i), y: baseY - (d.kept / maxV) * plotH }));
-    sitePts = data.map((d, i) => ({ x: X(i), y: baseY - (d.site / maxV) * plotH }));
-  }
-  els.push(h("path", { key: "sl", d: smooth(sitePts), strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round", style: { fill: "none", stroke: "var(--faint)" } }));
-  els.push(h("path", { key: "kl", d: smooth(keptPts), strokeWidth: 2.8, strokeLinecap: "round", strokeLinejoin: "round", style: { fill: "none", stroke: "var(--bar-main)" } }));
-
-  for (let i = 0; i < n - 1; i++) {
-    const a = data[i].kept - data[i].site, b = data[i + 1].kept - data[i + 1].site;
-    if (a <= 0 && b > 0) {
-      const fr = (-a) / (b - a);
-      const cx = X(i) + fr * (X(i + 1) - X(i));
-      const cy = keptPts[i].y + fr * (keptPts[i + 1].y - keptPts[i].y);
-      els.push(h("circle", { key: "xo", cx, cy, r: 5.5, strokeWidth: 2.5, style: { fill: "var(--dot)", stroke: "var(--accent)" } }));
-      break;
+  data.forEach((d, i) => {
+    const tot = total(d);
+    if (tot > 0) {
+      // Full-height in share mode (each bar = 100%); scaled to the busiest bucket in count mode.
+      const barH = mode === "share" ? plotH : (tot / maxTotal) * plotH;
+      const unit = barH / tot;
+      const x = cx(i) - bw / 2, rr = 4;
+      const present = SEGS
+        .map((s) => ({ ...s, h: d[s.key] > 0 ? Math.max(d[s.key] * unit, 2) : 0 }))
+        .filter((s) => s.h > 0);
+      let yCur = baseY;
+      present.forEach((s, k) => {
+        const isBottom = k === 0, isTop = k === present.length - 1;
+        const y = yCur - s.h;
+        els.push(h("path", { key: s.key + i, d: barPath(x, y, bw, s.h, isTop ? rr : 0, isBottom ? rr : 0), style: { fill: s.color } }));
+        yCur = y;
+      });
     }
-  }
+    els.push(h("text", { key: "xl" + i, x: cx(i), y: baseY + 15, textAnchor: "middle", fontSize: 9.5, fontFamily: "'Source Sans 3',sans-serif", style: { fill: "var(--xlabel)" } }, d.label));
+  });
 
   const yl = mode === "share"
     ? [{ f: 0, t: "0" }, { f: 0.5, t: "50%" }, { f: 1, t: "100%" }]
-    : (() => { const maxV = Math.max(...data.map((d) => Math.max(d.kept, d.site)), 1); return [{ f: 0, t: "0" }, { f: 1, t: "" + maxV }]; })();
+    : [{ f: 0, t: "0" }, { f: 1, t: "" + maxTotal }];
   yl.forEach((L, li) => els.push(h("text", { key: "yl" + li, x: padL - 8, y: baseY - L.f * plotH + 3, textAnchor: "end", fontSize: 9.5, fontFamily: "'Source Sans 3',sans-serif", style: { fill: "var(--muted)" } }, L.t)));
-  data.forEach((d, i) => els.push(h("text", { key: "xl" + i, x: X(i), y: baseY + 15, textAnchor: "middle", fontSize: 9.5, fontFamily: "'Source Sans 3',sans-serif", style: { fill: "var(--xlabel)" } }, d.label)));
 
   return h("svg", { viewBox: "0 0 " + VBW + " " + VBH, width: "100%", style: { display: "block", height: "auto", overflow: "visible", marginTop: "2px" } }, els);
+}
+
+function legendDot(color, label) {
+  return h("span", { style: { display: "inline-flex", gap: 7, alignItems: "center" } }, [
+    h("span", { key: "d", style: { width: 12, height: 12, borderRadius: 3, background: color, display: "inline-block" } }),
+    label,
+  ]);
 }
 
 export default function PaperCrossoverChart({ impulses }) {
@@ -94,8 +114,11 @@ export default function PaperCrossoverChart({ impulses }) {
   return (
     <div className="card" style={{ padding: "24px 26px 22px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 4 }}>
-        <div style={{ minWidth: 220 }}>
-          <h2 style={{ margin: "0 0 8px -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Kept reading vs. went to site</h2>
+        <div style={{ minWidth: 240, maxWidth: 460 }}>
+          <h2 style={{ margin: "0 0 8px -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Resisting the impulse</h2>
+          <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.5, marginBottom: 8 }}>
+            Of the times you met your reading goal, how often you went to the site vs. resisted — by reading more or closing the tab.
+          </div>
           <span style={{ display: "inline-block", fontSize: 12.5, fontWeight: 600, color: "var(--muted)", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 999, padding: "4px 11px" }}>{copy.trendText}</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
@@ -111,11 +134,12 @@ export default function PaperCrossoverChart({ impulses }) {
         </div>
       </div>
       <div style={{ fontSize: 14.5, color: "var(--text)", lineHeight: 1.4, margin: "14px 0 2px", maxWidth: 460 }}>
-        {copy.headlineText} <span style={{ color: "var(--muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{copy.deltaText}</span>
+        {copy.headlineText} {copy.deltaText && <span style={{ color: "var(--muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{copy.deltaText}</span>}
       </div>
-      <div style={{ display: "flex", gap: 18, alignItems: "center", margin: "14px 0 8px", fontSize: 13, color: "var(--muted)" }}>
-        <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 16, height: 3, borderRadius: 2, background: "var(--bar-main)", display: "inline-block" }} />Kept reading</span>
-        <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }}><span style={{ width: 16, height: 3, borderRadius: 2, background: "var(--faint)", display: "inline-block" }} />Went to site</span>
+      <div style={{ display: "flex", gap: 18, alignItems: "center", margin: "14px 0 8px", fontSize: 13, color: "var(--muted)", flexWrap: "wrap" }}>
+        {legendDot("var(--danger)", "Went to site")}
+        {legendDot("var(--bar-main)", "Kept reading")}
+        {legendDot("var(--faint)", "Closed tab")}
       </div>
       <div>{buildPlot(data, mode)}</div>
     </div>

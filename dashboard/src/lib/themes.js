@@ -40,6 +40,49 @@ function luminance(hex) {
   return 0.2126 * ch(0) + 0.7152 * ch(2) + 0.0722 * ch(4);
 }
 
+// ---- HSL helpers, used to keep the alert red separated from warm accents ----
+function rgbToHsl(hex) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16) / 255, g = parseInt(h.slice(2, 4), 16) / 255, b = parseInt(h.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let hue = 0;
+  if (d) {
+    if (max === r) hue = ((g - b) / d) % 6;
+    else if (max === g) hue = (b - r) / d + 2;
+    else hue = (r - g) / d + 4;
+    hue = hue * 60; if (hue < 0) hue += 360;
+  }
+  const l = (max + min) / 2;
+  const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+  return { h: hue, s, l };
+}
+function hslToHex(hue, s, l) {
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r = 0, g = 0, b = 0;
+  if (hue < 60) { r = c; g = x; } else if (hue < 120) { r = x; g = c; }
+  else if (hue < 180) { g = c; b = x; } else if (hue < 240) { g = x; b = c; }
+  else if (hue < 300) { r = x; b = c; } else { r = c; b = x; }
+  const to = (v) => Math.round((v + m) * 255).toString(16).padStart(2, '0');
+  return '#' + to(r) + to(g) + to(b);
+}
+
+// The "went to site" / alert red. Cool or near-grey accents keep the standard alert red
+// (#d9534f) — it already stands apart. But when the accent is itself warm (red / orange /
+// pink), that same red muddies against it, so push the alert's lightness away from the
+// accent's: a deep red against light-or-mid warm accents, a bright coral-red against dark
+// ones. That keeps the "bad" bar obviously distinct from the accent-colored "good" bars in
+// every theme, while still reading as red = alert.
+const DANGER_BASE = '#d9534f';
+export function dangerColor(accent) {
+  const { h, s, l } = rgbToHsl(accent);
+  if (s < 0.15) return DANGER_BASE;               // near-grey accent (Mono) → plain alert red
+  const warm = h >= 330 || h <= 50;               // red / orange / pink hue range
+  if (!warm) return DANGER_BASE;                  // cool accent → plain alert red
+  return hslToHex(3, 0.72, l < 0.45 ? 0.64 : 0.36);
+}
+
 // Circular swatch background (two-tone for solids that define swatch2).
 export function swatchBg(key) {
   const t = THEMES[key];
@@ -91,6 +134,7 @@ export function computeVars(key, { rimLight = 72, rimBR = 56 } = {}) {
     '--surface': t.surface, '--surface-2': t.surface2, '--border': t.border,
     '--text': t.text, '--muted': t.muted, '--faint': t.faint,
     '--accent': t.accent, '--accent-rgb': t.accentRgb, '--accent2': t.accent2,
+    '--danger': dangerColor(t.accent),
     '--grid': t.grid, '--shadow': shadow, '--blur': t.blur,
     '--tip-bg': t.tipBg, '--tip-text': t.tipText,
     '--line': glass ? '#ffffff' : mix(t.accent, 34, '#ffffff'),

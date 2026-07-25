@@ -118,7 +118,8 @@ Use Supabase **Auth** for accounts and **Row Level Security (RLS)** so every use
 **`impulse_log`** (one row every time the gate is triggered — powers the impulse counter)
 - `id`, `user_id`
 - `domain` (which blocked site they tried to open)
-- `completed` (bool — did they finish the article, or bail out?)
+- `completed` (bool — did they meet their reading goal, or bail out?)
+- `outcome` (text, nullable — what they did *after* meeting the goal: `kept_reading`, `closed` (left without going to the site), or `went_to_site`; `null` when the gate was never completed. Powers the "Resisting the impulse" chart, which counts only completed gates.)
 - `created_at`
 
 > Note: an "impulse" = **every gate trigger**, including times the user hit the gate and closed the tab without reading. That's deliberate — the times they bailed are some of the most telling. This is why impulses live in their own table and are NOT derived from `reading_log` (which only records completed articles).
