@@ -118,7 +118,7 @@ export default function PaperCrossoverChart({ impulses }) {
         <div style={{ minWidth: 240, maxWidth: 460 }}>
           <h2 style={{ margin: "0 0 8px -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Resisting the impulse</h2>
           <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.5, marginBottom: 8 }}>
-            Of the times you met your reading goal, how often you went to the site vs. resisted — by reading more or closing the tab.
+            Of the times you met your reading goal, how often you went to the site (accessed site) vs. resisted (kept reading or closed the tab).
           </div>
           <span style={{ display: "inline-block", fontSize: 12.5, fontWeight: 600, color: "var(--muted)", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 999, padding: "4px 11px" }}>{copy.trendText}</span>
         </div>
