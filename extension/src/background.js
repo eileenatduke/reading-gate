@@ -18,6 +18,7 @@ const NONE = chrome.windows.WINDOW_ID_NONE;
 // unlocks[tabId] = { domain, grantedAt, lastBlurAt|null }  (presence => unlocked)
 let unlocks = {};
 let pendingImpulse = {}; // tabId -> impulse_log row id (to flip completed=true on submit)
+let lastTrigger = {};    // tabId -> { domain, at }  (dedup rapid double-fires for one visit)
 let blockDomains = [];   // bare hosts, e.g. ["instagram.com","tiktok.com"]
 let activeTabId = null;
 let windowFocused = true;
@@ -147,6 +148,18 @@ function markBlur(tabId) {
 }
 
 async function triggerGate(tabId, domain, target) {
+  // One visit to a blocked site can wake this from two paths at once (webNavigation
+  // onBeforeNavigate + tab activation/visibility), and redirects (http→https, apex→www)
+  // can fire onBeforeNavigate several more times before the tab lands on the gate page.
+  // Each fire would insert its own impulse_log row, so the counter reads one open as
+  // several. Debounce per tab+domain: set the marker synchronously (before any await) so a
+  // near-simultaneous second call sees it and bails; a genuine later re-visit (or a
+  // different domain) is well past the window and still gates normally.
+  const now = Date.now();
+  const prev = lastTrigger[tabId];
+  if (prev && prev.domain === domain && now - prev.at < 2000) return;
+  lastTrigger[tabId] = { domain, at: now };
+
   delete unlocks[tabId];
   // Log the impulse at trigger time — every gate trigger counts (Spec §7).
   try {
@@ -209,6 +222,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
 chrome.tabs.onRemoved.addListener(async (tabId) => {
   delete unlocks[tabId];
   delete pendingImpulse[tabId];
+  delete lastTrigger[tabId];
   if (activeTabId === tabId) activeTabId = null;
   await persist();
 });
