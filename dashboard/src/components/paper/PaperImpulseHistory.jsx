@@ -4,18 +4,11 @@
 // via `style` so the panel follows the Settings theme.
 import { createElement as h } from "react";
 import { impulseTrend } from "../../lib/data.js";
-
-function niceMax(m) {
-  if (m <= 4) return Math.max(1, Math.ceil(m));
-  const pow = Math.pow(10, Math.floor(Math.log10(m)));
-  const step = pow / 2;
-  return Math.ceil(m / step) * step;
-}
+import { niceTicks } from "../../lib/scale.js";
 
 function buildChart(weeks) {
   const n = weeks.length;
-  const max = niceMax(Math.max(...weeks.map((w) => w.total), 1));
-  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(max * f));
+  const { max, ticks } = niceTicks(Math.max(...weeks.map((w) => w.total), 1));
   // Wider left padding so the numeric ticks clear the rotated axis label.
   const VBW = 560, VBH = 210, padT = 16, padB = 30, padL = 56, padR = 8;
   const plotW = VBW - padL - padR, plotH = VBH - padT - padB, baseY = padT + plotH;
