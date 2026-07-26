@@ -55,6 +55,9 @@ export default function Settings() {
   const [domains, setDomains] = useState([]);
   const [customFeeds, setCustomFeeds] = useState([]);
   const [articlesRequired, setArticlesRequired] = useState(1);
+  // Whether the user has saved settings before — gates the one-time "You're all set" modal.
+  const [onboarded, setOnboarded] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [newDomain, setNewDomain] = useState("");
   const [domainErr, setDomainErr] = useState("");
   const [newFeedName, setNewFeedName] = useState("");
@@ -77,11 +80,20 @@ export default function Settings() {
     supabase.auth.getUser().then(({ data }) => {
       const n = parseInt(data?.user?.user_metadata?.articles_required, 10);
       if (Number.isFinite(n) && n > 0) setArticlesRequired(n);
+      setOnboarded(!!data?.user?.user_metadata?.onboarded);
     }).catch(() => {});
   }, []);
 
   // The saved check only reflects the last successful save — any edit clears it.
   useEffect(() => { setStatus(""); }, [pendingTheme, interests, domains, customFeeds, articlesRequired]);
+
+  // Let Escape dismiss the welcome modal.
+  useEffect(() => {
+    if (!showWelcome) return;
+    const onKey = (e) => { if (e.key === "Escape") setShowWelcome(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showWelcome]);
 
   const clampReq = (n) => Math.max(1, Math.min(20, parseInt(n, 10) || 1));
 
@@ -127,7 +139,7 @@ export default function Settings() {
       // Persist the previewed theme locally now (not on click).
       commit(pendingTheme);
       // Theme + minimum-articles → auth metadata in one write (shared with the gate).
-      await supabase.auth.updateUser({ data: { theme: pendingTheme, articles_required: articlesRequired } });
+      await supabase.auth.updateUser({ data: { theme: pendingTheme, articles_required: articlesRequired, onboarded: true } });
 
       // interests + custom feeds → profiles. If the DB hasn't had the custom_feeds
       // migration (0002) applied, that column is missing and PostgREST rejects the whole
@@ -164,6 +176,8 @@ export default function Settings() {
       }
 
       setStatus("saved");
+      // First successful save ever → welcome the user and point them to next steps.
+      if (!onboarded) { setOnboarded(true); setShowWelcome(true); }
     } catch (e) {
       setErr(e.message);
     }
@@ -237,10 +251,10 @@ export default function Settings() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Where your articles come from</h2>
-        <p className="sub">For transparency, here are all the publishers Reading Gate pulls news from.</p>
-        <div className="row">
-          {SOURCES.map((s) => <span key={s} className="pill source">{s}</span>)}
-        </div>
+        <p className="sub">For transparency, here are all the publishers Reading Gate pulls news from. This is a read-only list — nothing to pick here.</p>
+        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.85, color: "var(--muted)" }}>
+          {SOURCES.join("  ·  ")}
+        </p>
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
@@ -332,6 +346,22 @@ export default function Settings() {
           </span>
         )}
       </div>
+
+      {showWelcome && (
+        <div role="dialog" aria-modal="true" aria-labelledby="welcome-title"
+          onClick={() => setShowWelcome(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(20,20,30,.45)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }}>
+          <div className="card" onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 400, width: "100%", textAlign: "center", padding: "32px 28px" }}>
+            <div style={{ fontSize: 36, lineHeight: 1, marginBottom: 12 }}>🎉</div>
+            <h2 id="welcome-title" style={{ margin: "0 0 10px", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 25, letterSpacing: "-.01em", color: "var(--text)" }}>You're all set</h2>
+            <p style={{ margin: "0 0 24px", fontSize: 14.5, lineHeight: 1.55, color: "var(--muted)" }}>
+              Try opening a blocked site to see the extension in action, or explore the dashboard!
+            </p>
+            <button className="btn" autoFocus onClick={() => setShowWelcome(false)} style={{ padding: "0.6875rem 2.25rem" }}>Okay</button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
