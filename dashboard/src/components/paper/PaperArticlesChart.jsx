@@ -4,6 +4,7 @@
 // so the chart follows the Settings theme and updates live on preview.
 import { useMemo, useState, createElement as h } from "react";
 import { articleCountSeries } from "../../lib/data.js";
+import { dualNiceAxes } from "../../lib/scale.js";
 
 const UNIT = { week: "day", month: "day", year: "month" };
 
@@ -27,6 +28,11 @@ function buildPlot(series) {
   const lastCum = [...cum].reverse().find((v) => v != null) ?? 0;
   const total = Math.max(lastCum, 1);
 
+  // Left axis (per-period bars) and right axis (cumulative line) get independent nice
+  // scales, but both step by a constant amount and share the same gridlines.
+  const axes = dualNiceAxes(dailyMax, total);
+  const leftMax = axes.left.max, rightMax = axes.right.max;
+
   const VBW = 620, VBH = 300, padT = 18, padB = 30, padL = 26, padR = 30;
   const plotW = VBW - padL - padR, plotH = VBH - padT - padB, baseY = padT + plotH;
   const slot = plotW / n;
@@ -34,20 +40,20 @@ function buildPlot(series) {
   const cx = (i) => padL + slot * i + slot / 2;
   const els = [];
 
-  [0, 0.25, 0.5, 0.75, 1].forEach((f, gi) => {
-    const y = padT + f * plotH;
-    els.push(h("line", { key: "g" + gi, x1: padL, y1: y, x2: padL + plotW, y2: y, strokeWidth: 1, strokeDasharray: gi === 4 ? "0" : "3 4", style: { stroke: "var(--grid)" } }));
-    els.push(label(padL - 8, y + 3.5, "end", "var(--axis-left)", "" + Math.round(dailyMax * (1 - f))));
-    els.push(label(padL + plotW + 8, y + 3.5, "start", "var(--axis-right)", "" + Math.round(total * (1 - f))));
-  });
+  for (let i = 0; i <= axes.intervals; i++) {
+    const y = baseY - (i / axes.intervals) * plotH;   // i=0 bottom (0), i=intervals top (max)
+    els.push(h("line", { key: "g" + i, x1: padL, y1: y, x2: padL + plotW, y2: y, strokeWidth: 1, strokeDasharray: i === 0 ? "0" : "3 4", style: { stroke: "var(--grid)" } }));
+    els.push(label(padL - 8, y + 3.5, "end", "var(--axis-left)", "" + axes.left.step * i));
+    els.push(label(padL + plotW + 8, y + 3.5, "start", "var(--axis-right)", "" + axes.right.step * i));
+  }
 
   daily.forEach((v, i) => {
     if (v <= 0) return;
-    const bh = (v / dailyMax) * plotH;
+    const bh = (v / leftMax) * plotH;
     els.push(h("rect", { key: "b" + i, x: cx(i) - bw / 2, y: baseY - bh, width: bw, height: bh, rx: 5, style: { fill: "var(--bar-main)" } }));
   });
 
-  const pts = series.map((s, i) => (s.future ? null : { x: cx(i), y: baseY - (s.cumulative / total) * plotH })).filter(Boolean);
+  const pts = series.map((s, i) => (s.future ? null : { x: cx(i), y: baseY - (s.cumulative / rightMax) * plotH })).filter(Boolean);
   if (pts.length) {
     let path = "M " + pts[0].x + " " + pts[0].y;
     for (let i = 1; i < pts.length; i++) path += " L " + pts[i].x + " " + pts[i].y;
