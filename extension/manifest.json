@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Reading Gate",
-  "version": "0.14.0",
+  "version": "0.14.2",
   "description": "Read and summarize a news article before a distracting site unlocks. Every open, a fresh article.",
   "permissions": ["tabs", "storage", "alarms", "webNavigation"],
   "host_permissions": ["<all_urls>"],
