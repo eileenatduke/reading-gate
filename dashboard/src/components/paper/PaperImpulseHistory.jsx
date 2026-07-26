@@ -46,7 +46,7 @@ function buildChart(weeks) {
     }
     els.push(h("text", { key: "xl" + i, x: cx(i), y: baseY + 16, textAnchor: "middle", fontSize: 9.5, fontFamily: "'Source Sans 3',sans-serif", style: { fill: "var(--muted)" } }, d.label));
   });
-  els.push(h("text", { key: "axl", x: 12, y: padT + plotH / 2, textAnchor: "middle", fontSize: 9, letterSpacing: ".08em", fontFamily: "'Source Sans 3',sans-serif", transform: "rotate(-90 12 " + (padT + plotH / 2) + ")", style: { fill: "var(--muted)" } }, "GATE TRIGGERS / WEEK"));
+  els.push(h("text", { key: "axl", x: 12, y: padT + plotH / 2, textAnchor: "middle", fontSize: 9, letterSpacing: ".08em", fontFamily: "'Source Sans 3',sans-serif", transform: "rotate(-90 12 " + (padT + plotH / 2) + ")", style: { fill: "var(--muted)" } }, "IMPULSES / WEEK"));
   return h("svg", { viewBox: "0 0 " + VBW + " " + VBH, width: "100%", style: { display: "block", height: "auto", overflow: "visible" } }, els);
 }
 

@@ -148,7 +148,16 @@ async function submit() {
     if (sessionReads === required) {
       if (!impulseId) await ensureImpulse();
       if (impulseId) {
-        await db("impulse_log").eq("id", impulseId).update({ completed: true, outcome: "closed" });
+        // Impulse logging must never block the reading flow, so keep this out of submit()'s
+        // main throw path. Try the combined write; if the DB predates migration 0003 (no
+        // `outcome` column) it 400s, so fall back to just `completed` — the completion
+        // metrics still work, and the resist chart fills in once the migration is applied.
+        try {
+          await db("impulse_log").eq("id", impulseId).update({ completed: true, outcome: "closed" });
+        } catch (e) {
+          console.warn("[gate:impulse] outcome write failed — is migration 0003 applied?", e.message);
+          try { await db("impulse_log").eq("id", impulseId).update({ completed: true }); } catch (e2) { console.warn("[gate:impulse]", e2.message); }
+        }
         await chrome.runtime.sendMessage({ type: "CLEAR_PENDING_IMPULSE" }).catch(() => {});
       }
     }
@@ -173,11 +182,13 @@ function showChoices() {
 // that resisting choice (overwriting the default "closed" outcome), then load the next
 // article. Best-effort: never block reading on impulse logging.
 async function keepReading() {
+  // Reaching this button means the goal is met, so assert completed too — that keeps every
+  // row that has an outcome consistent with the resist chart's "completed" filter.
   try {
     if (!impulseId) await ensureImpulse();
-    if (impulseId) await db("impulse_log").eq("id", impulseId).update({ outcome: "kept_reading" });
+    if (impulseId) await db("impulse_log").eq("id", impulseId).update({ completed: true, outcome: "kept_reading" });
   } catch (e) {
-    // ignore — the outcome just stays whatever it was
+    console.warn("[gate:impulse] kept_reading write failed — is migration 0003 applied?", e.message);
   }
   await loadNextArticle();
 }
@@ -187,9 +198,9 @@ async function accessSite() {
   // captured even as we leave the page (this overwrites "closed"/"kept_reading").
   try {
     if (!impulseId) await ensureImpulse();
-    if (impulseId) await db("impulse_log").eq("id", impulseId).update({ outcome: "went_to_site" });
+    if (impulseId) await db("impulse_log").eq("id", impulseId).update({ completed: true, outcome: "went_to_site" });
   } catch (e) {
-    // best effort — never block navigation on logging
+    console.warn("[gate:impulse] went_to_site write failed — is migration 0003 applied?", e.message);
   }
   // Grant the unlock (background records it BEFORE we navigate), then send the user to the
   // exact site they just unlocked. `target` is the blocked URL captured when the gate fired;
