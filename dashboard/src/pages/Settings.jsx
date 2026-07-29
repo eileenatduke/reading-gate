@@ -57,8 +57,10 @@ export default function Settings() {
   const [domains, setDomains] = useState([]);
   const [customFeeds, setCustomFeeds] = useState([]);
   const [articlesRequired, setArticlesRequired] = useState(1);
-  // Whether the user has saved settings before — gates the one-time "You're all set" modal.
-  const [onboarded, setOnboarded] = useState(false);
+  // Whether the user has saved settings before — gates the one-time "You're all set" modal
+  // and the first-run guide. Starts null (unknown) until the user's metadata loads, so the
+  // guide never flashes for returning users before we know they've already onboarded.
+  const [onboarded, setOnboarded] = useState(null);
   const [showWelcome, setShowWelcome] = useState(false);
   // The first-time "Getting started" guide shows until the user saves once (i.e. while
   // !onboarded) or dismisses it by hand.
@@ -209,7 +211,7 @@ export default function Settings() {
         </div>
       </div>
 
-      {!onboarded && !guideDismissed && (
+      {onboarded === false && !guideDismissed && (
         <div className="card" style={{ marginBottom: 20, borderColor: "var(--accent)" }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
             <h2 style={{ margin: 0 }}>Getting started</h2>
