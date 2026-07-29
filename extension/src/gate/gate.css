@@ -148,8 +148,11 @@ textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; 
 .reaction:hover { border-color: var(--accent); }
 .reaction.selected {
   border-color: var(--accent); color: var(--accent); font-weight: 600;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: var(--accent-weak);
 }
+/* Glass themes use a translucent-white --border that reads too faint on the pastel
+   surface; give unselected pills a slightly firmer edge so they still look tappable. */
+:root[data-theme-group="glass"] .reaction { border-color: rgba(255,255,255,0.55); }
 .reaction:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .submit-row { margin-top: var(--sp-5); display: flex; align-items: center; gap: var(--sp-4); }
