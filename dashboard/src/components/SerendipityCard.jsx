@@ -19,10 +19,6 @@ export default function SerendipityCard({ reading }) {
               <div className="muted" style={{ fontSize: 13 }}>wildcards read</div>
             </div>
             <div>
-              <div style={{ fontSize: 22 }}><Stars value={s.avgQuality} label="Avg quality" /></div>
-              <div className="muted" style={{ fontSize: 13 }}>avg quality</div>
-            </div>
-            <div>
               <div style={{ fontSize: 22 }}><Stars value={s.avgInterest} label="Avg interest" /></div>
               <div className="muted" style={{ fontSize: 13 }}>avg interest</div>
             </div>

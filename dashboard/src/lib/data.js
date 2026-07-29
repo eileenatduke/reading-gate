@@ -208,7 +208,6 @@ export function serendipity(reading) {
   const avg = (sel) => (n ? picks.reduce((s, r) => s + r[sel], 0) / n : 0);
   return {
     count: n,
-    avgQuality: avg("quality_rating"),
     avgInterest: avg("preference_rating"),
     picks,
   };
@@ -218,13 +217,13 @@ export function serendipity(reading) {
 export function sourceScorecard(reading) {
   const m = new Map();
   for (const r of reading) {
-    const s = m.get(r.source) || { source: r.source, n: 0, q: 0, i: 0 };
-    s.n++; s.q += r.quality_rating; s.i += r.preference_rating;
+    const s = m.get(r.source) || { source: r.source, n: 0, i: 0 };
+    s.n++; s.i += r.preference_rating;
     m.set(r.source, s);
   }
   return [...m.values()]
-    .map((s) => ({ source: s.source, count: s.n, quality: s.q / s.n, interest: s.i / s.n }))
-    .sort((a, b) => b.quality - a.quality);
+    .map((s) => ({ source: s.source, count: s.n, interest: s.i / s.n }))
+    .sort((a, b) => b.interest - a.interest);
 }
 
 // ---------- impulse history (weekly, all time) ----------

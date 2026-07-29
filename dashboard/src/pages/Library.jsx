@@ -8,7 +8,6 @@ export default function Library() {
   const [q, setQ] = useState("");
   const [genre, setGenre] = useState("");
   const [source, setSource] = useState("");
-  const [minRating, setMinRating] = useState(0);
 
   useEffect(() => {
     fetchReadingLog()
@@ -25,14 +24,13 @@ export default function Library() {
     return reading.filter((r) => {
       if (genre && r.genre !== genre) return false;
       if (source && r.source !== source) return false;
-      if (minRating && r.quality_rating < minRating) return false;
       if (needle) {
         const hay = (r.article_title + " " + r.summary_text).toLowerCase();
         if (!hay.includes(needle)) return false;
       }
       return true;
     });
-  }, [reading, q, genre, source, minRating]);
+  }, [reading, q, genre, source]);
 
   if (err) return <div className="loading">Couldn't load your library: {err}</div>;
   if (reading === null) return <div className="loading">Loading…</div>;
@@ -56,10 +54,6 @@ export default function Library() {
           <option value="">All sources</option>
           {sources.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
-        <select value={minRating} onChange={(e) => setMinRating(Number(e.target.value))}>
-          <option value={0}>Any quality</option>
-          {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}★ and up</option>)}
-        </select>
       </div>
 
       {filtered.length === 0 ? (
@@ -76,8 +70,6 @@ export default function Library() {
               <span className="pill source">{r.source}</span>
               <span className="pill">{r.genre}</span>
               {r.is_serendipity && <span className="pill">wildcard</span>}
-              <span className="muted" style={{ fontSize: "var(--fs-sm)" }}>Quality</span>
-              <Stars value={r.quality_rating} label="Quality" />
               <span className="muted" style={{ fontSize: "var(--fs-sm)" }}>Interest</span>
               <Stars value={r.preference_rating} label="Interest" />
             </div>

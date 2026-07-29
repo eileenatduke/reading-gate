@@ -27,7 +27,7 @@ export default function Privacy() {
           <h2>What we collect</h2>
           <ul>
             <li><strong>Account information</strong> — your email address when you create an account or sign in.</li>
-            <li><strong>Reading activity</strong> — the summaries you write, the quality and interest ratings you give, and basic metadata about each article (title, source, genre, timestamp).</li>
+            <li><strong>Reading activity</strong> — the summaries you write, the interest reactions you give, and basic metadata about each article (title, source, genre, timestamp).</li>
             <li><strong>Gate activity</strong> — when the gate is triggered on a site you've chosen to block (the domain, a timestamp, and whether you completed the reading).</li>
             <li><strong>Your settings</strong> — the sites on your blocklist, your selected interests, any custom sources you add, your theme, and how many articles you require per unlock.</li>
           </ul>
