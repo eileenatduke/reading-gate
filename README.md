@@ -19,6 +19,7 @@ They never talk to each other directly — only to Supabase. See
 ```
 reading-gate/
 ├── supabase/migrations/   # the schema + RLS — the shared contract (build first)
+├── supabase/functions/    # verify-summary edge function (AI anti-gaming check)
 ├── extension/             # MV3 gate: content pipeline, recommender, gate UI
 ├── dashboard/             # React dashboard (Overview / Library / Settings + drill-in)
 ├── docs/AI-EXEMPTION.md   # how AI/MCP stays un-gated (profile separation)
@@ -79,7 +80,21 @@ the **Mono (black & white)** theme and can pick any theme in **Settings**.
 5. Open a blocked site → the gate appears with a fresh article. Read it, summarize
    (≥70 words), rate quality + interest, and submit to unlock **this visit only**.
 
-### 4. AI / MCP exemption
+### 4. AI anti-gaming check (optional but recommended)
+The gate is only meaningful if the summary reflects a real read — otherwise anyone can
+type random text without opening the article. Deploy the `verify-summary` Edge Function
+to score each summary against the article on submit:
+
+```bash
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-...   # kept server-side, never in the extension
+supabase functions deploy verify-summary
+```
+
+The extension calls it automatically. It **fails open** — without the key deployed, the
+gate behaves exactly as before (70 words + both ratings). See
+[`supabase/functions/README.md`](supabase/functions/README.md).
+
+### 5. AI / MCP exemption
 Keep the extension only in your personal browser profile. Run automation in a
 separate, extension-free profile — see [`docs/AI-EXEMPTION.md`](docs/AI-EXEMPTION.md).
 

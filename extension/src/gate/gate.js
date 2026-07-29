@@ -1,6 +1,7 @@
 import { getConfig } from "../lib/config.js";
 import { currentUser, db, signIn, signUp, getUserFresh, getSession } from "../lib/sb.js";
 import { pickArticle } from "../lib/recommender.js";
+import { verifySummary } from "../lib/verify.js";
 import { applyTheme, DEFAULT_THEME } from "../lib/themes.js";
 
 const params = new URLSearchParams(location.search);
@@ -16,6 +17,8 @@ let preference = 0;
 let required = 1;      // minimum articles to read before the site can be accessed
 let sessionReads = 0;  // articles completed during this gate visit
 let impulseId = null;  // impulse_log row for this gate visit (created at trigger, or backfilled here)
+let openedArticle = false; // did the reader click through to the article on the source?
+let openedAt = null;       // timestamp of the first open — powers the dwell-time signal
 
 // Make sure this gate trigger is recorded in impulse_log. The background worker logs
 // it at trigger time, but only if a session exists then — so a visit where the user
@@ -122,10 +125,34 @@ function updateSubmit() {
 
 async function submit() {
   $("submit").disabled = true;
-  $("submit").textContent = "Saving…";
+  $("why").textContent = "";
   try {
     const user = await currentUser();
     if (!user) throw new Error("Not logged in");
+
+    // Anti-gaming check (Spec §11 v2): before we accept the read, ask the backend
+    // AI check whether this summary is a genuine reflection of the article the reader
+    // was shown — catching random text typed without opening the article. Fail-open:
+    // verifySummary returns ok:true whenever the check can't run, so an outage never
+    // blocks a real reader; only an explicit "fail" holds the gate.
+    $("submit").textContent = "Checking…";
+    const summaryText = $("summary").value.trim();
+    const check = await verifySummary({
+      article,
+      summary: summaryText,
+      signals: {
+        openedArticle,
+        dwellSeconds: openedAt ? (Date.now() - openedAt) / 1000 : 0,
+      },
+    });
+    if (!check.ok) {
+      $("submit").disabled = false;
+      $("submit").textContent = "Submit";
+      $("why").textContent = check.reason;
+      return;
+    }
+
+    $("submit").textContent = "Saving…";
 
     // Save the completed read.
     await db("reading_log").insert({
@@ -244,6 +271,7 @@ function updateProgress() {
 
 function renderArticle(a) {
   article = a; quality = 0; preference = 0;
+  openedArticle = false; openedAt = null;
   $("a-source").textContent = a.source;
   $("a-genre").textContent = a.genre;
   $("a-serendipity").classList.toggle("hidden", !a.is_serendipity);
@@ -326,6 +354,13 @@ $("signup-btn").addEventListener("click", () => doAuth(signUp));
 $("password").addEventListener("keydown", (e) => { if (e.key === "Enter") $("login-btn").click(); });
 $("submit").addEventListener("click", submit);
 $("summary").addEventListener("input", updateCounter);
+// Record that the reader opened the article on the source (the gate's only path to
+// the full text). First open stamps the dwell clock; both feed the AI check as
+// behavioral signals for "did they actually read it?".
+$("a-read").addEventListener("click", () => {
+  openedArticle = true;
+  if (!openedAt) openedAt = Date.now();
+});
 $("access-btn").addEventListener("click", accessSite);
 $("more-btn").addEventListener("click", keepReading);
 $("go-dashboard").addEventListener("click", () => openDashboard("/login"));
