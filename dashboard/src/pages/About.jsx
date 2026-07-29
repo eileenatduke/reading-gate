@@ -27,7 +27,7 @@ const PRINCIPLES = [
     n: "02",
     title: "Lock people out and they want in more.",
     body: [
-      "In 1966, psychologist Jack Brehm introduced Psychological Reactance: when people feel their freedom being taken away, they try to regain control. Even when you create the restriction yourself, being locked out can make the blocked activity feel even more tempting.",
+      "In 1966, psychologist Jack Brehm introduced Psychological Reactance: when people feel their freedom being taken away, they try to regain control. Even when you create the restriction yourself, being locked out can make the blocked activity feel even more tempting, which is why you are likely to uninstall traditional app blockers.",
     ],
     most: "Build a wall and rely on users' willpower.",
     ours: "Preserve choice while changing the order of actions. Access apps, but read and learn first to earn the fun — intentional, not forbidden.",
@@ -36,7 +36,7 @@ const PRINCIPLES = [
     n: "03",
     title: "Predictable friction stops working.",
     body: [
-      "Wolfram Schultz studied dopamine neurons in monkeys receiving juice rewards. Once a cue reliably predicted the reward, the neurons fired at the cue instead. The same applies to blockers with a fixed password, timer, or breathing exercise — your brain learns to anticipate the friction and bypass it.",
+      "Wolfram Schultz found that dopamine neurons in monkeys initially fired when they received a juice reward. Once a cue reliably predicted the reward, the neurons shifted to firing at the cue instead, showing that the brain had learned to anticipate the reward before it arrived. Similarly, when a blocker always uses the same password, timer, or breathing exercise, that friction becomes predictable and you learn to wait it out.",
     ],
     most: "Rely on the same repeated barrier. A week in, users have learned to wait it out.",
     ours: "Keep the interruption valuable, not predictable. Reading stays consistent but the articles change every time, so the experience stays fresh.",

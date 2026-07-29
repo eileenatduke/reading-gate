@@ -346,11 +346,14 @@ html:has(.rg-about) body {
   border: 1px solid rgba(255,255,255,0.12);
   padding: 2.5rem 1.75rem;
 }
-/* Arrow connector sitting in the gap before every step after the first. */
+/* Arrow connector centered in the 1.25rem grid gap before every step after the first.
+   translate(-50%,-50%) pins the glyph's own center to the gap midpoint (half the gap =
+   0.625rem left of the card), so it never overlaps either card's border. */
 .rg-ab-step + .rg-ab-step::before {
   content: "→";
-  position: absolute; left: -0.85rem; top: 50%; transform: translateY(-50%);
-  color: rgba(255,255,255,0.35); font-size: 1.25rem; line-height: 1;
+  position: absolute; left: -0.625rem; top: 50%; transform: translate(-50%, -50%);
+  color: rgba(255,255,255,0.35); font-size: 1.125rem; line-height: 1;
+  pointer-events: none;
 }
 .rg-ab-step-num {
   font-family: "Playfair Display", Georgia, serif; font-style: italic;
@@ -446,9 +449,9 @@ html:has(.rg-about) body {
   .rg-ab-how-h { font-size: 2.125rem; margin-bottom: 2rem; }
   .rg-ab-steps { grid-template-columns: 1fr; gap: 1.75rem; }
   .rg-ab-step { padding: 2rem 1.5rem; text-align: center; }
-  /* Stacked: arrow points down, centered above each following step. */
+  /* Stacked: arrow points down, centered in the 1.75rem gap above each following step. */
   .rg-ab-step + .rg-ab-step::before {
-    content: "↓"; left: 50%; top: -1.35rem; transform: translateX(-50%);
+    content: "↓"; left: 50%; top: -0.875rem; transform: translate(-50%, -50%);
   }
   .rg-ab-research-intro { padding: 4rem 1.5rem 1.5rem; }
   .rg-ab-research-h { font-size: 2.125rem; }
