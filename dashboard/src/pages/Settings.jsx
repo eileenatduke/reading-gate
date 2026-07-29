@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase.js";
 import { fetchProfile, fetchBlocklist } from "../lib/data.js";
 import { GENRE_GROUPS, SOURCES } from "../lib/genres.js";
@@ -44,6 +45,7 @@ function normalizeFeed(name, url) {
 }
 
 export default function Settings() {
+  const navigate = useNavigate();
   const { theme, preview, commit, resetPreview } = useTheme();
   const [pendingTheme, setPendingTheme] = useState(theme);
   // Follow the saved theme until the user picks a different one.
@@ -58,6 +60,9 @@ export default function Settings() {
   // Whether the user has saved settings before — gates the one-time "You're all set" modal.
   const [onboarded, setOnboarded] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  // The first-time "Getting started" guide shows until the user saves once (i.e. while
+  // !onboarded) or dismisses it by hand.
+  const [guideDismissed, setGuideDismissed] = useState(false);
   const [newDomain, setNewDomain] = useState("");
   const [domainErr, setDomainErr] = useState("");
   const [newFeedName, setNewFeedName] = useState("");
@@ -183,6 +188,14 @@ export default function Settings() {
     }
   }
 
+  // "Try it on a blocked site" — open the first site the user just blocked in a new tab so
+  // the gate fires live. If they blocked nothing there's nothing to demo, so just close.
+  function tryBlockedSite() {
+    setShowWelcome(false);
+    const first = domains.map(normalizeDomain).filter(Boolean)[0];
+    if (first) window.open("https://" + first, "_blank", "noopener");
+  }
+
   if (err) return <div className="loading">Error: {err}</div>;
 
   // Preset picks are shown (and toggled) by the "Popular sites" buttons, so keep them out of
@@ -199,6 +212,29 @@ export default function Settings() {
           <p className="page-sub">Personalize your reading and your view.</p>
         </div>
       </div>
+
+      {!onboarded && !guideDismissed && (
+        <div className="card" style={{ marginBottom: 20, borderColor: "var(--accent)" }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+            <h2 style={{ margin: 0 }}>Getting started</h2>
+            <button
+              onClick={() => setGuideDismissed(true)}
+              aria-label="Dismiss getting started guide"
+              style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", font: "inherit", fontSize: 13, padding: 0 }}
+            >
+              Dismiss
+            </button>
+          </div>
+          <p className="sub" style={{ marginTop: 4 }}>New here? Set up Reading Gate top to bottom, then hit Save.</p>
+          <ol style={{ margin: 0, paddingLeft: "1.25rem", lineHeight: 1.7, fontSize: "0.9375rem" }}>
+            <li><b>Block distracting sites</b> — tap a popular site or paste any URL.</li>
+            <li><b>Set your reading goal</b> — how many articles unlock a site.</li>
+            <li><b>Pick your interests</b> — and add any custom sources you subscribe to.</li>
+            <li><b>Choose a theme</b> — make the dashboard yours.</li>
+            <li><b>Save changes</b> — your gate goes live right away.</li>
+          </ol>
+        </div>
+      )}
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Blocked sites</h2>
@@ -352,13 +388,16 @@ export default function Settings() {
           onClick={() => setShowWelcome(false)}
           style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(20,20,30,.45)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }}>
           <div className="card" onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 400, width: "100%", textAlign: "center", padding: "32px 28px" }}>
-            <div style={{ fontSize: 36, lineHeight: 1, marginBottom: 12 }}>🎉</div>
-            <h2 id="welcome-title" style={{ margin: "0 0 10px", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 25, letterSpacing: "-.01em", color: "var(--text)" }}>You're all set</h2>
-            <p style={{ margin: "0 0 24px", fontSize: 14.5, lineHeight: 1.55, color: "var(--muted)" }}>
-              Try opening a blocked site to see the extension in action, or explore the dashboard!
+            style={{ maxWidth: 520, width: "100%", textAlign: "center", padding: "44px 40px" }}>
+            <div style={{ fontSize: 52, lineHeight: 1, marginBottom: 18 }}>🎉</div>
+            <h2 id="welcome-title" style={{ margin: "0 0 14px", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 34, letterSpacing: "-.01em", color: "var(--text)" }}>You're all set</h2>
+            <p style={{ margin: "0 auto 28px", maxWidth: 400, fontSize: 17, lineHeight: 1.6, color: "var(--muted)" }}>
+              Your reading gate is live! Try it on a blocked site to see it in action, or explore your dashboard.
             </p>
-            <button className="btn" autoFocus onClick={() => setShowWelcome(false)} style={{ padding: "0.6875rem 2.25rem" }}>Okay</button>
+            <div className="row" style={{ justifyContent: "center", flexWrap: "wrap", gap: 12 }}>
+              <button className="btn" autoFocus onClick={tryBlockedSite} style={{ padding: "0.75rem 1.75rem" }}>Try it on a blocked site</button>
+              <button className="btn ghost" onClick={() => { setShowWelcome(false); navigate("/"); }} style={{ padding: "0.75rem 1.75rem" }}>Go to dashboard</button>
+            </div>
           </div>
         </div>
       )}
