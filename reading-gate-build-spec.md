@@ -52,7 +52,7 @@ Anyone can sign up. Each user chooses **which sites to block** themselves (one u
 
 **How to implement (MV3):** track tab focus with `chrome.tabs.onActivated` + `chrome.windows.onFocusChanged`, and page foreground/background with the Page Visibility API (`visibilitychange` / `document.hidden`) in the content script. Store a `lastActive` timestamp per unlocked tab; on refocus, if `now - lastActive > grace`, revoke and re-gate.
 
-**MVP scope note:** no honor-system bypass protection beyond the 70-word minimum. No LLM checking that the summary actually matches the article (explicitly out of scope for v1).
+**MVP scope note:** the v1 gate had no honor-system bypass protection beyond the 70-word minimum. **v2 adds an AI anti-gaming check** (§11): on submit, the summary is scored server-side against the article the reader was shown, and a summary that reads as gibberish/filler/off-topic/copy-of-the-blurb holds the gate. It fails **open** (an outage never traps a real reader) — a deterrent, not a hard security boundary.
 
 ---
 
@@ -227,11 +227,41 @@ This project has multiple layers, but the layers are **tightly coupled through o
 
 **Deliberately deferred**
 - Ratings-over-time chart (does personalization improve what you're served).
-- LLM validation that the summary actually reflects the article.
+- ~~LLM validation that the summary actually reflects the article.~~ **Shipped (v2):**
+  the `verify-summary` Supabase Edge Function runs an AI check on submit — see §11.
 - Mobile / phone-app blocking (much harder; needs native iOS/Android).
 - Firefox/Safari builds.
 - User-selectable **theme switcher** (e.g., liquid glass / fuzzy / minimal). Cheap to add later *if* MVP styling is token-based from the start — see the note in the ui-ux-designer definition (Appendix A).
 - CSV/Notion export, weekly digest email, social features.
+
+### v2 — AI anti-gaming check (the summary must reflect the article)
+
+The single biggest threat to the product's value: the gate is trivially gamed. You
+can type random text without opening the article, and most people set the article
+goal to 1 to get past as fast as possible — so if that one summary is fake, the
+dashboard measures nothing real. This check makes each gated read genuine.
+
+- **`supabase/functions/verify-summary`** — a Supabase Edge Function. On submit it
+  receives the article the reader was shown (headline / source / genre / blurb), the
+  summary they wrote, and two behavioral signals (did they click through to open the
+  article, and seconds between opening and submitting). It asks an LLM whether the
+  summary is a plausible, on-topic, human-written reflection of *this* article, and
+  returns `pass` / `fail` / `skip`.
+- **The LLM key is server-side only.** The extension ships just the public anon key,
+  so the paid key lives as the `ANTHROPIC_API_KEY` Supabase secret and is never
+  exposed. Supabase verifies the caller's JWT before the function runs, so only
+  signed-in users reach it.
+- **Model:** defaults to a fast, low-cost classifier (`claude-haiku-4-5`), overridable
+  via the `VERIFY_MODEL` secret. This runs on every submit and the product targets a
+  near-$0 running cost, so a Haiku-tier model is the right default.
+- **Fails open.** Missing key, network error, or a bad response → `skip`, and the gate
+  behaves exactly as v1 (70 words + both ratings). Only an explicit `fail` holds the
+  gate, with the reason shown to the reader. It's a strong deterrent against casual
+  gaming, not a hard security boundary — the goal is to make faking a summary more
+  work than actually reading.
+- **Client wiring:** `extension/src/lib/verify.js` calls the function on submit; the
+  gate tracks whether "Read on <source>" was clicked and the dwell time to supply the
+  signals. Toggle with the `AI_SUMMARY_CHECK` config flag.
 
 ---
 

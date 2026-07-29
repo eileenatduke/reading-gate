@@ -17,6 +17,9 @@ export const DEFAULT_CONFIG = {
   POOL_TARGET: 12,           // how many unread articles to keep per user
   POOL_REFILL_MINUTES: 30,   // background content refresh cadence
   DASHBOARD_URL: "",         // deployed web dashboard URL (for the popup link)
+  AI_SUMMARY_CHECK: true,    // run the AI anti-gaming check on submit (Spec §11 v2)
+  VERIFY_URL: "",            // override for the verify-summary function endpoint
+                             // (default: <SUPABASE_URL>/functions/v1/verify-summary)
 };
 
 export async function getConfig() {
