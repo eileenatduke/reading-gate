@@ -131,6 +131,27 @@ textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; 
 :root[data-theme-group="glass"] .star:not(.filled) { color: #ffffff; }
 .star:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
 
+/* "Teach your feed" reaction row — replaces the star ratings. One tap sets the interest
+   signal (👎/👍/🔥) that biases which genres get recommended next. */
+.react-block { margin: var(--sp-4) 0; }
+.react-block .label { font-weight: 600; }
+.react-block .sub { font-size: var(--fs-sm); color: var(--muted); margin-bottom: var(--sp-3); }
+.reactions { display: flex; gap: var(--sp-3); flex-wrap: wrap; }
+.reaction {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  font: inherit; cursor: pointer;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: var(--sp-2) var(--sp-4); transition: all 120ms var(--ease);
+}
+.reaction .emoji { font-size: 1.25rem; line-height: 1; }
+.reaction:hover { border-color: var(--accent); }
+.reaction.selected {
+  border-color: var(--accent); color: var(--accent); font-weight: 600;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.reaction:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
 .submit-row { margin-top: var(--sp-5); display: flex; align-items: center; gap: var(--sp-4); }
 .submit-row .why { font-size: var(--fs-sm); color: var(--muted); }
 

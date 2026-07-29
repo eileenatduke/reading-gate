@@ -12,8 +12,7 @@ const $ = (id) => document.getElementById(id);
 const MIN_WORDS = 70;
 
 let article = null;
-let quality = 0;
-let preference = 0;
+let preference = 0;  // interest signal (1/4/5) from the reaction row
 let required = 1;      // minimum articles to read before the site can be accessed
 let sessionReads = 0;  // articles completed during this gate visit
 let impulseId = null;  // impulse_log row for this gate visit (created at trigger, or backfilled here)
@@ -97,29 +96,38 @@ function wordCount(text) {
   return (text.trim().match(/\S+/g) || []).length;
 }
 
-function buildStars(containerId, onChange) {
+// "Teach your feed" reactions. One tap sets the interest signal the recommender averages
+// per genre: 👎 pulls a genre below the neutral-3 default, 👍/🔥 push it above.
+const REACTIONS = [
+  { emoji: "👎", label: "Not for me", score: 1 },
+  { emoji: "👍", label: "Good", score: 4 },
+  { emoji: "🔥", label: "More like this", score: 5 },
+];
+
+function buildReactions(containerId, onChange) {
   const el = $(containerId);
   el.innerHTML = "";
   const btns = [];
-  for (let i = 1; i <= 5; i++) {
+  REACTIONS.forEach((r) => {
     const b = document.createElement("button");
-    b.className = "star";
+    b.className = "reaction";
     b.type = "button";
-    b.textContent = "★";
     b.setAttribute("role", "radio");
-    b.setAttribute("aria-label", `${i} of 5`);
+    b.setAttribute("aria-checked", "false");
+    b.setAttribute("aria-label", r.label);
+    b.innerHTML = `<span class="emoji" aria-hidden="true">${r.emoji}</span><span>${r.label}</span>`;
     b.addEventListener("click", () => {
-      onChange(i);
-      btns.forEach((x, idx) => {
-        const filled = idx < i;
-        x.classList.toggle("filled", filled);
-        x.setAttribute("aria-checked", String(idx + 1 === i));
+      onChange(r.score);
+      btns.forEach((x) => {
+        const on = x === b;
+        x.classList.toggle("selected", on);
+        x.setAttribute("aria-checked", String(on));
       });
       updateSubmit();
     });
     btns.push(b);
     el.appendChild(b);
-  }
+  });
 }
 
 function updateCounter() {
@@ -133,7 +141,7 @@ function updateCounter() {
 function updateSubmit() {
   const n = wordCount($("summary").value);
   const timeOk = elapsedSecs() >= minReadSecs;
-  const ok = n >= MIN_WORDS && quality > 0 && preference > 0 && timeOk;
+  const ok = n >= MIN_WORDS && preference > 0 && timeOk;
   $("submit").disabled = !ok;
   // Build the visible "why" hint from the ratable requirements only — the dwell timer is
   // deliberately invisible. If everything the user can see is satisfied but the timer hasn't
@@ -141,8 +149,7 @@ function updateSubmit() {
   // button with no explanation. Once the timer's met, stop ticking — nothing left to recheck.
   const missing = [];
   if (n < MIN_WORDS) missing.push(`${MIN_WORDS - n} more words`);
-  if (!quality) missing.push("quality rating");
-  if (!preference) missing.push("interest rating");
+  if (!preference) missing.push("a reaction");
   if (missing.length) {
     $("why").textContent = "Need: " + missing.join(", ");
   } else if (!timeOk) {
@@ -192,7 +199,7 @@ async function submit() {
       source: article.source,
       genre: article.genre,
       summary_text: $("summary").value.trim(),
-      quality_rating: quality,
+      quality_rating: 3, // Quality rating retired from the UI; column is NOT NULL, so write neutral.
       preference_rating: preference,
       is_serendipity: !!article.is_serendipity,
     });
@@ -301,7 +308,7 @@ function updateProgress() {
 }
 
 function renderArticle(a) {
-  article = a; quality = 0; preference = 0;
+  article = a; preference = 0;
   openedArticle = false; openedAt = null;
   $("a-source").textContent = a.source;
   $("a-genre").textContent = a.genre;
@@ -310,8 +317,7 @@ function renderArticle(a) {
   $("a-blurb").textContent = a.blurb || "";
   $("a-read").href = a.url;
   $("a-read-source").textContent = a.source;
-  buildStars("quality", (v) => { quality = v; });
-  buildStars("preference", (v) => { preference = v; });
+  buildReactions("reactions", (v) => { preference = v; });
   $("summary").value = "";
   $("submit").textContent = "Submit";
   // (Re)start the invisible dwell timer for this article and tick every second so Submit
