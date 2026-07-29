@@ -20,6 +20,23 @@ let impulseId = null;  // impulse_log row for this gate visit (created at trigge
 let openedArticle = false; // did the reader click through to the article on the source?
 let openedAt = null;       // timestamp of the first open — powers the dwell-time signal
 
+// Invisible anti-gaming dwell timer. The user must spend at least MIN_READ_SECONDS on
+// the gate (per article) before Submit unlocks — enough time to actually read and write,
+// not paste a summary and leave. It's wall-clock and does NOT pause on blur: reading
+// happens on the source site, which opens in a new tab, so the gate is backgrounded while
+// the user reads and that time must count. The countdown is never shown to the user.
+let minReadSecs = 60;  // loaded from config in init()
+let readStartMs = 0;   // when the current article was rendered
+let tickTimer = null;  // 1s interval that re-checks the dwell timer
+
+function elapsedSecs() {
+  return readStartMs ? (Date.now() - readStartMs) / 1000 : Infinity;
+}
+
+function stopTick() {
+  if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
+}
+
 // Make sure this gate trigger is recorded in impulse_log. The background worker logs
 // it at trigger time, but only if a session exists then — so a visit where the user
 // had to log in first would go uncounted (and the doomscroll heatmap would miss it).
@@ -49,6 +66,7 @@ function show(stateId) {
 }
 
 async function message(text) {
+  stopTick();  // leaving the reading view — don't leave a tick running
   $("message-msg").textContent = text;
   $("open-dashboard").href = await dashboardBase();
   show("message-state");
@@ -114,13 +132,25 @@ function updateCounter() {
 
 function updateSubmit() {
   const n = wordCount($("summary").value);
-  const ok = n >= MIN_WORDS && quality > 0 && preference > 0;
+  const timeOk = elapsedSecs() >= minReadSecs;
+  const ok = n >= MIN_WORDS && quality > 0 && preference > 0 && timeOk;
   $("submit").disabled = !ok;
+  // Build the visible "why" hint from the ratable requirements only — the dwell timer is
+  // deliberately invisible. If everything the user can see is satisfied but the timer hasn't
+  // elapsed, show a neutral note (no number, no mention of a timer) so Submit is never a dead
+  // button with no explanation. Once the timer's met, stop ticking — nothing left to recheck.
   const missing = [];
   if (n < MIN_WORDS) missing.push(`${MIN_WORDS - n} more words`);
   if (!quality) missing.push("quality rating");
   if (!preference) missing.push("interest rating");
-  $("why").textContent = ok ? "" : "Need: " + missing.join(", ");
+  if (missing.length) {
+    $("why").textContent = "Need: " + missing.join(", ");
+  } else if (!timeOk) {
+    $("why").textContent = "Just a moment…";
+  } else {
+    $("why").textContent = "";
+    stopTick();
+  }
 }
 
 async function submit() {
@@ -200,6 +230,7 @@ async function submit() {
 }
 
 function showChoices() {
+  stopTick();  // reading done for this article — nothing left to time
   $("choices-msg").textContent =
     `You've read ${sessionReads} article${sessionReads === 1 ? "" : "s"} — your goal of ${required} is met. Keep reading, or head to the site.`;
   show("choices-state");
@@ -283,6 +314,11 @@ function renderArticle(a) {
   buildStars("preference", (v) => { preference = v; });
   $("summary").value = "";
   $("submit").textContent = "Submit";
+  // (Re)start the invisible dwell timer for this article and tick every second so Submit
+  // unlocks the moment the minimum reading time is reached.
+  stopTick();
+  readStartMs = Date.now();
+  tickTimer = setInterval(updateSubmit, 1000);
   updateProgress();
   updateCounter();
   show("gate-state");
@@ -312,6 +348,9 @@ async function init() {
   }
   sessionReads = 0;
   impulseId = null;
+  const cfg = await getConfig();
+  const s = parseInt(cfg.MIN_READ_SECONDS, 10);
+  minReadSecs = Number.isFinite(s) && s >= 0 ? s : 60;
   await ensureImpulse();    // record the trigger now (backfills if we just logged in)
   await loadPrefs();        // theme + minimum-articles requirement
   await loadNextArticle();
@@ -354,6 +393,13 @@ $("signup-btn").addEventListener("click", () => doAuth(signUp));
 $("password").addEventListener("keydown", (e) => { if (e.key === "Enter") $("login-btn").click(); });
 $("submit").addEventListener("click", submit);
 $("summary").addEventListener("input", updateCounter);
+// Type-only summary: block pasting/drag-dropping external text so the user writes in
+// their own words rather than dropping in an AI-generated summary. `paste` covers
+// Ctrl/Cmd-V, right-click paste, and middle-click (primary-selection) paste; `drop` +
+// `dragover` cover dragged text. Copy/cut stay allowed — only inserting text is blocked.
+["paste", "drop", "dragover"].forEach((evt) =>
+  $("summary").addEventListener(evt, (e) => e.preventDefault())
+);
 // Record that the reader opened the article on the source (the gate's only path to
 // the full text). First open stamps the dwell clock; both feed the AI check as
 // behavioral signals for "did they actually read it?".
