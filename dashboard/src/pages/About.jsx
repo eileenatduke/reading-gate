@@ -17,8 +17,8 @@ const PRINCIPLES = [
     n: "01",
     title: "The habit loop.",
     body: [
-      "Habits follow a simple pattern: a cue triggers them, you perform a routine, and your brain receives a reward. MIT neuroscientist Ann Graybiel found that as behaviors become habitual, the brain increasingly relies on the basal ganglia, a system involved in automatic actions, instead of conscious decision-making. That's why you can find yourself opening Instagram before you even realize you've reached for your phone.",
-      "Because habits are built into the brain's reward system, simply removing the behavior is often not enough. A more effective approach is replacing the routine that follows the cue with a better one.",
+      "Habits follow a simple pattern: a cue triggers a routine, and your brain receives a reward. MIT neuroscientist Ann Graybiel found that as behaviors become habitual, the brain relies on the basal ganglia — a system for automatic actions — rather than conscious decision-making. That's why you open Instagram before you realize you've reached for your phone.",
+      "Because habits are built into the brain's reward system, removing the behavior often isn't enough. A more effective approach is to replace the routine that follows the cue with a better one.",
     ],
     most: "Remove access to distracting apps but leave the underlying cue and craving unaddressed, making users more likely to return later.",
     ours: "Redirect the routine instead of eliminating it. Read a short article and write a summary — the moment that led to wasted time becomes learning.",
@@ -27,7 +27,7 @@ const PRINCIPLES = [
     n: "02",
     title: "Lock people out and they want in more.",
     body: [
-      "In 1966, psychologist Jack Brehm introduced Psychological Reactance: when people feel their freedom is being taken away, they naturally try to regain control. Even when people create the restriction themselves, being completely locked out can make the blocked activity feel even more tempting.",
+      "In 1966, psychologist Jack Brehm introduced Psychological Reactance: when people feel their freedom being taken away, they try to regain control. Even when you create the restriction yourself, being locked out can make the blocked activity feel even more tempting.",
     ],
     most: "Build a wall and rely on users' willpower.",
     ours: "Preserve choice while changing the order of actions. Access apps, but read and learn first to earn the fun — intentional, not forbidden.",
@@ -36,7 +36,7 @@ const PRINCIPLES = [
     n: "03",
     title: "Predictable friction stops working.",
     body: [
-      "Wolfram Schultz studied dopamine neurons in monkeys receiving juice rewards. After a cue consistently predicted the reward, the neurons began firing at the cue instead. The same applies to blockers using a fixed password, timer, or breathing exercise — your brain learns to anticipate the friction and bypasses it.",
+      "Wolfram Schultz studied dopamine neurons in monkeys receiving juice rewards. Once a cue reliably predicted the reward, the neurons fired at the cue instead. The same applies to blockers with a fixed password, timer, or breathing exercise — your brain learns to anticipate the friction and bypass it.",
     ],
     most: "Rely on the same repeated barrier. A week in, users have learned to wait it out.",
     ours: "Keep the interruption valuable, not predictable. Reading stays consistent but the articles change every time, so the experience stays fresh.",
@@ -56,6 +56,14 @@ const STATS = [
   { big: "7h 11m", label: "avg. daily phone use — up 14% YoY" },
   { big: "78%", label: "of adults tried a detox" },
   { big: "72%", label: "of those attempts failed" },
+];
+
+// The "how it works" walkthrough — three beats, shown as numbered cards with arrow
+// connectors. Numbers match the brand's existing motif (the 01–03 principle numerals).
+const STEPS = [
+  { n: "1", label: "Open a blocked site" },
+  { n: "2", label: "Read and summarize an article" },
+  { n: "3", label: "Unlock site or keep reading" },
 ];
 
 // The apps people lose time to, shown as a row of their official icons above the
@@ -175,10 +183,21 @@ export default function About() {
         <section className="rg-ab-trade">
           <h2 className="rg-ab-trade-h">Trade your doomscroll for a read.</h2>
           <p className="rg-ab-trade-p">
-            Unlike traditional app blockers, Reading Gate replaces every doomscroll with a
-            valuable read, then unlocks your apps after you've learned something. Become more
-            informed with every scroll.
+            Become more informed with every scroll.
           </p>
+        </section>
+
+        {/* How it works — three-step walkthrough that breaks up the copy */}
+        <section className="rg-ab-how">
+          <h2 className="rg-ab-how-h">How it works</h2>
+          <ol className="rg-ab-steps">
+            {STEPS.map((s) => (
+              <li className="rg-ab-step" key={s.n}>
+                <div className="rg-ab-step-num">{s.n}</div>
+                <div className="rg-ab-step-label">{s.label}</div>
+              </li>
+            ))}
+          </ol>
         </section>
 
         {/* Research intro */}

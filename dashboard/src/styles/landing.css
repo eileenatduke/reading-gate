@@ -331,6 +331,33 @@ html:has(.rg-about) body {
   margin: 0 auto; max-width: 35rem;
 }
 
+/* ---- How it works — three-step walkthrough ---- */
+.rg-ab-how { max-width: 60rem; margin: 0 auto; padding: 6.25rem 2.5rem 2.5rem; text-align: center; }
+.rg-ab-how-h {
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 500; font-size: 2.875rem; line-height: 1.2; color: #fff; margin: 0 0 3rem;
+}
+.rg-ab-steps {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem;
+}
+.rg-ab-step {
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 2.5rem 1.75rem;
+}
+/* Arrow connector sitting in the gap before every step after the first. */
+.rg-ab-step + .rg-ab-step::before {
+  content: "→";
+  position: absolute; left: -0.85rem; top: 50%; transform: translateY(-50%);
+  color: rgba(255,255,255,0.35); font-size: 1.25rem; line-height: 1;
+}
+.rg-ab-step-num {
+  font-family: "Playfair Display", Georgia, serif; font-style: italic;
+  font-size: 2.5rem; color: #a5a5a5; line-height: 1; margin-bottom: 1rem;
+}
+.rg-ab-step-label { color: rgba(255,255,255,0.85); font-size: 1.0625rem; line-height: 1.5; }
+
 /* ---- Mid-page CTA band (light) ---- */
 .rg-ab-final { background: var(--rg-paper); padding: 3.75rem 2.5rem; text-align: center; }
 .rg-ab-final-h {
@@ -415,6 +442,14 @@ html:has(.rg-about) body {
   .rg-ab-trade-h { font-size: 2.125rem; }
   .rg-ab-final { padding: 3rem 1.5rem; }
   .rg-ab-final-h { font-size: 2.125rem; }
+  .rg-ab-how { padding: 4rem 1.5rem 1.5rem; }
+  .rg-ab-how-h { font-size: 2.125rem; margin-bottom: 2rem; }
+  .rg-ab-steps { grid-template-columns: 1fr; gap: 1.75rem; }
+  .rg-ab-step { padding: 2rem 1.5rem; text-align: center; }
+  /* Stacked: arrow points down, centered above each following step. */
+  .rg-ab-step + .rg-ab-step::before {
+    content: "↓"; left: 50%; top: -1.35rem; transform: translateX(-50%);
+  }
   .rg-ab-research-intro { padding: 4rem 1.5rem 1.5rem; }
   .rg-ab-research-h { font-size: 2.125rem; }
   .rg-ab-principles { padding: 1.5rem 1.5rem 2.5rem; }
