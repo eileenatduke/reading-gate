@@ -17,6 +17,14 @@
 :root {
   --rg-ink: #0e0e0d;
   --rg-paper: #f4f4f2;
+  /* Brand ember accent (DESIGN.md). --rg-ember reads well on the dark page; the darker
+     --rg-ember-ink is for the one light "trade" band, where the bright ember is too low
+     contrast. */
+  --rg-ember: #f97316;
+  --rg-ember-ink: #c2410c;
+  /* Companion ice-blue from the "Ice & blaze" theme (pairs with the ember; used in the
+     hero glow and the "our approach" cards). */
+  --rg-blue: #bfedff;
 }
 
 .rg-landing,
@@ -231,9 +239,23 @@ html:has(.rg-about) body {
    intro · three principles · comparison table.
 --------------------------------------------------------------------------- */
 .rg-ab {
+  position: relative;
   max-width: 73.75rem;
   margin: 0 auto;
   color: #fff;
+}
+
+/* Movable blue+orange glow that follows the cursor across the top region (nav + hero).
+   JS sets --gx/--gy (px within this layer) and its height (= the top of the stat band).
+   The two offset radials blend orange and blue where they overlap; at rest it eases back
+   to a centered position. pointer-events:none so it never blocks clicks. */
+.rg-ab-glow {
+  position: absolute; top: 0; left: 0; right: 0; height: 620px;
+  z-index: 0; pointer-events: none; overflow: hidden;
+  --gx: 50%; --gy: 42%;
+  background:
+    radial-gradient(300px 300px at calc(var(--gx) - 45px) calc(var(--gy) - 25px), rgba(249,115,22,0.34), transparent 68%),
+    radial-gradient(320px 320px at calc(var(--gx) + 55px) calc(var(--gy) + 30px), rgba(191,237,255,0.36), transparent 70%);
 }
 
 /* ---- Nav ---- */
@@ -280,6 +302,7 @@ html:has(.rg-about) body {
   max-width: 45rem; margin: 0 auto;
   padding: 7.5rem 2.5rem 5.625rem; text-align: center;
 }
+.rg-ab-h1, .rg-ab-lede { position: relative; z-index: 1; }
 .rg-ab-h1 {
   font-family: "Playfair Display", Georgia, serif;
   font-weight: 500; color: #fff; letter-spacing: -0.01em;
@@ -287,8 +310,16 @@ html:has(.rg-about) body {
 }
 .rg-ab-h1 span { display: block; font-size: 4.25rem; line-height: 1.06; }
 .rg-ab-h1 span:first-child { margin-bottom: 0.5rem; }
+.rg-ab-h1-accent { color: var(--rg-ember); }
 .rg-ab-lede {
   color: rgba(255,255,255,0.7); font-size: 1.1875rem; line-height: 1.65; margin: 0;
+}
+
+/* ---- Scroll-reveal: sections fade + rise as they enter view (JS toggles .is-in) ---- */
+.rg-reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.7,.3,1); }
+.rg-reveal.is-in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .rg-reveal { opacity: 1; transform: none; transition: none; }
 }
 
 /* ---- Stat band ---- */
@@ -299,7 +330,7 @@ html:has(.rg-about) body {
 }
 .rg-ab-stat { padding: 2.875rem 2.5rem; text-align: center; }
 .rg-ab-stat + .rg-ab-stat { border-left: 1px solid rgba(255,255,255,0.08); }
-.rg-ab-stat-num { font-family: "Playfair Display", Georgia, serif; font-size: 2.875rem; color: #fff; }
+.rg-ab-stat-num { font-family: "Playfair Display", Georgia, serif; font-size: 2.875rem; color: var(--rg-ember); }
 .rg-ab-stat-label { color: rgba(255,255,255,0.5); font-size: 0.875rem; margin-top: 0.5rem; }
 
 /* ---- Doomscroll app icons — uniform rounded tiles above the trade band ---- */
@@ -314,18 +345,21 @@ html:has(.rg-about) body {
   width: 3.5rem; height: 3.5rem;
   border-radius: 0.875rem; overflow: hidden;
   box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+  transition: transform .18s ease, box-shadow .18s ease;
 }
+.rg-ab-app:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 18px rgba(0,0,0,0.45); }
 .rg-ab-app-img { width: 100%; height: 100%; display: block; box-sizing: border-box; }
 .rg-ab-app-img.is-cover { object-fit: cover; }
 .rg-ab-app-img.is-contain { object-fit: contain; padding: 16%; }
 
 /* ---- Trade statement — the only light/inverted band ---- */
-.rg-ab-trade { background: var(--rg-paper); padding: 6rem 2.5rem; text-align: center; }
+.rg-ab-trade { background: #ffffff; padding: 6rem 2.5rem; text-align: center; }
 .rg-ab-trade-h {
   font-family: "Playfair Display", Georgia, serif;
   font-weight: 500; font-size: 2.875rem; line-height: 1.2; color: var(--rg-ink);
   margin: 0 auto 1.5rem; max-width: 38.75rem;
 }
+.rg-ab-trade-accent { color: var(--rg-ember-ink); }
 .rg-ab-trade-p {
   color: rgba(14,14,13,0.72); font-size: 1.1875rem; line-height: 1.65;
   margin: 0 auto; max-width: 35rem;
@@ -345,6 +379,12 @@ html:has(.rg-about) body {
   position: relative;
   border: 1px solid rgba(255,255,255,0.12);
   padding: 2.5rem 1.75rem;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.rg-ab-step:hover {
+  transform: translateY(-4px);
+  border-color: rgba(249,115,22,0.55);
+  box-shadow: 0 0 26px -8px rgba(249,115,22,0.5);
 }
 /* Arrow connector centered in the 1.25rem grid gap before every step after the first.
    translate(-50%,-50%) pins the glyph's own center to the gap midpoint (half the gap =
@@ -352,17 +392,17 @@ html:has(.rg-about) body {
 .rg-ab-step + .rg-ab-step::before {
   content: "→";
   position: absolute; left: -0.625rem; top: 50%; transform: translate(-50%, -50%);
-  color: rgba(255,255,255,0.35); font-size: 1.125rem; line-height: 1;
+  color: var(--rg-ember); font-size: 1.125rem; line-height: 1;
   pointer-events: none;
 }
 .rg-ab-step-num {
   font-family: "Playfair Display", Georgia, serif; font-style: italic;
-  font-size: 2.5rem; color: #a5a5a5; line-height: 1; margin-bottom: 1rem;
+  font-size: 2.5rem; color: var(--rg-ember); line-height: 1; margin-bottom: 1rem;
 }
 .rg-ab-step-label { color: rgba(255,255,255,0.85); font-size: 1.0625rem; line-height: 1.5; }
 
 /* ---- Mid-page CTA band (light) ---- */
-.rg-ab-final { background: var(--rg-paper); padding: 3.75rem 2.5rem; text-align: center; }
+.rg-ab-final { background: #ffffff; padding: 3.75rem 2.5rem; text-align: center; }
 .rg-ab-final-h {
   font-family: "Playfair Display", Georgia, serif;
   font-weight: 500; font-size: 2.875rem; line-height: 1.2; color: var(--rg-ink);
@@ -387,7 +427,7 @@ html:has(.rg-about) body {
 .rg-ab-principle { padding: 3.5rem 0; border-top: 1px solid rgba(255,255,255,0.1); }
 .rg-ab-principle-num {
   font-family: "Playfair Display", Georgia, serif; font-style: italic;
-  font-size: 1.375rem; color: #a5a5a5; margin-bottom: 0.875rem;
+  font-size: 1.375rem; color: var(--rg-ember); margin-bottom: 0.875rem;
 }
 .rg-ab-principle-h {
   font-family: "Playfair Display", Georgia, serif;
@@ -398,13 +438,18 @@ html:has(.rg-about) body {
 }
 .rg-ab-principle-p:last-of-type { margin-bottom: 1.875rem; }
 .rg-ab-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-.rg-ab-card { border: 1px solid rgba(255,255,255,0.12); padding: 1.625rem; }
-.rg-ab-card.is-ours { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.06); }
+.rg-ab-card {
+  border: 1px solid rgba(255,255,255,0.12); padding: 1.625rem;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.rg-ab-card:hover { transform: translateY(-3px); }
+.rg-ab-card.is-ours { border-color: rgba(191,237,255,0.55); background: rgba(191,237,255,0.09); }
+.rg-ab-card.is-ours:hover { box-shadow: 0 0 26px -8px rgba(191,237,255,0.45); }
 .rg-ab-card-label {
   font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.12em;
   color: rgba(255,255,255,0.45); margin-bottom: 0.75rem;
 }
-.rg-ab-card.is-ours .rg-ab-card-label { color: #a5a5a5; }
+.rg-ab-card.is-ours .rg-ab-card-label { color: var(--rg-blue); }
 .rg-ab-card-p { color: rgba(255,255,255,0.7); font-size: 0.9375rem; line-height: 1.6; margin: 0; }
 .rg-ab-card.is-ours .rg-ab-card-p { color: rgba(255,255,255,0.85); }
 
@@ -427,9 +472,10 @@ html:has(.rg-about) body {
 .rg-ab-th { padding: 1rem 1.375rem; }
 .rg-ab-td { padding: 1rem 1.375rem; color: rgba(255,255,255,0.75); font-size: 0.9375rem; }
 .rg-ab-tr.is-us {
-  border-top: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.08);
+  border-top: 1px solid rgba(249,115,22,0.6); background: rgba(249,115,22,0.1);
 }
 .rg-ab-tr.is-us .rg-ab-td { padding: 1.25rem 1.375rem; color: #fff; }
+.rg-ab-tr.is-us .rg-ab-td:first-child { color: var(--rg-ember); }
 .rg-ab-tr.is-us .rg-ab-td:first-child { font-weight: 600; }
 
 /* ---- Responsive (mock is a fixed 1180px desktop column) ---- */

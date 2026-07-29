@@ -93,7 +93,7 @@ const DOOMSCROLL_APPS = [
 // cards). Extracted so the list can be split around the mid-page call to action.
 function renderPrinciple(p) {
   return (
-    <article className="rg-ab-principle" key={p.n}>
+    <article className="rg-ab-principle rg-reveal" key={p.n}>
       <div className="rg-ab-principle-num">{p.n}</div>
       <h3 className="rg-ab-principle-h">{p.title}</h3>
       {p.body.map((para, i) => (
@@ -113,11 +113,28 @@ function renderPrinciple(p) {
   );
 }
 
+// Count every number in `finalText` up from zero, preserving the surrounding text
+// ("7h 11m" → "0h 0m" … "7h 11m", "78%" → "0%" … "78%"). Ease-out cubic over `duration`.
+function animateCount(el, finalText, duration) {
+  const parts = finalText.match(/(\d+|\D+)/g) || [finalText];
+  const start = performance.now();
+  const ease = (t) => 1 - Math.pow(1 - t, 3);
+  function frame(now) {
+    const p = Math.min(1, (now - start) / duration);
+    const e = ease(p);
+    el.textContent = parts.map((seg) => (/^\d+$/.test(seg) ? String(Math.round(Number(seg) * e)) : seg)).join("");
+    if (p < 1) requestAnimationFrame(frame);
+    else el.textContent = finalText;
+  }
+  requestAnimationFrame(frame);
+}
+
 export default function About() {
   // The page scrolls inside the fixed .rg-about container (not the window), so we
   // watch that element's scrollTop to fade the sticky nav to a translucent, blurred
   // bar once the user leaves the very top.
   const scrollRef = useRef(null);
+  const glowRef = useRef(null);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const el = scrollRef.current;
@@ -128,9 +145,100 @@ export default function About() {
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Tasteful motion: fade + rise each section as it scrolls into view, and count the
+  // stat numbers up the first time the stat band appears. Both honor prefers-reduced-
+  // motion (content just shows at rest). Observers use the scroll container as root.
+  useEffect(() => {
+    const root = scrollRef.current;
+    if (!root) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const cleanups = [];
+
+    // Scroll-reveal for the below-the-fold sections.
+    const reveals = root.querySelectorAll(".rg-reveal");
+    if (reduce) {
+      reveals.forEach((el) => el.classList.add("is-in"));
+    } else {
+      const io = new IntersectionObserver((entries, obs) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) { e.target.classList.add("is-in"); obs.unobserve(e.target); }
+        });
+      }, { root, rootMargin: "0px 0px -10% 0px", threshold: 0.12 });
+      reveals.forEach((el) => io.observe(el));
+      cleanups.push(() => io.disconnect());
+    }
+
+    // Count-up on the stat band.
+    const statNums = [...root.querySelectorAll(".rg-ab-stat-num")];
+    const finals = statNums.map((el) => el.textContent);
+    if (!reduce) {
+      statNums.forEach((el) => { el.textContent = el.textContent.replace(/\d+/g, "0"); });
+      const band = root.querySelector(".rg-ab-stats");
+      if (band) {
+        const io2 = new IntersectionObserver((entries, obs) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              statNums.forEach((el, i) => animateCount(el, finals[i], 1100));
+              obs.disconnect();
+            }
+          });
+        }, { root, threshold: 0.4 });
+        io2.observe(band);
+        cleanups.push(() => io2.disconnect());
+      }
+    }
+
+    return () => cleanups.forEach((fn) => fn());
+  }, []);
+
+  // Movable blue+orange glow: follow the cursor across the top region (nav + hero, i.e.
+  // everything above the stat band). The glow layer's height is sized to the stat band's
+  // top, and the position eases toward the cursor for a smooth trail. Reduced-motion just
+  // leaves the glow centered.
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    const glow = glowRef.current;
+    if (!scroller || !glow) return;
+
+    const sizeGlow = () => {
+      const stats = scroller.querySelector(".rg-ab-stats");
+      if (stats) glow.style.height = stats.offsetTop + "px";
+    };
+    sizeGlow();
+    window.addEventListener("resize", sizeGlow);
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return () => window.removeEventListener("resize", sizeGlow);
+
+    let tx = 0, ty = 0, cx = null, cy = null, raf = 0;
+    const tick = () => {
+      cx += (tx - cx) * 0.16;
+      cy += (ty - cy) * 0.16;
+      glow.style.setProperty("--gx", cx + "px");
+      glow.style.setProperty("--gy", cy + "px");
+      raf = (Math.abs(tx - cx) > 0.5 || Math.abs(ty - cy) > 0.5) ? requestAnimationFrame(tick) : 0;
+    };
+    const onMove = (e) => {
+      const r = glow.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      if (x < 0 || x > r.width || y < 0 || y > r.height) return; // only the top region
+      tx = x; ty = y;
+      if (cx === null) { cx = x; cy = y; } // first move: start from the cursor, no jump
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+    scroller.addEventListener("mousemove", onMove);
+    return () => {
+      window.removeEventListener("resize", sizeGlow);
+      scroller.removeEventListener("mousemove", onMove);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
     <div className="rg-about" ref={scrollRef}>
       <div className="rg-ab">
+        {/* Cursor-following blue+orange glow across the top region (behind nav + hero) */}
+        <div className="rg-ab-glow" ref={glowRef} aria-hidden="true" />
         {/* Nav */}
         <nav className={`rg-ab-nav${scrolled ? " is-scrolled" : ""}`}>
           <Link className="rg-ab-wordmark" to="/">Reading Gate</Link>
@@ -148,7 +256,7 @@ export default function About() {
         <header className="rg-ab-hero">
           <h1 className="rg-ab-h1">
             <span>You've already tried other app blockers.</span>
-            <span>They didn't work.</span>
+            <span className="rg-ab-h1-accent">They didn't work.</span>
           </h1>
           <p className="rg-ab-lede">
             The average American now loses more of the day to a screen than ever before.
@@ -156,7 +264,7 @@ export default function About() {
         </header>
 
         {/* Stat band */}
-        <div className="rg-ab-stats">
+        <div className="rg-ab-stats rg-reveal">
           {STATS.map((s) => (
             <div className="rg-ab-stat" key={s.big}>
               <div className="rg-ab-stat-num">{s.big}</div>
@@ -166,7 +274,7 @@ export default function About() {
         </div>
 
         {/* Apps people doomscroll on — a row of official app icons */}
-        <div className="rg-ab-apps" aria-label="Apps people doomscroll on">
+        <div className="rg-ab-apps rg-reveal" aria-label="Apps people doomscroll on">
           {DOOMSCROLL_APPS.map((a) => (
             <span className="rg-ab-app" key={a.name} style={{ background: a.bg }}>
               <img
@@ -180,15 +288,15 @@ export default function About() {
         </div>
 
         {/* Trade statement — the one light/inverted band */}
-        <section className="rg-ab-trade">
-          <h2 className="rg-ab-trade-h">Trade your doomscroll for a read.</h2>
+        <section className="rg-ab-trade rg-reveal">
+          <h2 className="rg-ab-trade-h">Trade your doomscroll for a <span className="rg-ab-trade-accent">read</span>.</h2>
           <p className="rg-ab-trade-p">
             Become more informed with every scroll.
           </p>
         </section>
 
         {/* How it works — three-step walkthrough that breaks up the copy */}
-        <section className="rg-ab-how">
+        <section className="rg-ab-how rg-reveal">
           <h2 className="rg-ab-how-h">How it works</h2>
           <ol className="rg-ab-steps">
             {STEPS.map((s) => (
@@ -201,7 +309,7 @@ export default function About() {
         </section>
 
         {/* Research intro */}
-        <section className="rg-ab-research-intro">
+        <section className="rg-ab-research-intro rg-reveal">
           <h2 className="rg-ab-research-h">Reading Gate is rooted in psychology research.</h2>
         </section>
 
@@ -211,7 +319,7 @@ export default function About() {
         </section>
 
         {/* Mid-page call to action — the light band between studies 02 and 03 */}
-        <section className="rg-ab-final">
+        <section className="rg-ab-final rg-reveal">
           <h2 className="rg-ab-final-h">Stop reading about it.<br />Start doing it.</h2>
           <p className="rg-ab-final-p">
             Reading Gate lives in your browser, turning every doomscroll into a chance to
@@ -234,7 +342,7 @@ export default function About() {
         </section>
 
         {/* Comparison table */}
-        <section className="rg-ab-table-wrap">
+        <section className="rg-ab-table-wrap rg-reveal">
           <h2 className="rg-ab-table-h">What actually happens while you're blocked</h2>
           <div className="rg-ab-table" role="table">
             <div className="rg-ab-tr rg-ab-thead" role="row">
