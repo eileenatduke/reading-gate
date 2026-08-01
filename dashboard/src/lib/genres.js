@@ -22,6 +22,9 @@ export const MY_SOURCES_GENRE = "My Sources";
 // extension/src/lib/feeds.js). Shown on Settings for transparency.
 export const SOURCES = [
   "BBC", "NPR", "Guardian", "AP News", "PBS News", "ProPublica",
-  "The Marshall Project", "Yahoo Finance", "Yahoo Tech", "Wired",
+  "The Marshall Project", "Yahoo Finance", "Yahoo Tech",
   "OpenAI", "Anthropic", "Stanford Digital Economy Lab",
+  // University publications (free, public-facing .edu newsrooms + one student paper).
+  "MIT News", "Harvard Gazette", "Johns Hopkins Hub", "Northwestern Now",
+  "Princeton University", "Penn Today", "Vanderbilt University", "The Stanford Daily",
 ];

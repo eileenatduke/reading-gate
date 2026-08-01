@@ -61,12 +61,37 @@ const MARSHALL = rss("The Marshall Project", "https://www.themarshallproject.org
 const YAHOO_FINANCE = rss("Yahoo Finance", "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US");
 const YAHOO_TECH = rss("Yahoo Tech", "https://www.engadget.com/rss.xml");
 
-// Wired (native RSS) + OpenAI (official news feed).
-const WIRED = rss("Wired", "https://www.wired.com/feed/rss");
-const WIRED_AI = rss("Wired", "https://www.wired.com/feed/tag/ai/latest/rss");
-const WIRED_SECURITY = rss("Wired", "https://www.wired.com/feed/category/security/latest/rss");
-const WIRED_SCIENCE = rss("Wired", "https://www.wired.com/feed/category/science/latest/rss");
+// OpenAI (official news feed).
 const OPENAI = rss("OpenAI", "https://openai.com/news/rss.xml");
+
+// University publications (owner-requested). Free, public-facing reading from top-US-
+// university .edu newsrooms and one student paper — NOT academic-journal databases, so
+// they stay readable rather than paper-dense. All verified to return live articles.
+// MIT News and the Harvard Gazette expose per-topic/section feeds we map to fine
+// categories; the rest publish one general campus feed we file under Education.
+const MIT = rss("MIT News", "https://news.mit.edu/rss/feed");
+const MIT_AI = rss("MIT News", "https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml");
+const MIT_CYBER = rss("MIT News", "https://news.mit.edu/topic/mitcyber-security-rss.xml");
+const MIT_HEALTH = rss("MIT News", "https://news.mit.edu/topic/mithealth-rss.xml");
+const MIT_SPACE = rss("MIT News", "https://news.mit.edu/topic/mitspace-rss.xml");
+const MIT_CLIMATE = rss("MIT News", "https://news.mit.edu/topic/mitclimate-change-rss.xml");
+const MIT_ENERGY = rss("MIT News", "https://news.mit.edu/topic/mitenergy-rss.xml");
+const MIT_ECON = rss("MIT News", "https://news.mit.edu/topic/miteconomics-rss.xml");
+
+const HARVARD = rss("Harvard Gazette", "https://news.harvard.edu/gazette/feed/");
+const HARVARD_SCITECH = rss("Harvard Gazette", "https://news.harvard.edu/gazette/section/science-technology/feed/");
+const HARVARD_HEALTH = rss("Harvard Gazette", "https://news.harvard.edu/gazette/section/health/feed/");
+const HARVARD_BUSINESS = rss("Harvard Gazette", "https://news.harvard.edu/gazette/section/business-economy/feed/");
+const HARVARD_ARTS = rss("Harvard Gazette", "https://news.harvard.edu/gazette/section/arts-humanities/feed/");
+const HARVARD_WORLD = rss("Harvard Gazette", "https://news.harvard.edu/gazette/section/nation-world/feed/");
+
+const JHU = rss("Johns Hopkins Hub", "https://hub.jhu.edu/feed/");
+const NORTHWESTERN = rss("Northwestern Now", "https://news.northwestern.edu/feeds/allStories");
+const PRINCETON = rss("Princeton University", "https://www.princeton.edu/feed/");
+const PRINCETON_RESEARCH = rss("Princeton University", "https://www.princeton.edu/feed/research/");
+const PENN = rss("Penn Today", "https://penntoday.upenn.edu/rss.xml");
+const VANDERBILT = rss("Vanderbilt University", "https://news.vanderbilt.edu/feed/");
+const STANFORD_DAILY = rss("The Stanford Daily", "https://stanforddaily.com/feed/");
 
 // Anthropic and the Stanford Digital Economy Lab publish no RSS — cover them via
 // Google News topic feeds (best-effort; these are news *about* them from many outlets).
@@ -79,37 +104,37 @@ const STANFORD_DEL = rss("Stanford Digital Economy Lab", gnews('"Stanford Digita
 // ---------------------------------------------------------------------------
 export const CATALOG = {
   // Front of the feed
-  "Top Stories": [rss("BBC", bbc("news")), rss("NPR", npr(1001)), gSection("news"), AP, rss("PBS News", pbs("headlines")), PROPUBLICA],
+  "Top Stories": [rss("BBC", bbc("news")), rss("NPR", npr(1001)), gSection("news"), AP, rss("PBS News", pbs("headlines")), PROPUBLICA, HARVARD_WORLD, STANFORD_DAILY],
   "Opinion": [gSection("commentisfree")],
   // News & Politics
-  "World": [rss("BBC", bbc("news/world")), gSection("world"), rss("NPR", npr(1004)), AP, rss("PBS News", pbs("world"))],
-  "U.S. / National": [gSection("us-news"), rss("NPR", npr(1003)), AP, rss("PBS News", pbs("nation")), PROPUBLICA],
+  "World": [rss("BBC", bbc("news/world")), gSection("world"), rss("NPR", npr(1004)), AP, rss("PBS News", pbs("world")), HARVARD_WORLD],
+  "U.S. / National": [gSection("us-news"), rss("NPR", npr(1003)), AP, rss("PBS News", pbs("nation")), PROPUBLICA, HARVARD_WORLD],
   "Politics": [rss("BBC", bbc("news/politics")), gSection("politics"), rss("NPR", npr(1014)), rss("PBS News", pbs("politics")), PROPUBLICA],
   "Immigration": [gTag("world/migration")],
   "Legal & Justice": [gSection("law"), MARSHALL],
   "Military & Defense": [gTag("us-news/us-military")],
   "Crime & Safety": [gTag("us-news/us-crime"), MARSHALL],
   // Business & Money
-  "Business & Finance": [rss("BBC", bbc("news/business")), gSection("business"), rss("NPR", npr(1006)), rss("PBS News", pbs("economy")), YAHOO_FINANCE],
+  "Business & Finance": [rss("BBC", bbc("news/business")), gSection("business"), rss("NPR", npr(1006)), rss("PBS News", pbs("economy")), YAHOO_FINANCE, HARVARD_BUSINESS, MIT_ECON],
   "Personal Finance": [gSection("money")],
   "Real Estate & Housing": [gTag("money/property")],
   "Labor & Work": [gTag("money/work-and-careers")],
   // Tech & Science
-  "Technology": [rss("BBC", bbc("news/technology")), gSection("technology"), rss("NPR", npr(1019)), YAHOO_TECH, WIRED],
-  "AI": [gTag("technology/artificialintelligenceai"), WIRED_AI, OPENAI, ANTHROPIC, STANFORD_DEL],
-  "Cybersecurity": [gTag("technology/data-computer-security"), WIRED_SECURITY],
-  "Science": [rss("BBC", bbc("news/science_and_environment")), gSection("science"), rss("NPR", npr(1007)), rss("PBS News", pbs("science")), WIRED_SCIENCE],
-  "Space": [gTag("science/space")],
+  "Technology": [rss("BBC", bbc("news/technology")), gSection("technology"), rss("NPR", npr(1019)), YAHOO_TECH, MIT, HARVARD_SCITECH],
+  "AI": [gTag("technology/artificialintelligenceai"), OPENAI, ANTHROPIC, STANFORD_DEL, MIT_AI],
+  "Cybersecurity": [gTag("technology/data-computer-security"), MIT_CYBER],
+  "Science": [rss("BBC", bbc("news/science_and_environment")), gSection("science"), rss("NPR", npr(1007)), rss("PBS News", pbs("science")), MIT, HARVARD_SCITECH, PRINCETON_RESEARCH],
+  "Space": [gTag("science/space"), MIT_SPACE],
   // Environment & Energy
-  "Climate & Environment": [gSection("environment"), rss("BBC", bbc("news/science_and_environment"))],
+  "Climate & Environment": [gSection("environment"), rss("BBC", bbc("news/science_and_environment")), MIT_CLIMATE],
   "Weather": [gTag("world/extreme-weather")],
-  "Energy": [gTag("environment/energy")],
+  "Energy": [gTag("environment/energy"), MIT_ENERGY],
   // Health & Wellbeing
-  "Health": [rss("BBC", bbc("news/health")), gTag("society/health"), rss("NPR", npr(1128)), rss("PBS News", pbs("health"))],
+  "Health": [rss("BBC", bbc("news/health")), gTag("society/health"), rss("NPR", npr(1128)), rss("PBS News", pbs("health")), MIT_HEALTH, HARVARD_HEALTH],
   "Wellness & Mental Health": [gTag("lifeandstyle/health-and-wellbeing")],
   // Culture & Entertainment
   "Entertainment": [gSection("film"), gSection("culture")],
-  "Arts & Culture": [gSection("artanddesign"), gSection("culture")],
+  "Arts & Culture": [gSection("artanddesign"), gSection("culture"), HARVARD_ARTS],
   "Gaming & Esports": [gSection("games")],
   "Internet Culture": [gTag("technology/internet")],
   "Fashion & Style": [gSection("fashion")],
@@ -122,7 +147,7 @@ export const CATALOG = {
   "Religion & Faith": [gTag("world/religion")],
   // Other
   "Sports": [rss("BBC", bbc("sport")), gSection("sport")],
-  "Education": [gSection("education"), rss("NPR", npr(1013))],
+  "Education": [gSection("education"), rss("NPR", npr(1013)), HARVARD, NORTHWESTERN, PRINCETON, PENN, VANDERBILT, JHU, STANFORD_DAILY],
   "Media & Press": [gSection("media")],
 };
 
@@ -154,7 +179,11 @@ function pickLink(block) {
   if (rssLink && /^https?:/i.test(rssLink.trim())) return rssLink.trim();
   const atom = block.match(/<link[^>]*rel=["']?alternate["']?[^>]*href=["']([^"']+)["']/i)
     || block.match(/<link[^>]*href=["']([^"']+)["']/i);
-  return atom ? atom[1] : "";
+  if (atom) return atom[1];
+  // Some feeds (e.g. Northwestern Now) carry no <link> and put the canonical article URL
+  // only in <guid isPermaLink="true">. Fall back to guid when it's an http(s) URL.
+  const guid = pick(block, "guid").trim();
+  return /^https?:/i.test(guid) ? guid : "";
 }
 
 // Normalize a BBC link so non-UK readers can actually open it.
