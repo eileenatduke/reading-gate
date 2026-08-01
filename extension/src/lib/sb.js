@@ -30,11 +30,13 @@ export async function clearSession() {
   await chrome.storage.local.remove(SESSION_KEY);
 }
 
-function isExpired(session) {
+function isExpired(session, skewSecs = 60) {
   if (!session?.expires_at) return true;
-  // expires_at is unix seconds; refresh 60s early
-  return Date.now() / 1000 > session.expires_at - 60;
+  // expires_at is unix seconds; refresh a little early so a request never races the clock.
+  return Date.now() / 1000 > session.expires_at - skewSecs;
 }
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ---- auth ------------------------------------------------------------------
 async function authFetch(path, body) {
@@ -85,36 +87,109 @@ export async function signOut() {
   await clearSession();
 }
 
-async function refresh(session) {
-  const data = await authFetch("token?grant_type=refresh_token", {
-    refresh_token: session.refresh_token,
-  });
+// ---- token refresh (stay-logged-in hardening) ------------------------------
+// The background worker, the gate page, and the popup each run their own copy of this
+// module, and the web dashboard's own Supabase client mirrors its session in too. Supabase
+// ROTATES the refresh token on every use, so two contexts refreshing the same token at once
+// race: one wins and the other gets "invalid/already-used". Losing that race must NOT log
+// the user out — the winner already saved a fresh session. Likewise, a transient failure
+// (offline, 5xx) must never drop a good session. So we:
+//   (a) single-flight within a context (concurrent callers share one refresh),
+//   (b) take a short cross-context lock in chrome.storage so peers wait instead of racing,
+//   (c) on ANY failure, re-read storage and adopt whatever a peer just saved, and
+//   (d) clear the session ONLY when the refresh token is durably dead (a definitive auth
+//       rejection with no fresher peer session) — never on a network/5xx blip.
+const REFRESH_LOCK_KEY = "sb_refresh_lock";
+const REFRESH_LOCK_TTL_MS = 15000;
+let refreshInFlight = null;
+
+// Perform the network refresh. Tags transient failures (offline / 5xx / 429 / timeout) so
+// the caller can keep the session instead of signing the user out over a blip.
+async function refreshRequest(refresh_token) {
+  const cfg = await base();
+  let res;
+  try {
+    res = await fetch(`${cfg.SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: cfg.SUPABASE_ANON_KEY },
+      body: JSON.stringify({ refresh_token }),
+    });
+  } catch (e) {
+    const err = new Error("network"); err.transient = true; throw err; // offline / DNS / TLS
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error_description || data.msg || data.error || `refresh HTTP ${res.status}`);
+    err.transient = res.status >= 500 || res.status === 429 || res.status === 408;
+    throw err;
+  }
   const s = sessionFromToken(data);
   await saveSession(s);
   return s;
 }
 
-// Returns a valid access token, refreshing if needed. Null if not logged in.
-export async function accessToken() {
-  let s = await getSession();
-  if (!s) return null;
-  if (isExpired(s)) {
-    try {
-      s = await refresh(s);
-    } catch (e) {
-      // Another context (background/gate/popup) may have refreshed concurrently and
-      // rotated the refresh token, making ours look invalid. Before logging the user
-      // out, re-read storage — if a fresh session is already there, use it.
-      const latest = await getSession();
-      if (latest && !isExpired(latest) && latest.refresh_token !== s.refresh_token) {
-        s = latest;
-      } else {
-        await clearSession();
-        return null;
+async function acquireRefreshLock() {
+  const now = Date.now();
+  const { [REFRESH_LOCK_KEY]: held } = await chrome.storage.local.get(REFRESH_LOCK_KEY);
+  if (held && now - held < REFRESH_LOCK_TTL_MS) return false; // a peer is refreshing
+  await chrome.storage.local.set({ [REFRESH_LOCK_KEY]: now });
+  return true;
+}
+async function releaseRefreshLock() {
+  try { await chrome.storage.local.remove(REFRESH_LOCK_KEY); } catch { /* ignore */ }
+}
+
+// Return a fresh, valid session — adopting a peer's refresh when one is in progress, and
+// never dropping a live session over a race or a transient error. Null only when there is
+// genuinely no usable session left.
+async function refreshSession(current) {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    // A peer may have refreshed while we were deciding to.
+    let latest = await getSession();
+    if (latest && !isExpired(latest)) return latest;
+    if (latest && current && latest.refresh_token !== current.refresh_token) current = latest;
+    if (!current?.refresh_token) return null;
+
+    // If a peer holds the refresh lock, wait for its result rather than racing it.
+    if (!(await acquireRefreshLock())) {
+      for (let i = 0; i < 25; i++) {          // poll up to ~2.5s
+        await sleep(100);
+        latest = await getSession();
+        if (latest && !isExpired(latest)) return latest;
       }
+      // Lock holder stalled or died — fall through and refresh ourselves.
     }
-  }
-  return s.access_token;
+    try {
+      return await refreshRequest(current.refresh_token);
+    } catch (e) {
+      // A peer may have refreshed successfully in parallel — adopt its session.
+      latest = await getSession();
+      if (latest && !isExpired(latest) && latest.refresh_token !== current.refresh_token) return latest;
+      if (e.transient) return null; // keep the session; a later call recovers when back online
+      // Give a racing peer a beat to persist its rotation, then look once more.
+      await sleep(300);
+      latest = await getSession();
+      if (latest && !isExpired(latest) && latest.refresh_token !== current.refresh_token) return latest;
+      // Durably invalid and no peer saved a newer session — only now do we sign out.
+      await clearSession();
+      return null;
+    } finally {
+      await releaseRefreshLock();
+    }
+  })();
+  try { return await refreshInFlight; } finally { refreshInFlight = null; }
+}
+
+// Returns a valid access token, refreshing if needed. Null if not logged in. A failed
+// refresh returns null WITHOUT clearing the session unless the token is durably dead, so a
+// transient error surfaces as one failed request — not a logout.
+export async function accessToken() {
+  const s = await getSession();
+  if (!s) return null;
+  if (!isExpired(s)) return s.access_token;
+  const refreshed = await refreshSession(s);
+  return refreshed ? refreshed.access_token : null;
 }
 
 export async function currentUser() {
