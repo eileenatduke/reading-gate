@@ -302,9 +302,7 @@ export default function Settings() {
           <div style={{ marginTop: 22 }}>
             <div className="group-heading" style={{ marginBottom: 4 }}>Unlock time per site</div>
             <p className="sub" style={{ marginTop: 0 }}>
-              After you finish reading, how long that site stays open before the gate returns.
-              Set it per site — say a quick 5 minutes for Instagram but 30 for YouTube. Leaving
-              and coming back within this window won't ask you to read again.
+              Choose how long a site stays unlocked after you finish reading
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {[...new Set(domains.map(normalizeDomain).filter(Boolean))].map((d) => {
