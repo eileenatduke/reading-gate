@@ -4,8 +4,10 @@
 //  - Track tab focus + per-tab unlock state.
 //  - When a blocked-domain tab becomes the active foreground tab without a valid
 //    unlock, trigger the gate (log an impulse, redirect the tab to gate.html).
-//  - An unlock is valid only while the user stays actively on that tab; it is revoked
-//    on close, navigate-away, or losing focus for LONGER than the grace period (30s).
+//  - Completing the read grants a TIMED, site-wide unlock: the blocked domain stays open
+//    for a per-site number of minutes (set in the dashboard's Settings), across tabs and
+//    no matter how long the user steps away and returns. The gate only comes back once
+//    that time is up — so a quick tab-switch never forces another read.
 //  - Periodically refill each user's article pool.
 
 import { getConfig } from "./lib/config.js";
@@ -15,11 +17,14 @@ import { refillPool, resetPool } from "./lib/content.js";
 const NONE = chrome.windows.WINDOW_ID_NONE;
 
 // ---- in-memory + persisted state ------------------------------------------
-// unlocks[tabId] = { domain, grantedAt, lastBlurAt|null }  (presence => unlocked)
-let unlocks = {};
+// passes[domain] = { grantedAt }  (present + not-yet-expired => the whole site is unlocked).
+// A pass is site-wide and time-boxed: once granted it holds for unlockMins[domain] minutes
+// regardless of tab switches or how long the user is away, then expires and re-gates.
+let passes = {};
 let pendingImpulse = {}; // tabId -> impulse_log row id (to flip completed=true on submit)
 let lastTrigger = {};    // tabId -> { domain, at }  (dedup rapid double-fires for one visit)
 let blockDomains = [];   // bare hosts, e.g. ["instagram.com","tiktok.com"]
+let unlockMins = {};     // domain -> minutes one completed read keeps that site open (per-site)
 let activeTabId = null;
 let windowFocused = true;
 
@@ -30,21 +35,38 @@ let resolveReady;
 const ready = new Promise((r) => { resolveReady = r; });
 
 async function persist() {
-  await chrome.storage.session.set({ unlocks, pendingImpulse, activeTabId });
+  await chrome.storage.session.set({ passes, pendingImpulse, activeTabId });
 }
 async function restore() {
-  const s = await chrome.storage.session.get(["unlocks", "pendingImpulse", "activeTabId"]);
-  unlocks = s.unlocks || {};
+  const s = await chrome.storage.session.get(["passes", "pendingImpulse", "activeTabId"]);
+  passes = s.passes || {};
   pendingImpulse = s.pendingImpulse || {};
   activeTabId = s.activeTabId ?? null;
   // Fast local cache first so the barrier opens without waiting on the network.
-  const cached = (await chrome.storage.local.get("blocklist_cache")).blocklist_cache;
-  if (Array.isArray(cached)) blockDomains = cached;
+  applyBlocklistCache((await chrome.storage.local.get("blocklist_cache")).blocklist_cache);
   resolveReady();
   // Then refresh the blocklist from Supabase in the background.
   loadBlocklist().catch(() => {});
   // One-time: flush any queue built by the old, non-diverse algorithm.
   maybeResetStalePool().catch(() => {});
+}
+
+// Load a cached blocklist into blockDomains + unlockMins. Accepts the current shape
+// ([{domain, unlock_minutes}]) OR the legacy one (["instagram.com", ...]) so upgrading
+// doesn't misread a cache written before per-site unlock times existed.
+function applyBlocklistCache(cache) {
+  if (!Array.isArray(cache)) return;
+  const domains = [];
+  const mins = {};
+  for (const entry of cache) {
+    if (typeof entry === "string") { domains.push(entry); continue; }
+    if (entry && entry.domain) {
+      domains.push(entry.domain);
+      if (Number.isFinite(entry.unlock_minutes)) mins[entry.domain] = entry.unlock_minutes;
+    }
+  }
+  blockDomains = domains;
+  unlockMins = mins;
 }
 
 // Reset the article queue exactly once after upgrading to the diverse-pool logic,
@@ -62,15 +84,28 @@ async function maybeResetStalePool() {
 
 // ---- blocklist cache -------------------------------------------------------
 async function loadBlocklist() {
-  const cached = (await chrome.storage.local.get("blocklist_cache")).blocklist_cache;
-  if (Array.isArray(cached)) blockDomains = cached;
+  applyBlocklistCache((await chrome.storage.local.get("blocklist_cache")).blocklist_cache);
   // Best-effort refresh from Supabase (requires login + config).
   try {
     const user = await currentUser();
     if (!user) return;
-    const rows = await db("blocklist").select("domain").eq("user_id", user.id).run();
-    blockDomains = (rows || []).map((r) => normalizeDomain(r.domain)).filter(Boolean);
-    await chrome.storage.local.set({ blocklist_cache: blockDomains });
+    // select("*") tolerates a DB that predates the unlock_minutes column (migration 0004):
+    // the field is simply undefined and each site falls back to the default duration.
+    const rows = await db("blocklist").select("*").eq("user_id", user.id).run();
+    const cfg = await getConfig();
+    const def = cfg.DEFAULT_UNLOCK_MINUTES || 15;
+    const domains = [];
+    const mins = {};
+    for (const r of rows || []) {
+      const d = normalizeDomain(r.domain);
+      if (!d) continue;
+      domains.push(d);
+      const m = parseInt(r.unlock_minutes, 10);
+      mins[d] = Number.isFinite(m) && m > 0 ? m : def;
+    }
+    blockDomains = domains;
+    unlockMins = mins;
+    await chrome.storage.local.set({ blocklist_cache: domains.map((d) => ({ domain: d, unlock_minutes: mins[d] })) });
     // The list may now include a domain the user just added while a tab is already sitting on
     // it — or that loaded before this fetch finished (the earlier navigation was checked
     // against a stale cache and slipped through). Re-check the active tab so the newly-blocked
@@ -109,19 +144,19 @@ function gateUrl(domain, target) {
 }
 
 // ---- unlock validity -------------------------------------------------------
-async function isUnlockValid(tabId, domain) {
-  const u = unlocks[tabId];
-  if (!u || u.domain !== domain) return false;
+// A pass unlocks the whole domain for a fixed number of minutes from when it was granted —
+// no tab binding, no blur/grace bookkeeping. Returning after any absence is fine until the
+// pass expires; only then does the next visit re-gate.
+async function isUnlockValid(domain) {
+  const p = passes[domain];
+  if (!p) return false;
   const cfg = await getConfig();
-
-  // Optional stricter lever: cap continuous unlock length (disabled by default).
-  const maxMs = (cfg.MAX_SESSION_MINUTES || 0) * 60 * 1000;
-  if (maxMs && Date.now() - u.grantedAt > maxMs) return false;
-
-  if (u.lastBlurAt == null) return true; // active, never blurred since grant
-  const elapsed = Date.now() - u.lastBlurAt;
-  const graceMs = (cfg.GRACE_SECS ?? 30) * 1000;
-  return elapsed <= graceMs;
+  const mins = unlockMins[domain] || cfg.DEFAULT_UNLOCK_MINUTES || 15;
+  if (Date.now() - p.grantedAt <= mins * 60 * 1000) return true;
+  // Expired — drop it so we don't keep re-checking a dead pass.
+  delete passes[domain];
+  persist();
+  return false;
 }
 
 // ---- core: evaluate the focused tab ---------------------------------------
@@ -131,20 +166,8 @@ async function evaluateActive(tabId) {
   try { tab = await chrome.tabs.get(tabId); } catch { return; }
   const domain = matchedDomain(tab.url || "");
   if (!domain) return; // not a blocked site
-
-  if (await isUnlockValid(tabId, domain)) {
-    // Returning within grace (or still active): keep it, clear the blur stamp.
-    if (unlocks[tabId]) { unlocks[tabId].lastBlurAt = null; await persist(); }
-    return;
-  }
+  if (await isUnlockValid(domain)) return; // still inside the timed pass — let them through
   await triggerGate(tabId, domain, tab.url);
-}
-
-function markBlur(tabId) {
-  if (tabId != null && unlocks[tabId] && unlocks[tabId].lastBlurAt == null) {
-    unlocks[tabId].lastBlurAt = Date.now();
-    persist();
-  }
 }
 
 async function triggerGate(tabId, domain, target) {
@@ -160,7 +183,7 @@ async function triggerGate(tabId, domain, target) {
   if (prev && prev.domain === domain && now - prev.at < 2000) return;
   lastTrigger[tabId] = { domain, at: now };
 
-  delete unlocks[tabId];
+  delete passes[domain];
   // Log the impulse at trigger time — every gate trigger counts (Spec §7).
   try {
     const user = await currentUser();
@@ -176,7 +199,6 @@ async function triggerGate(tabId, domain, target) {
 // ---- events ----------------------------------------------------------------
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
   await ready;
-  if (activeTabId != null && activeTabId !== tabId) markBlur(activeTabId);
   activeTabId = tabId;
   await persist();
   if (windowFocused) evaluateActive(tabId);
@@ -186,7 +208,6 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
   await ready;
   if (windowId === NONE) {
     windowFocused = false;
-    markBlur(activeTabId);
     return;
   }
   windowFocused = true;
@@ -204,23 +225,20 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (d) => {
   if (!domain) return;
   // Only gate the tab the user is actually looking at; background loads wait for focus.
   if (d.tabId !== activeTabId || !windowFocused) return;
-  if (await isUnlockValid(d.tabId, domain)) return;
+  if (await isUnlockValid(domain)) return;
   await triggerGate(d.tabId, domain, d.url);
 });
 
-// Navigating away from the unlocked domain revokes the unlock for that tab.
+// A URL change in the focused tab (including SPA history navigations that skip
+// webNavigation) → re-evaluate, so entering a blocked domain still gates. evaluateActive
+// no-ops on an unblocked domain or one that still holds a valid pass, so this is cheap.
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
   if (!changeInfo.url) return;
   await ready;
-  const u = unlocks[tabId];
-  if (u && matchedDomain(changeInfo.url) !== u.domain) {
-    delete unlocks[tabId];
-    await persist();
-  }
+  if (tabId === activeTabId && windowFocused) evaluateActive(tabId);
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {
-  delete unlocks[tabId];
   delete pendingImpulse[tabId];
   delete lastTrigger[tabId];
   if (activeTabId === tabId) activeTabId = null;
@@ -235,20 +253,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case "VISIBILITY": {
         const tabId = sender.tab?.id;
         if (tabId == null) return sendResponse({ ok: true });
-        if (msg.hidden) markBlur(tabId);
         // A page reporting itself visible is authoritative that the user is looking at it —
         // more reliable than our cached `windowFocused` flag, which Chrome leaves stale when
         // the OS focus is held by a Picture-in-Picture / screen-share window during a video
         // call (onFocusChanged fires WINDOW_ID_NONE and never flips back until the call ends).
         // Gate on the page's own signal so a blocked site opened mid-call isn't left ungated.
-        else if (tabId === activeTabId) await evaluateActive(tabId);
+        // (Hidden no longer matters — the pass is time-based, not blur-based.)
+        if (!msg.hidden && tabId === activeTabId) await evaluateActive(tabId);
         return sendResponse({ ok: true });
       }
       case "GRANT_UNLOCK": {
-        // Sent by the gate page on successful submit, before it navigates to target.
-        const tabId = sender.tab?.id;
-        if (tabId != null) {
-          unlocks[tabId] = { domain: msg.domain, grantedAt: Date.now(), lastBlurAt: null };
+        // Sent by the gate on successful submit, before it navigates to the target. Grant a
+        // site-wide timed pass so the user can move around (and come back to) the whole
+        // domain until it expires — not just this one tab.
+        if (msg.domain) {
+          passes[msg.domain] = { grantedAt: Date.now() };
           await persist();
         }
         return sendResponse({ ok: true });

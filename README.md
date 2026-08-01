@@ -102,10 +102,11 @@ separate, extension-free profile — see [`docs/AI-EXEMPTION.md`](docs/AI-EXEMPT
 
 - The gate fires when a blocked-domain tab becomes the **active foreground tab**
   without a valid unlock.
-- Completing an article grants an unlock **valid only while you stay on that tab**.
-- It's revoked on close, navigate-away, or losing focus for **> 30 seconds** (grace,
-  configurable in Settings). Returning re-gates with a **fresh article** — closing the
-  "open it once and leave it open all day" exploit.
+- Completing an article grants a **timed, site-wide unlock**: that domain stays open for a
+  number of minutes you choose **per site** in Settings (e.g. 5 for Instagram, 30 for
+  YouTube) — across tabs, and no matter how long you step away and come back.
+- When the timer runs out, the next visit re-gates with a **fresh article**. A quick
+  tab-switch no longer forces another read.
 - **Every** gate trigger is logged to `impulse_log` (completed or bailed) — the
   bail-outs are the point.
 

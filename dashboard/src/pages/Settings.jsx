@@ -13,6 +13,11 @@ function normalizeDomain(d) {
     .replace(/[/?#:].*$/, "");       // path, query, hash, or port — keep only the bare host
 }
 
+// How many minutes one completed read keeps a site open, when the user hasn't set a
+// per-site value. Mirrors the extension's DEFAULT_UNLOCK_MINUTES (extension/src/lib/config.js).
+const DEFAULT_UNLOCK_MINUTES = 15;
+const clampMins = (n) => Math.max(1, Math.min(480, parseInt(n, 10) || DEFAULT_UNLOCK_MINUTES));
+
 // One-tap presets for the most-requested sites, so users don't have to type them. Each is a
 // bare host that matches the extension's blocklist matcher (apex + any subdomain).
 const PRESET_SITES = [
@@ -55,6 +60,7 @@ export default function Settings() {
 
   const [interests, setInterests] = useState(new Set());
   const [domains, setDomains] = useState([]);
+  const [durations, setDurations] = useState({}); // domain -> unlock minutes
   const [customFeeds, setCustomFeeds] = useState([]);
   const [articlesRequired, setArticlesRequired] = useState(1);
   // Whether the user has saved settings before — gates the one-time "You're all set" modal
@@ -78,6 +84,10 @@ export default function Settings() {
         setInterests(new Set(p?.interests || []));
         setCustomFeeds(Array.isArray(p?.custom_feeds) ? p.custom_feeds : []);
         setDomains(b.map((r) => r.domain));
+        setDurations(Object.fromEntries(b.map((r) => [
+          normalizeDomain(r.domain),
+          Number.isFinite(r.unlock_minutes) ? r.unlock_minutes : DEFAULT_UNLOCK_MINUTES,
+        ])));
       })
       .catch((e) => setErr(e.message));
     // Minimum-articles preference lives in auth metadata (shared with the gate).
@@ -89,7 +99,7 @@ export default function Settings() {
   }, []);
 
   // The saved check only reflects the last successful save — any edit clears it.
-  useEffect(() => { setStatus(""); }, [pendingTheme, interests, domains, customFeeds, articlesRequired]);
+  useEffect(() => { setStatus(""); }, [pendingTheme, interests, domains, durations, customFeeds, articlesRequired]);
 
   // Let Escape dismiss the welcome modal.
   useEffect(() => {
@@ -107,6 +117,14 @@ export default function Settings() {
     setInterests(next);
   }
 
+  // Give a newly-blocked site a default unlock time if it doesn't have one yet.
+  function ensureDuration(domain) {
+    setDurations((cur) => (cur[domain] != null ? cur : { ...cur, [domain]: DEFAULT_UNLOCK_MINUTES }));
+  }
+  function setDomainMinutes(domain, mins) {
+    setDurations((cur) => ({ ...cur, [domain]: clampMins(mins) }));
+  }
+
   function addDomain() {
     const d = normalizeDomain(newDomain);
     // Require a real host (must contain a dot). A bare word like "tiktok" would be stored but
@@ -116,6 +134,7 @@ export default function Settings() {
       return;
     }
     if (!domains.includes(d)) setDomains([...domains, d]);
+    ensureDuration(d);
     setNewDomain("");
     setDomainErr("");
   }
@@ -123,6 +142,7 @@ export default function Settings() {
   // Toggle a preset site on/off in the blocklist with a single click.
   function togglePreset(domain) {
     setDomains((cur) => (cur.includes(domain) ? cur.filter((d) => d !== domain) : [...cur, domain]));
+    ensureDuration(domain);
     if (domainErr) setDomainErr("");
   }
 
@@ -159,24 +179,33 @@ export default function Settings() {
       }
       if (pErr) throw pErr;
 
-      // blocklist → replace-all
+      // blocklist → delete removed sites, then upsert each wanted site with its per-site
+      // unlock time (upsert both inserts new domains and updates the minutes on existing ones).
+      const wantList = [...new Set(domains.map(normalizeDomain).filter(Boolean))];
+      const want = new Set(wantList);
       const { data: existing } = await supabase.from("blocklist").select("id,domain");
-      const want = new Set(domains.map(normalizeDomain).filter(Boolean));
-      const have = new Set((existing || []).map((r) => normalizeDomain(r.domain)));
 
       const toDelete = (existing || []).filter((r) => !want.has(normalizeDomain(r.domain))).map((r) => r.id);
       if (toDelete.length) await supabase.from("blocklist").delete().in("id", toDelete);
 
-      const toAdd = [...want].filter((d) => !have.has(d)).map((d) => ({ user_id: uid, domain: d }));
-      if (toAdd.length) await supabase.from("blocklist").insert(toAdd);
-
-      // Nudge the extension to re-fetch the blocklist right away, so a domain the user just
-      // added starts gating immediately instead of waiting for the extension's periodic
-      // refresh. The dashboard-bridge content script (running on this origin) relays this to
-      // the background worker; on pages without the extension installed it's a harmless no-op.
-      if (toAdd.length || toDelete.length) {
-        window.postMessage({ __readingGate: true, type: "BLOCKLIST_CHANGED" }, window.location.origin);
+      const rows = wantList.map((d) => ({ user_id: uid, domain: d, unlock_minutes: clampMins(durations[d]) }));
+      let bErr = null;
+      if (rows.length) {
+        ({ error: bErr } = await supabase.from("blocklist").upsert(rows, { onConflict: "user_id,domain" }));
+        if (bErr && (bErr.code === "PGRST204" || /unlock_minutes/i.test(bErr.message || ""))) {
+          // DB predates migration 0004 (no unlock_minutes column) — save the domains without
+          // it so the blocklist still works; per-site times take effect once 0004 is applied.
+          ({ error: bErr } = await supabase.from("blocklist")
+            .upsert(wantList.map((d) => ({ user_id: uid, domain: d })), { onConflict: "user_id,domain" }));
+        }
+        if (bErr) throw bErr;
       }
+
+      // Nudge the extension to re-fetch the blocklist right away, so an added domain (or a
+      // changed unlock time) takes effect immediately instead of waiting for the extension's
+      // periodic refresh. The dashboard-bridge content script (running on this origin) relays
+      // this to the background worker; on pages without the extension it's a harmless no-op.
+      window.postMessage({ __readingGate: true, type: "BLOCKLIST_CHANGED" }, window.location.origin);
 
       setStatus("saved");
       // First successful save ever → welcome the user and point them to next steps.
@@ -268,6 +297,38 @@ export default function Settings() {
           <button className="btn ghost" onClick={addDomain}>Add</button>
         </div>
         {domainErr && <p className="sub" style={{ color: "var(--danger, #c0392b)", marginTop: 8 }}>{domainErr}</p>}
+
+        {domains.length > 0 && (
+          <div style={{ marginTop: 22 }}>
+            <div className="group-heading" style={{ marginBottom: 4 }}>Unlock time per site</div>
+            <p className="sub" style={{ marginTop: 0 }}>
+              After you finish reading, how long that site stays open before the gate returns.
+              Set it per site — say a quick 5 minutes for Instagram but 30 for YouTube. Leaving
+              and coming back within this window won't ask you to read again.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[...new Set(domains.map(normalizeDomain).filter(Boolean))].map((d) => {
+                const mins = durations[d] ?? DEFAULT_UNLOCK_MINUTES;
+                return (
+                  <div key={d} className="row" style={{ alignItems: "center", gap: 10 }}>
+                    <span style={{ flex: 1, minWidth: 120, fontSize: 14, wordBreak: "break-all" }}>{d}</span>
+                    <button className="btn ghost" aria-label={`Less time for ${d}`}
+                      onClick={() => setDomainMinutes(d, mins - 5)}
+                      style={{ padding: "6px 12px", fontSize: 16, lineHeight: 1 }}>−</button>
+                    <input className="input" type="number" min="1" max="480" value={mins}
+                      aria-label={`Unlock minutes for ${d}`}
+                      onChange={(e) => setDomainMinutes(d, e.target.value)}
+                      style={{ width: 72, textAlign: "center" }} />
+                    <button className="btn ghost" aria-label={`More time for ${d}`}
+                      onClick={() => setDomainMinutes(d, mins + 5)}
+                      style={{ padding: "6px 12px", fontSize: 16, lineHeight: 1 }}>+</button>
+                    <span className="muted" style={{ fontSize: 13 }}>min</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
