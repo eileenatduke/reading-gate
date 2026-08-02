@@ -229,6 +229,7 @@ export function db(table) {
   const api = {
     select(cols = "*") { query.columns = cols; return api; },
     eq(col, val) { query.filters.push(`${col}=eq.${encodeURIComponent(val)}`); return api; },
+    in(col, vals) { query.filters.push(`${col}=in.(${vals.map(encodeURIComponent).join(",")})`); return api; },
     gte(col, val) { query.filters.push(`${col}=gte.${encodeURIComponent(val)}`); return api; },
     is(col, val) { query.filters.push(`${col}=is.${val}`); return api; },
     order(col, { ascending = true } = {}) { query.order = `${col}.${ascending ? "asc" : "desc"}`; return api; },

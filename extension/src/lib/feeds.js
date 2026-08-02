@@ -33,6 +33,43 @@ export const GENRES = GENRE_GROUPS.flatMap((g) => g.genres);
 // The dashboard mirrors this in dashboard/src/lib/genres.js (keep in sync).
 export const MY_SOURCES_GENRE = "My Sources";
 
+// ---------------------------------------------------------------------------
+// Recency / freshness policy.
+//
+// The gate's whole point is timely, relevant reading, so how old an article may be
+// depends on the topic. Time-sensitive topics decay fast: a markets story is stale
+// within days, and an AI piece from a year ago can be outright wrong as the field
+// moves. Evergreen / knowledge topics (a science explainer, a food or travel piece, a
+// campus research writeup) stay useful for much longer, so they get a longer window.
+//
+// Anything NOT in EVERGREEN_GENRES is treated as time-sensitive — the safe default.
+export const FRESH_DAYS_TIME_SENSITIVE = 7;   // "no more than a week old, for the most part"
+export const FRESH_DAYS_EVERGREEN = 90;       // knowledge/evergreen topics: much more lenient
+
+const EVERGREEN_GENRES = new Set([
+  "Science", "Space",
+  "Arts & Culture", "Design & Architecture", "Gaming & Esports",
+  "Food", "Travel", "Lifestyle", "Pets & Animals", "Religion & Faith",
+  "Education", "Wellness & Mental Health",
+]);
+
+// Max age (days) an article of the given genre may be before it's considered stale.
+export function maxAgeDays(genre) {
+  // A user's own added feed is something they explicitly asked for — be lenient.
+  if (genre === MY_SOURCES_GENRE) return FRESH_DAYS_EVERGREEN;
+  return EVERGREEN_GENRES.has(genre) ? FRESH_DAYS_EVERGREEN : FRESH_DAYS_TIME_SENSITIVE;
+}
+
+// True if an article (published epoch-ms, or null when the feed carried no date) is
+// fresh enough to serve for its genre. Undated items are KEPT rather than dropped:
+// mainstream feeds almost always carry a date, so a missing one usually means a quirky
+// feed, not a stale item — and dropping them all would needlessly starve niche genres.
+// We only ever discard an item we can prove is too old.
+export function isFreshEnough(publishedMs, genre, now = Date.now()) {
+  if (publishedMs == null) return true;
+  return (now - publishedMs) <= maxAgeDays(genre) * 86400000;
+}
+
 // Turn a stored custom feed ({ name, url }) into a fetchable source spec. The URL may
 // be an actual feed OR just a homepage the user pasted — kind "custom" resolves either
 // (see fetchCustomSource). Falls back to the URL's hostname when the user didn't name it.
@@ -174,6 +211,25 @@ function pick(block, tag) {
   return m ? m[1] : "";
 }
 
+// Pull a publication date out of a feed item, across RSS (<pubDate>, <dc:date>) and
+// Atom (<published>, <updated>). Returns epoch-ms, or null when absent/unparseable.
+function pickDate(block) {
+  const raw = pick(block, "pubDate") || pick(block, "dc:date")
+    || pick(block, "published") || pick(block, "updated");
+  const t = raw ? Date.parse(decode(raw)) : NaN;
+  return Number.isNaN(t) ? null : t;
+}
+
+// Drop items older than their genre allows, then sort newest-first so that when a feed
+// is capped (see fetchSource) we keep the most recent items rather than an arbitrary
+// slice. Undated items are retained (see isFreshEnough) and sink to the end of the sort.
+function freshestFirst(items, genre) {
+  const now = Date.now();
+  return items
+    .filter((a) => isFreshEnough(a.published, genre, now))
+    .sort((a, b) => (b.published || 0) - (a.published || 0));
+}
+
 function pickLink(block) {
   const rssLink = pick(block, "link");
   if (rssLink && /^https?:/i.test(rssLink.trim())) return rssLink.trim();
@@ -291,26 +347,29 @@ export function parseFeed(xml) {
     const title = decode(pick(b, "title"));
     const url = normalizeArticleUrl(decode(pickLink(b)));
     const blurb = decode(pick(b, "description") || pick(b, "summary") || pick(b, "content"));
+    const published = pickDate(b);
     if (title && url && /^https?:/i.test(url)) {
-      items.push({ title, url, blurb: blurb.slice(0, 400) });
+      items.push({ title, url, blurb: blurb.slice(0, 400), published });
     }
   }
   return items;
 }
 
-// Fetch one source spec and tag every article with the given genre.
+// Fetch one source spec and tag every article with the given genre. Each source is
+// filtered to its genre's freshness window and sorted newest-first BEFORE the per-feed
+// cap, so a stale item never enters the pool and the cap keeps the most recent items.
 export async function fetchSource(spec, genre) {
   if (spec.kind === "custom") {
     // User-supplied: URL may be a feed or a homepage — fetchCustomSource resolves both.
     const items = await fetchCustomSource(spec.url);
-    return items.slice(0, 25).map((a) => ({ ...a, source: spec.source, genre }));
+    return freshestFirst(items, genre).slice(0, 25).map((a) => ({ ...a, source: spec.source, genre }));
   }
   if (spec.kind === "rss") {
     const res = await fetch(spec.url, { cache: "no-store" });
     if (!res.ok) throw new Error(`${spec.source} ${genre} HTTP ${res.status}`);
     const xml = await res.text();
     // Cap per feed — some feeds (e.g. OpenAI) publish 1000+ items in one file.
-    return parseFeed(xml).slice(0, 25).map((a) => ({ ...a, source: spec.source, genre }));
+    return freshestFirst(parseFeed(xml), genre).slice(0, 25).map((a) => ({ ...a, source: spec.source, genre }));
   }
   // Guardian section or tag
   const cfg = await getConfig();
@@ -324,11 +383,14 @@ export async function fetchSource(spec, genre) {
   if (!res.ok) throw new Error(`Guardian ${spec.ref} HTTP ${res.status}`);
   const data = await res.json();
   const results = data?.response?.results || [];
-  return results.map((r) => ({
+  const items = results.map((r) => ({
     title: decode(r.webTitle),
     url: r.webUrl,
     blurb: decode(r.fields?.trailText || "").slice(0, 400),
+    // Guardian always returns webPublicationDate (ISO-8601) on each result.
+    published: r.webPublicationDate ? Date.parse(r.webPublicationDate) || null : null,
     source: "Guardian",
     genre,
   }));
+  return freshestFirst(items, genre);
 }

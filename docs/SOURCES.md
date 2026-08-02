@@ -110,6 +110,33 @@ The Marshall Project · OpenAI · Yahoo Finance
 - **Anthropic** & **Stanford Digital Economy Lab** — Google News topic feeds (news
   *about* them from many outlets; neither publishes its own RSS).
 
+## Freshness / recency
+Every article is filtered by **how old it is**, because the gate is about timely reading.
+The window depends on the topic (see `maxAgeDays()` in `extension/src/lib/feeds.js`):
+
+- **Time-sensitive topics — up to ~1 week old.** The default for anything not listed as
+  evergreen below: all news & politics, business & money (a markets story is stale within
+  days), **AI / technology / cybersecurity** (last year's AI story can be flat wrong),
+  weather, current health/climate/entertainment. `FRESH_DAYS_TIME_SENSITIVE = 7`.
+- **Evergreen / knowledge topics — up to ~90 days.** Science, Space, Arts & Culture,
+  Design & Architecture, Gaming, Food, Travel, Lifestyle, Pets & Animals, Religion,
+  Education, Wellness — these stay useful far longer. `FRESH_DAYS_EVERGREEN = 90`.
+- **Your own added feeds** get the lenient 90-day window — you asked for them.
+
+How it's enforced, end to end:
+1. **At fetch time**, each feed is parsed for its publication date (`<pubDate>`,
+   `<dc:date>`, Atom `<published>`/`<updated>`, or the Guardian `webPublicationDate`),
+   filtered to its topic's window, and **sorted newest-first before the per-feed cap** —
+   so search-style feeds (Google News for Anthropic / Stanford DEL) and big feeds
+   (OpenAI's 1000-item file) contribute their *newest* items, not an arbitrary slice.
+2. **At refill time**, unread pool rows that have since aged past their window are pruned,
+   so a piece that was fresh when fetched isn't served a month later after sitting unread.
+
+Items whose feed carries **no date** are kept (mainstream feeds almost always date their
+items; a missing date usually means a quirky feed, not a stale item) — we only ever drop
+what we can prove is too old. The publication date is stored per row in `article_pool`
+(`published_at`, migration `0005`).
+
 ## Notes
 - **AI** is the richest category (5 sources, incl. OpenAI direct and MIT News).
 - **Wired was removed** — it sits behind a metered paywall, and Reading Gate only serves
