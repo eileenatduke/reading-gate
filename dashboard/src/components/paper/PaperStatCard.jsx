@@ -4,7 +4,12 @@
 //   adornment — a node shown beside the value (a streak-mood emoji, a growing seedling).
 //   caption   — a plain muted line under the label (e.g. the streak mood, flower progress).
 //   onClick   — makes the whole card a button (cursor, hover lift, keyboard-activatable).
-export default function PaperStatCard({ value, label, hint, adornment, caption, onClick }) {
+//   cta       — accent pill naming where the card leads ("See your garden"), so the
+//               click target is visible rather than something you have to discover.
+//               It is a span, not a nested button: the card itself is the button, and
+//               a click on the pill bubbles to it. Its text joins the card's
+//               accessible name, so screen readers hear the destination too.
+export default function PaperStatCard({ value, label, hint, adornment, caption, onClick, cta }) {
   const clickable = !!onClick;
   return (
     <div
@@ -32,6 +37,12 @@ export default function PaperStatCard({ value, label, hint, adornment, caption, 
       <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 8 }}>{label}</div>
       {caption && (
         <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 3, lineHeight: 1.35 }}>{caption}</div>
+      )}
+      {cta && (
+        <span className="stat-cta">
+          {cta}
+          <span className="stat-cta-arrow" aria-hidden="true">→</span>
+        </span>
       )}
     </div>
   );
