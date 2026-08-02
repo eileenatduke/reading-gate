@@ -70,6 +70,51 @@ export function isFreshEnough(publishedMs, genre, now = Date.now()) {
   return (now - publishedMs) <= maxAgeDays(genre) * 86400000;
 }
 
+// ---------------------------------------------------------------------------
+// Family-friendly filter.
+//
+// Some feeds surface adult / semi-explicit pieces (sex columns, "raunchy" culture
+// coverage, etc.) that aren't appropriate for younger readers. We drop an article when
+// its HEADLINE contains an explicit keyword.
+//
+// Keyword filtering is inherently blunt (the "Scunthorpe problem"): a naive list nukes
+// legitimate news, which covers sexuality, sexual assault, breast cancer, same-sex
+// marriage, "analysis", "cocktail", etc. in non-explicit language. So this list is
+// deliberately HIGH-PRECISION:
+//   • matched on the title only (per the request),
+//   • word-boundary anchored (\b) so "assault"/"Sussex"/"cocktail"/"title" don't match,
+//   • limited to terms that are almost always explicit regardless of context.
+// Ambiguous stems (sex, anal, cock, ass, tit, cum, nude, strip, breast…) are left OUT
+// on purpose — they'd drop far more real news than adult content. Tune to taste.
+const EXPLICIT_TERMS = [
+  // Sexual / adult
+  "porn\\w*", "x-rated", "erotic\\w*", "orgasm\\w*", "orgy", "orgies",
+  "masturbat\\w*", "ejaculat\\w*", "fellatio", "cunnilingus",
+  "blowjob\\w*", "handjob\\w*", "rimjob\\w*", "deepthroat\\w*",
+  "bdsm", "bondage", "dominatrix", "sadomasochis\\w*", "fetish\\w*",
+  "dildo\\w*", "onlyfans", "camgirl\\w*",
+  "sextape", "sex tape", "sexting", "sexy", "threesome",
+  "hentai", "milf", "gilf", "incest\\w*", "bestiality",
+  "creampie", "gangbang\\w*", "bukkake",
+  "horny", "raunchy", "lewd", "obscen\\w*", "nudity", "topless", "oral sex",
+  // Strong profanity
+  "fuck\\w*", "motherfuck\\w*", "shit\\w*", "cunt\\w*", "bitch\\w*",
+  "asshole\\w*", "slut\\w*", "whore\\w*", "wank\\w*", "twat\\w*", "bollocks", "dickhead\\w*",
+];
+const EXPLICIT_RE = new RegExp(`\\b(?:${EXPLICIT_TERMS.join("|")})`, "i");
+
+// True if a headline contains an explicit keyword and should be filtered out.
+export function isExplicitHeadline(title) {
+  return !!title && EXPLICIT_RE.test(title);
+}
+
+// One gate for what may enter the pool: drop explicit headlines, then apply the
+// freshness window (which also sorts newest-first). Used by every source kind.
+function admissible(items, genre) {
+  const clean = items.filter((a) => !isExplicitHeadline(a.title));
+  return freshestFirst(clean, genre);
+}
+
 // Turn a stored custom feed ({ name, url }) into a fetchable source spec. The URL may
 // be an actual feed OR just a homepage the user pasted — kind "custom" resolves either
 // (see fetchCustomSource). Falls back to the URL's hostname when the user didn't name it.
@@ -356,20 +401,21 @@ export function parseFeed(xml) {
 }
 
 // Fetch one source spec and tag every article with the given genre. Each source is
-// filtered to its genre's freshness window and sorted newest-first BEFORE the per-feed
-// cap, so a stale item never enters the pool and the cap keeps the most recent items.
+// filtered for explicit headlines and to its genre's freshness window, and sorted
+// newest-first BEFORE the per-feed cap — so nothing explicit or stale enters the pool
+// and the cap keeps the most recent items (see admissible()).
 export async function fetchSource(spec, genre) {
   if (spec.kind === "custom") {
     // User-supplied: URL may be a feed or a homepage — fetchCustomSource resolves both.
     const items = await fetchCustomSource(spec.url);
-    return freshestFirst(items, genre).slice(0, 25).map((a) => ({ ...a, source: spec.source, genre }));
+    return admissible(items, genre).slice(0, 25).map((a) => ({ ...a, source: spec.source, genre }));
   }
   if (spec.kind === "rss") {
     const res = await fetch(spec.url, { cache: "no-store" });
     if (!res.ok) throw new Error(`${spec.source} ${genre} HTTP ${res.status}`);
     const xml = await res.text();
     // Cap per feed — some feeds (e.g. OpenAI) publish 1000+ items in one file.
-    return freshestFirst(parseFeed(xml), genre).slice(0, 25).map((a) => ({ ...a, source: spec.source, genre }));
+    return admissible(parseFeed(xml), genre).slice(0, 25).map((a) => ({ ...a, source: spec.source, genre }));
   }
   // Guardian section or tag
   const cfg = await getConfig();
@@ -392,5 +438,5 @@ export async function fetchSource(spec, genre) {
     source: "Guardian",
     genre,
   }));
-  return freshestFirst(items, genre);
+  return admissible(items, genre);
 }

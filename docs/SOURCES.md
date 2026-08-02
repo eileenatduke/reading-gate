@@ -137,6 +137,23 @@ items; a missing date usually means a quirky feed, not a stale item) — we only
 what we can prove is too old. The publication date is stored per row in `article_pool`
 (`published_at`, migration `0005`).
 
+## Family-friendly filter
+Some feeds surface adult / semi-explicit pieces (sex columns, "raunchy" culture coverage)
+that aren't appropriate for younger readers. An article is **dropped when its headline
+contains an explicit keyword** (`EXPLICIT_TERMS` / `isExplicitHeadline()` in
+`extension/src/lib/feeds.js`), applied to every source before it can enter the pool.
+
+The list is deliberately **high-precision** to sidestep the classic keyword-filter trap of
+nuking real news (which covers sexuality, sexual assault, breast cancer, same-sex marriage,
+"analysis", "cocktail", etc. in non-explicit language):
+- matched on the **title only**, with **word boundaries** (so *assault*, *Sussex*,
+  *cocktail*, *Scunthorpe*, *cumulative*, *title* never match);
+- limited to terms that are almost always explicit regardless of context.
+
+Ambiguous stems (*sex*, *anal*, *cock*, *ass*, *tit*, *cum*, *nude*, *strip*, *breast*…)
+are intentionally left out — they'd drop far more legitimate news than adult content. Edit
+`EXPLICIT_TERMS` to tune the list.
+
 ## Notes
 - **AI** is the richest category (5 sources, incl. OpenAI direct and MIT News).
 - **Wired was removed** — it sits behind a metered paywall, and Reading Gate only serves
