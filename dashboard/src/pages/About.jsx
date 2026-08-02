@@ -188,6 +188,32 @@ export default function About() {
       }
     }
 
+    // Doomscroll icons drain from colour to gray, left to right, the first time the
+    // row comes into view — the trade band's message, told in colour. The stagger is
+    // timed here rather than with CSS transition-delay so hovering a settled tile
+    // restores its colour instantly in both directions.
+    const appRow = root.querySelector(".rg-ab-apps");
+    const tiles = appRow ? [...appRow.querySelectorAll(".rg-ab-app")] : [];
+    if (tiles.length) {
+      if (reduce) {
+        tiles.forEach((el) => el.classList.add("is-gray"));
+      } else {
+        const timers = [];
+        const io3 = new IntersectionObserver((entries, obs) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              obs.disconnect();
+              tiles.forEach((el, i) => {
+                timers.push(setTimeout(() => el.classList.add("is-gray"), 400 + i * 90));
+              });
+            }
+          });
+        }, { root, threshold: 0.35 });
+        io3.observe(appRow);
+        cleanups.push(() => { io3.disconnect(); timers.forEach(clearTimeout); });
+      }
+    }
+
     return () => cleanups.forEach((fn) => fn());
   }, []);
 

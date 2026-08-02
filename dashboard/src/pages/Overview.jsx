@@ -59,6 +59,7 @@ export default function Overview() {
               label="Articles read"
               adornment={<Seedling stage={growthStage(reading)} size={44} className="stat-seedling" />}
               caption={gardenCaption}
+              cta="See your garden"
               onClick={() => nav("/garden")}
             />
             <PaperStatCard

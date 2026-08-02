@@ -320,6 +320,7 @@ html:has(.rg-about) body {
 .rg-reveal.is-in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .rg-reveal { opacity: 1; transform: none; transition: none; }
+  .rg-ab-app { transition: none; }
 }
 
 /* ---- Stat band ---- */
@@ -345,9 +346,13 @@ html:has(.rg-about) body {
   width: 3.5rem; height: 3.5rem;
   border-radius: 0.875rem; overflow: hidden;
   box-shadow: 0 2px 12px rgba(0,0,0,0.35);
-  transition: transform .18s ease, box-shadow .18s ease;
+  transition: transform .18s ease, box-shadow .18s ease, filter .7s ease;
 }
 .rg-ab-app:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 18px rgba(0,0,0,0.45); }
+/* Drained state, added tile by tile once the row scrolls into view (About.jsx). The
+   filter sits on the tile, not the img, so Snapchat's yellow greys with its glyph. */
+.rg-ab-app.is-gray { filter: grayscale(1) brightness(.85); }
+.rg-ab-app.is-gray:hover { filter: none; }
 .rg-ab-app-img { width: 100%; height: 100%; display: block; box-sizing: border-box; }
 .rg-ab-app-img.is-cover { object-fit: cover; }
 .rg-ab-app-img.is-contain { object-fit: contain; padding: 16%; }
