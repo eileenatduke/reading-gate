@@ -120,7 +120,12 @@ async function refreshRequest(refresh_token) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const err = new Error(data.error_description || data.msg || data.error || `refresh HTTP ${res.status}`);
-    err.transient = res.status >= 500 || res.status === 429 || res.status === 408;
+    // Durable ONLY on a definitive auth rejection of the refresh token itself (GoTrue
+    // returns 400/401 for an invalid/expired/used token). Treat everything else — 5xx, 429,
+    // 408, and a proxy/CDN/WAF 403/407 or any unexpected status — as transient so an infra
+    // blip never signs a real user out (the stay-logged-in requirement). A genuinely dead
+    // token still surfaces as 400/401 and clears normally.
+    err.transient = !(res.status === 400 || res.status === 401);
     throw err;
   }
   const s = sessionFromToken(data);
