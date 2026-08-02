@@ -4,7 +4,17 @@
 
 import { db, currentUser } from "./sb.js";
 import { getConfig } from "./config.js";
-import { CATALOG, GENRES, MY_SOURCES_GENRE, fetchSource, customFeedSpec } from "./feeds.js";
+import { CATALOG, GENRES, MY_SOURCES_GENRE, fetchSource, customFeedSpec, maxAgeDays } from "./feeds.js";
+
+// An article carrying a known publication date that has aged past its genre's freshness
+// window (see maxAgeDays). Undated rows return false — we only prune what we can prove
+// is stale.
+function isStale(genre, publishedAtIso) {
+  if (!publishedAtIso) return false;
+  const t = Date.parse(publishedAtIso);
+  if (Number.isNaN(t)) return false;
+  return (Date.now() - t) > maxAgeDays(genre) * 86400000;
+}
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -76,20 +86,35 @@ export async function refillPool() {
   const uid = user.id;
 
   const [poolRows, profileRows, readRows] = await Promise.all([
-    db("article_pool").select("url,served").eq("user_id", uid).run(),
+    // select("*") so an older DB without published_at still returns the other columns
+    // instead of erroring the whole refill.
+    db("article_pool").select("*").eq("user_id", uid).run(),
     // select("*") (not an explicit column list) so an older DB without the
     // custom_feeds column still returns interests instead of erroring the whole refill.
     db("profiles").select("*").eq("user_id", uid).run(),
     db("reading_log").select("article_url").eq("user_id", uid).order("created_at", { ascending: false }).limit(500).run(),
   ]);
 
-  const unread = (poolRows || []).filter((r) => !r.served).length;
+  // Prune unread rows that have gone stale since we fetched them — a time-sensitive
+  // piece that's now past its freshness window shouldn't be served just because it sat
+  // in the queue. (Served rows are kept as read-history dedup and never re-served.)
+  const staleIds = (poolRows || [])
+    .filter((r) => !r.served && isStale(r.genre, r.published_at))
+    .map((r) => r.id);
+  if (staleIds.length) {
+    try { await db("article_pool").eq("user_id", uid).in("id", staleIds).remove(); }
+    catch (e) { console.warn("[content:prune]", e.message); }
+  }
+  const stale = new Set(staleIds);
+  const live = (poolRows || []).filter((r) => !stale.has(r.id));
+
+  const unread = live.filter((r) => !r.served).length;
   if (unread >= cfg.POOL_TARGET) return { added: 0, reason: "full" };
 
   const interests = profileRows?.[0]?.interests || [];
   const customFeeds = profileRows?.[0]?.custom_feeds || [];
   const known = new Set([
-    ...(poolRows || []).map((r) => r.url),
+    ...live.map((r) => r.url),
     ...(readRows || []).map((r) => r.article_url),
   ]);
 
@@ -105,6 +130,7 @@ export async function refillPool() {
     source: a.source,
     genre: a.genre,
     blurb: a.blurb || null,
+    published_at: a.published ? new Date(a.published).toISOString() : null,
     served: false,
   }));
 
