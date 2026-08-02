@@ -135,6 +135,39 @@ button { font-family: inherit; }
   .ov-habits { grid-template-columns: 1fr; }
 }
 
+/* ---- reading garden: streak mood + flower garden ---- */
+.mood-emoji { font-size: 1.9rem; line-height: 1; }
+.stat-seedling { display: block; }
+
+.garden-card { padding: 1.75rem; }
+.garden-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1.5rem 0 0.5rem; }
+.garden-empty svg { display: block; }
+
+.meadow {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+  gap: 0.25rem 0.125rem; align-items: end;
+  padding-bottom: 0.5rem;
+  background: linear-gradient(180deg, transparent 55%, rgba(var(--accent-rgb), .05) 100%);
+  border-radius: 0.75rem;
+}
+.plot { text-align: center; line-height: 0; }
+.plot svg {
+  width: 100%; max-width: 5.25rem; height: auto; transform-origin: 50% 100%;
+  animation: bloom-in .5s var(--e, 0s) both cubic-bezier(.2, .8, .2, 1);
+}
+.plot svg:hover { animation: sway 2.6s ease-in-out infinite; }
+@keyframes bloom-in { from { transform: scale(.2) translateY(0.75rem); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+@keyframes sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+
+.garden-growing {
+  display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem;
+  padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plot svg, .plot svg:hover { animation: none; }
+}
+
 /* ---- misc ---- */
 .muted { color: var(--muted); }
 .faint { color: var(--faint); }

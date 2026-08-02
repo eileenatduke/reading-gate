@@ -71,6 +71,54 @@ export function currentStreak(reading) {
   return streak;
 }
 
+// ---------- reading garden: flowers earned + seedling progress ----------
+// Five completed reads grow one flower; the garden on the Articles-read drill-in shows
+// every flower earned. All derived from reading.length — no new storage.
+export const ARTICLES_PER_FLOWER = 5;
+export function flowerCount(reading) {
+  return Math.floor(reading.length / ARTICLES_PER_FLOWER);
+}
+// 0..4 — how far the in-progress seedling has grown toward the next flower.
+export function growthStage(reading) {
+  return reading.length % ARTICLES_PER_FLOWER;
+}
+// Articles still needed to complete the next flower (1..5).
+export function articlesToNextFlower(reading) {
+  return ARTICLES_PER_FLOWER - growthStage(reading);
+}
+
+// ---------- day-streak mood ----------
+// A face for the streak card, from the streak plus this week's pace vs. the user's own
+// weekly average. Four moods: falling off feels different from thriving.
+//   😔 sad     — no streak, or nothing read in the last 7 days
+//   😐 neutral — on a streak but below your usual weekly pace
+//   🙂 happy   — reading at or above your usual weekly pace
+//   😄 beaming — above your usual pace AND a 7+ day streak
+export function streakMood(reading) {
+  const total = reading.length;
+  if (total === 0) {
+    return { key: "sad", emoji: "😔", caption: "Read your first article to start a streak" };
+  }
+  const now = Date.now();
+  const last7 = reading.filter((r) => now - new Date(r.created_at).getTime() <= 7 * DAY).length;
+  const streak = currentStreak(reading);
+  if (streak === 0 || last7 === 0) {
+    return { key: "sad", emoji: "😔", caption: "Read something to start a new streak" };
+  }
+  // "Your usual pace" = average reads per week over the weeks you've actually read.
+  const weekStart = startOfWeek().getTime();
+  const thisWeek = reading.filter((r) => new Date(r.created_at).getTime() >= weekStart).length;
+  const activeWeeks = new Set(reading.map((r) => weekKey(new Date(r.created_at)))).size || 1;
+  const avg = total / activeWeeks;
+  if (thisWeek >= avg) {
+    if (thisWeek > avg && streak >= 7) {
+      return { key: "beaming", emoji: "😄", caption: "Your best week yet" };
+    }
+    return { key: "happy", emoji: "🙂", caption: "Keeping up your usual pace" };
+  }
+  return { key: "neutral", emoji: "😐", caption: "A bit below your usual pace" };
+}
+
 // ---------- article-count combo chart (calendar buckets + cumulative line) ----------
 // week  -> 7 bars, one per day of the current week (Mon–Sun)
 // month -> one bar per day of the current month (28–31)
