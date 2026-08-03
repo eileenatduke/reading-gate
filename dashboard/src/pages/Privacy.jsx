@@ -60,7 +60,7 @@ export default function Privacy() {
           <ul>
             <li><strong>tabs</strong> and <strong>webNavigation</strong> — to detect when you open or navigate to a site you've blocked, so the gate can appear.</li>
             <li><strong>storage</strong> — to keep your settings, sign-in session, and gate state on your device.</li>
-            <li><strong>alarms</strong> — to time the grace period when you leave a tab.</li>
+            <li><strong>alarms</strong> — to periodically refresh your article pool and blocklist in the background.</li>
             <li><strong>host access</strong> — because you can block any site, the extension must be able to run on any site to enforce the gate and fetch public articles.</li>
           </ul>
 

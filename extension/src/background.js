@@ -1,7 +1,7 @@
 // Background service worker (MV3) — the enforcement engine (Spec §3).
 //
 // Responsibilities:
-//  - Track tab focus + per-tab unlock state.
+//  - Track tab focus + per-site unlock state.
 //  - When a blocked-domain tab becomes the active foreground tab without a valid
 //    unlock, trigger the gate (log an impulse, redirect the tab to gate.html).
 //  - Completing the read grants a TIMED, site-wide unlock: the blocked domain stays open
@@ -9,6 +9,13 @@
 //    no matter how long the user steps away and returns. The gate only comes back once
 //    that time is up — so a quick tab-switch never forces another read.
 //  - Periodically refill each user's article pool.
+//
+// The unlock is stored as an absolute expiry timestamp per domain in chrome.storage.local
+// (the source of truth), computed once at grant time from that site's minutes. Validity is
+// read straight from storage on every check — not from a warm in-memory cache — so an MV3
+// worker restart (which a tab-switch triggers constantly) can't drop a live unlock or
+// re-evaluate it against a cold, default duration. Because it's in local (not session)
+// storage, an unlock also survives a full browser restart until its timer actually runs out.
 
 import { getConfig } from "./lib/config.js";
 import { db, currentUser } from "./lib/sb.js";
@@ -17,10 +24,11 @@ import { refillPool, resetPool } from "./lib/content.js";
 const NONE = chrome.windows.WINDOW_ID_NONE;
 
 // ---- in-memory + persisted state ------------------------------------------
-// passes[domain] = { grantedAt }  (present + not-yet-expired => the whole site is unlocked).
-// A pass is site-wide and time-boxed: once granted it holds for unlockMins[domain] minutes
-// regardless of tab switches or how long the user is away, then expires and re-gates.
-let passes = {};
+// Unlocks live in chrome.storage.local under UNLOCK_KEY: { [domain]: expiryEpochMs }.
+// An entry that's still in the future => the whole site is unlocked. It's site-wide and
+// time-boxed: granted once for unlockMins[domain] minutes, it holds regardless of tab
+// switches, worker restarts, or a browser restart, then expires and the next visit re-gates.
+const UNLOCK_KEY = "unlock_until";
 let pendingImpulse = {}; // tabId -> impulse_log row id (to flip completed=true on submit)
 let lastTrigger = {};    // tabId -> { domain, at }  (dedup rapid double-fires for one visit)
 let blockDomains = [];   // bare hosts, e.g. ["instagram.com","tiktok.com"]
@@ -35,11 +43,10 @@ let resolveReady;
 const ready = new Promise((r) => { resolveReady = r; });
 
 async function persist() {
-  await chrome.storage.session.set({ passes, pendingImpulse, activeTabId });
+  await chrome.storage.session.set({ pendingImpulse, activeTabId });
 }
 async function restore() {
-  const s = await chrome.storage.session.get(["passes", "pendingImpulse", "activeTabId"]);
-  passes = s.passes || {};
+  const s = await chrome.storage.session.get(["pendingImpulse", "activeTabId"]);
   pendingImpulse = s.pendingImpulse || {};
   activeTabId = s.activeTabId ?? null;
   // Fast local cache first so the barrier opens without waiting on the network.
@@ -144,18 +151,44 @@ function gateUrl(domain, target) {
 }
 
 // ---- unlock validity -------------------------------------------------------
-// A pass unlocks the whole domain for a fixed number of minutes from when it was granted —
-// no tab binding, no blur/grace bookkeeping. Returning after any absence is fine until the
-// pass expires; only then does the next visit re-gate.
-async function isUnlockValid(domain) {
-  const p = passes[domain];
-  if (!p) return false;
+// Unlocks are absolute expiry timestamps kept in chrome.storage.local — the single source
+// of truth. Reading them straight from storage (rather than a warm in-memory cache) means a
+// worker restart can never drop a live unlock or re-check it against a cold default duration.
+async function readUnlocks() {
+  const { [UNLOCK_KEY]: u } = await chrome.storage.local.get(UNLOCK_KEY);
+  return u && typeof u === "object" ? u : {};
+}
+
+// Grant a site-wide unlock. The duration is baked into an absolute expiry at grant time,
+// when this site's per-site minutes are already loaded — so the unlock lasts exactly as long
+// as the user asked, immune to a later cold cache reading the wrong (default) minutes.
+async function grantUnlock(domain) {
   const cfg = await getConfig();
   const mins = unlockMins[domain] || cfg.DEFAULT_UNLOCK_MINUTES || 15;
-  if (Date.now() - p.grantedAt <= mins * 60 * 1000) return true;
-  // Expired — drop it so we don't keep re-checking a dead pass.
-  delete passes[domain];
-  persist();
+  const u = await readUnlocks();
+  u[domain] = Date.now() + mins * 60 * 1000;
+  await chrome.storage.local.set({ [UNLOCK_KEY]: u });
+}
+
+async function clearUnlock(domain) {
+  const u = await readUnlocks();
+  if (domain in u) {
+    delete u[domain];
+    await chrome.storage.local.set({ [UNLOCK_KEY]: u });
+  }
+}
+
+// A domain is unlocked while its stored expiry is still in the future — no tab binding, no
+// blur/grace bookkeeping. Returning after any absence (tab switch, worker restart, even a
+// browser restart) is fine until that moment; only then does the next visit re-gate.
+async function isUnlockValid(domain) {
+  const u = await readUnlocks();
+  const until = u[domain];
+  if (!until) return false;
+  if (Date.now() < until) return true;
+  // Expired — drop it so we don't keep re-checking a dead unlock.
+  delete u[domain];
+  await chrome.storage.local.set({ [UNLOCK_KEY]: u });
   return false;
 }
 
@@ -183,7 +216,7 @@ async function triggerGate(tabId, domain, target) {
   if (prev && prev.domain === domain && now - prev.at < 2000) return;
   lastTrigger[tabId] = { domain, at: now };
 
-  delete passes[domain];
+  await clearUnlock(domain);
   // Log the impulse at trigger time — every gate trigger counts (Spec §7).
   try {
     const user = await currentUser();
@@ -264,12 +297,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
       case "GRANT_UNLOCK": {
         // Sent by the gate on successful submit, before it navigates to the target. Grant a
-        // site-wide timed pass so the user can move around (and come back to) the whole
+        // site-wide timed unlock so the user can move around (and come back to) the whole
         // domain until it expires — not just this one tab.
-        if (msg.domain) {
-          passes[msg.domain] = { grantedAt: Date.now() };
-          await persist();
-        }
+        if (msg.domain) await grantUnlock(msg.domain);
         return sendResponse({ ok: true });
       }
       case "GET_PENDING_IMPULSE": {
