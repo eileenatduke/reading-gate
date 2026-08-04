@@ -385,7 +385,7 @@ export default function About() {
             ))}
             <div className="rg-ab-tr is-us" role="row">
               <div className="rg-ab-td" role="cell">Reading Gate</div>
-              <div className="rg-ab-td" role="cell">Read, write 70 words, rate it</div>
+              <div className="rg-ab-td" role="cell">Read, write 50 words, rate it</div>
               <div className="rg-ab-td" role="cell">You become more informed and well-versed.</div>
             </div>
           </div>

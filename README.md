@@ -8,7 +8,7 @@ Two pieces of software share **one Supabase backend**:
 
 - **`extension/`** — a Manifest V3 browser extension (the "gate"). It intercepts
   blocked sites, shows a fresh article, and refuses to unlock until you've written a
-  ≥70-word summary and given two ratings. It *writes* reading records.
+  ≥50-word summary and given two ratings. It *writes* reading records.
 - **`dashboard/`** — a React + Recharts web app that *reads* your history and shows
   progress charts.
 
@@ -78,7 +78,7 @@ the **Mono (black & white)** theme and can pick any theme in **Settings**.
    `nytimes.com`); the extension finds its feed automatically, mixes its articles in,
    and you read them on the publisher's own site, so your subscription keeps working.
 5. Open a blocked site → the gate appears with a fresh article. Read it, summarize
-   (≥70 words), rate quality + interest, and submit to unlock **this visit only**.
+   (≥50 words), rate quality + interest, and submit to unlock.
 
 ### 4. AI anti-gaming check (optional but recommended)
 The gate is only meaningful if the summary reflects a real read — otherwise anyone can
@@ -91,7 +91,7 @@ supabase functions deploy verify-summary
 ```
 
 The extension calls it automatically. It **fails open** — without the key deployed, the
-gate behaves exactly as before (70 words + both ratings). See
+gate behaves exactly as before (50 words + both ratings). See
 [`supabase/functions/README.md`](supabase/functions/README.md).
 
 ### 5. AI / MCP exemption
