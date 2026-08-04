@@ -9,7 +9,7 @@ const domain = params.get("domain") || "";
 const target = params.get("target") || "";
 
 const $ = (id) => document.getElementById(id);
-const MIN_WORDS = 70;
+const MIN_WORDS = 50;
 
 let article = null;
 let preference = 0;  // interest signal (1/4/5) from the reaction row
