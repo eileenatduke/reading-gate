@@ -159,12 +159,19 @@ async function readUnlocks() {
   return u && typeof u === "object" ? u : {};
 }
 
-// Grant a site-wide unlock. The duration is baked into an absolute expiry at grant time,
-// when this site's per-site minutes are already loaded — so the unlock lasts exactly as long
-// as the user asked, immune to a later cold cache reading the wrong (default) minutes.
-async function grantUnlock(domain) {
+// Grant a site-wide unlock. The duration is baked into an absolute expiry at grant time, so
+// the unlock lasts exactly as long as the user asked, immune to a later cold cache reading
+// the wrong (default) minutes.
+//
+// The authoritative duration is `minutes`, passed by the gate: the gate reads the user's
+// freshest per-site choice from auth metadata at completion time, so a value just changed in
+// the dashboard takes effect on the very next read. We fall back to the locally-cached
+// per-site value, then the global default, only when the gate couldn't supply one.
+async function grantUnlock(domain, minutes) {
   const cfg = await getConfig();
-  const mins = unlockMins[domain] || cfg.DEFAULT_UNLOCK_MINUTES || 15;
+  let mins = parseInt(minutes, 10);
+  if (!(Number.isFinite(mins) && mins > 0)) mins = unlockMins[domain];
+  if (!(Number.isFinite(mins) && mins > 0)) mins = cfg.DEFAULT_UNLOCK_MINUTES || 15;
   const u = await readUnlocks();
   u[domain] = Date.now() + mins * 60 * 1000;
   await chrome.storage.local.set({ [UNLOCK_KEY]: u });
@@ -298,8 +305,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case "GRANT_UNLOCK": {
         // Sent by the gate on successful submit, before it navigates to the target. Grant a
         // site-wide timed unlock so the user can move around (and come back to) the whole
-        // domain until it expires — not just this one tab.
-        if (msg.domain) await grantUnlock(msg.domain);
+        // domain until it expires — not just this one tab. The gate passes the user's
+        // per-site minutes so the unlock lasts exactly as long as they chose.
+        if (msg.domain) await grantUnlock(msg.domain, msg.minutes);
         return sendResponse({ ok: true });
       }
       case "GET_PENDING_IMPULSE": {
