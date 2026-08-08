@@ -48,9 +48,22 @@ function weightedPick(candidates, weights, rngSeed) {
   return scored[scored.length - 1]?.c || null;
 }
 
-// Pick the next article for this user, mark it served, and return it.
-// Returns null if no article is available even after a refill attempt.
-export async function pickArticle() {
+// Pick the next article for this user and return it — WITHOUT consuming it.
+//
+// Offering an article is not the same as reading it. Merely showing an article (initial
+// load or a "Refresh article" skip) must NOT mark it `served`, or every refresh would
+// permanently burn a pool row: the finite RSS/Guardian feeds run dry, refillPool can't
+// find anything new, and the gate dead-ends on "No articles are ready yet" even though
+// the reader read nothing. Consumption happens exactly once, when the reader completes a
+// read — the gate calls markArticleServed() on submit. See gate.js.
+//
+// `excludeIds` are pool-row ids already offered during this gate session; we skip them so a
+// refresh shows something different. If excluding them would leave no candidates (the reader
+// has cycled through every unread article), we wrap around to the full unread pool rather
+// than returning null — refresh can never dead-end while any unread article exists.
+//
+// Returns null only when the pool is genuinely empty even after a refill attempt.
+export async function pickArticle(excludeIds = []) {
   const user = await currentUser();
   if (!user) return null;
   const uid = user.id;
@@ -69,12 +82,18 @@ export async function pickArticle() {
   }
   if (!pool || pool.length === 0) return null;
 
+  // Don't re-offer an article already shown this session; wrap around if that empties the set.
+  const exclude = new Set(excludeIds || []);
+  const candidates = pool.some((a) => !exclude.has(a.id))
+    ? pool.filter((a) => !exclude.has(a.id))
+    : pool;
+
   // How many the user has completed so far → decide if this is the 1-in-10 pick.
   const readCount = (await db("reading_log").select("id").eq("user_id", uid).run())?.length || 0;
   const isSerendipity = (readCount + 1) % 10 === 0;
 
-  const inInterest = pool.filter((a) => interests.includes(a.genre));
-  const outInterest = pool.filter((a) => !interests.includes(a.genre));
+  const inInterest = candidates.filter((a) => interests.includes(a.genre));
+  const outInterest = candidates.filter((a) => !interests.includes(a.genre));
 
   // Avoid repeating recently-served topics/sources so the feed visibly varies.
   const recent = (await db("reading_log").select("genre,source").eq("user_id", uid)
@@ -98,22 +117,21 @@ export async function pickArticle() {
     const weights = await genreWeights(uid, interests);
     chosen = weightedPick(freshen(inInterest), weights, seed);
   } else {
-    // Fallbacks: whatever the pool has.
-    chosen = (isSerendipity ? outInterest[0] : null) || pool[0];
+    // Fallbacks: whatever the candidate set has.
+    chosen = (isSerendipity ? outInterest[0] : null) || candidates[0];
   }
-  if (!chosen) chosen = pool[0];
+  if (!chosen) chosen = candidates[0];
 
-  // Mark served so it won't be handed out again.
-  try {
-    await db("article_pool").eq("id", chosen.id).update({ served: true });
-  } catch (e) {
-    console.warn("[recommender:serve]", e.message);
-  }
+  // NOTE: we deliberately do NOT mark `chosen` served here. Offering isn't consuming —
+  // the row is marked served only when the reader completes it (markArticleServed, called
+  // from the gate's submit). This is what makes refresh safe: skipped articles return to
+  // rotation instead of being permanently burned.
 
   // Opportunistically top the pool back up for next time (fire and forget).
   refillPool().catch(() => {});
 
   return {
+    id: chosen.id,
     title: chosen.title,
     url: chosen.url,
     source: chosen.source,
@@ -121,4 +139,18 @@ export async function pickArticle() {
     blurb: chosen.blurb,
     is_serendipity: isSerendipity && !interests.includes(chosen.genre),
   };
+}
+
+// Consume a pool article: mark it served so it's never offered again. Called once, when
+// the reader completes a read (gate submit) — NOT when an article is merely shown. Keeping
+// consumption here (rather than at pick time) is what lets the reader refresh past
+// articles without draining the pool. Best-effort: a failed mark never blocks the read
+// that already succeeded (worst case the article can reappear later, which is harmless).
+export async function markArticleServed(id) {
+  if (!id) return;
+  try {
+    await db("article_pool").eq("id", id).update({ served: true });
+  } catch (e) {
+    console.warn("[recommender:serve]", e.message);
+  }
 }

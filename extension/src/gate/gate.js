@@ -1,6 +1,6 @@
 import { getConfig } from "../lib/config.js";
 import { currentUser, db, signIn, signUp, getUserFresh, getSession } from "../lib/sb.js";
-import { pickArticle } from "../lib/recommender.js";
+import { pickArticle, markArticleServed } from "../lib/recommender.js";
 import { verifySummary } from "../lib/verify.js";
 import { applyTheme, DEFAULT_THEME } from "../lib/themes.js";
 
@@ -15,6 +15,7 @@ let article = null;
 let preference = 0;  // interest signal (1/4/5) from the reaction row
 let required = 1;      // minimum articles to read before the site can be accessed
 let sessionReads = 0;  // articles completed during this gate visit
+let offeredIds = new Set(); // pool-row ids shown this session, so a refresh skips to a NEW one
 let impulseId = null;  // impulse_log row for this gate visit (created at trigger, or backfilled here)
 let openedArticle = false; // did the reader click through to the article on the source?
 let openedAt = null;       // timestamp of the first open — powers the dwell-time signal
@@ -203,6 +204,11 @@ async function submit() {
       preference_rating: preference,
       is_serendipity: !!article.is_serendipity,
     });
+    // The read is now saved, so consume this pool article — mark it served so it's never
+    // offered again. This is the ONLY place a pool row is consumed; merely showing or
+    // refreshing past an article leaves it in rotation (that's what stopped refresh from
+    // draining the pool and dead-ending on "No articles are ready yet").
+    await markArticleServed(article?.id);
     sessionReads++;
 
     // Mark this gate trigger completed the moment the minimum is met, and default its
@@ -334,7 +340,10 @@ async function loadNextArticle() {
   show("loading-state");
   let a;
   try {
-    a = await pickArticle();
+    // Pass the ids already shown this session so a refresh lands on a NEW article. The
+    // recommender wraps around once every unread article has been seen, so this never
+    // dead-ends while the pool holds anything unread.
+    a = await pickArticle([...offeredIds]);
   } catch (e) {
     await message("Couldn't load an article: " + e.message);
     return;
@@ -343,6 +352,7 @@ async function loadNextArticle() {
     await message("No articles are ready yet. Add a few interests on your dashboard, then reopen this site.");
     return;
   }
+  if (a.id) offeredIds.add(a.id);
   renderArticle(a);
 }
 
@@ -353,6 +363,7 @@ async function init() {
     return;
   }
   sessionReads = 0;
+  offeredIds = new Set();
   impulseId = null;
   const cfg = await getConfig();
   const s = parseInt(cfg.MIN_READ_SECONDS, 10);
