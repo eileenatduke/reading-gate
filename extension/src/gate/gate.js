@@ -14,6 +14,7 @@ const MIN_WORDS = 50;
 let article = null;
 let preference = 0;  // interest signal (1/4/5) from the reaction row
 let required = 1;      // minimum articles to read before the site can be accessed
+let unlockMinutes = null; // how long THIS site should stay unlocked (user's per-site choice); null → default
 let sessionReads = 0;  // articles completed during this gate visit
 let offeredIds = new Set(); // pool-row ids shown this session, so a refresh skips to a NEW one
 let impulseId = null;  // impulse_log row for this gate visit (created at trigger, or backfilled here)
@@ -278,29 +279,46 @@ async function accessSite() {
   // fall back to the bare domain if it's missing or isn't a real web address (e.g. a
   // chrome:// / extension page), so this button can only ever open the blocked site — never
   // some unrelated page. The grant is best-effort: navigate even if the message fails.
-  try { await chrome.runtime.sendMessage({ type: "GRANT_UNLOCK", domain }); } catch {}
+  try { await chrome.runtime.sendMessage({ type: "GRANT_UNLOCK", domain, minutes: unlockMinutes }); } catch {}
   const dest = /^https?:\/\//i.test(target) ? target : `https://${domain}`;
   location.href = dest;
 }
 
-// Load the user's prefs (theme + minimum articles) from auth metadata.
+// Load the user's prefs (theme + minimum articles + per-site unlock minutes) from auth
+// metadata. Per-site unlock minutes are a { domain: minutes } map the dashboard writes to
+// user_metadata — the same store used for theme/articles_required. Keeping them here (rather
+// than in a blocklist column that needs a migration to exist) is what makes "the time you
+// saved is the time the site stays unlocked" hold on any database.
 async function loadPrefs() {
+  let meta = {};
   try {
     const user = await getUserFresh();
-    const meta = user?.user_metadata || {};
-    if (meta.theme) {
-      applyTheme(meta.theme);
-      chrome.storage.local.set({ gate_theme: meta.theme });
-    } else {
-      // No saved theme → Mono default. Don't keep a theme cached from a different account.
-      applyTheme(DEFAULT_THEME);
-      chrome.storage.local.set({ gate_theme: DEFAULT_THEME });
-    }
-    const n = parseInt(meta.articles_required, 10);
-    required = Number.isFinite(n) && n > 0 ? n : 1;
+    meta = user?.user_metadata || {};
   } catch {
-    required = 1;
+    meta = {};
   }
+  if (meta.theme) {
+    applyTheme(meta.theme);
+    chrome.storage.local.set({ gate_theme: meta.theme });
+  } else {
+    // No saved theme → Mono default. Don't keep a theme cached from a different account.
+    applyTheme(DEFAULT_THEME);
+    chrome.storage.local.set({ gate_theme: DEFAULT_THEME });
+  }
+  const n = parseInt(meta.articles_required, 10);
+  required = Number.isFinite(n) && n > 0 ? n : 1;
+
+  // Resolve the unlock duration for THIS site from the freshest metadata, caching the whole
+  // map so a transient auth-fetch failure still enforces the user's choice instead of
+  // silently reverting to the default.
+  let map = meta.unlock_minutes && typeof meta.unlock_minutes === "object" ? meta.unlock_minutes : null;
+  if (map) {
+    chrome.storage.local.set({ gate_unlock_minutes: map });
+  } else {
+    map = (await chrome.storage.local.get("gate_unlock_minutes")).gate_unlock_minutes || {};
+  }
+  const m = parseInt(map[domain], 10);
+  unlockMinutes = Number.isFinite(m) && m > 0 ? m : null;
 }
 
 function updateProgress() {

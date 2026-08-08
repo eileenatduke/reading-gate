@@ -79,23 +79,46 @@ export default function Settings() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    Promise.all([fetchProfile(), fetchBlocklist()])
-      .then(([p, b]) => {
+    (async () => {
+      try {
+        const [p, b, { data: userData }] = await Promise.all([
+          fetchProfile(),
+          fetchBlocklist(),
+          supabase.auth.getUser(),
+        ]);
         setInterests(new Set(p?.interests || []));
         setCustomFeeds(Array.isArray(p?.custom_feeds) ? p.custom_feeds : []);
-        setDomains(b.map((r) => r.domain));
-        setDurations(Object.fromEntries(b.map((r) => [
-          normalizeDomain(r.domain),
-          Number.isFinite(r.unlock_minutes) ? r.unlock_minutes : DEFAULT_UNLOCK_MINUTES,
-        ])));
-      })
-      .catch((e) => setErr(e.message));
-    // Minimum-articles preference lives in auth metadata (shared with the gate).
-    supabase.auth.getUser().then(({ data }) => {
-      const n = parseInt(data?.user?.user_metadata?.articles_required, 10);
-      if (Number.isFinite(n) && n > 0) setArticlesRequired(n);
-      setOnboarded(!!data?.user?.user_metadata?.onboarded);
-    }).catch(() => {});
+        const domainList = b.map((r) => r.domain);
+        setDomains(domainList);
+
+        // Per-site unlock minutes live in auth metadata (a { domain: minutes } map), shared
+        // with the gate — NOT in a blocklist column, which would need a migration that may not
+        // be applied. Fall back to any legacy column value (for databases where that migration
+        // WAS applied) and finally to the default, so no site ever shows a blank duration.
+        const meta = userData?.user?.user_metadata || {};
+        const savedMins = meta.unlock_minutes && typeof meta.unlock_minutes === "object" ? meta.unlock_minutes : {};
+        const legacyByDomain = Object.fromEntries(
+          b.map((r) => [normalizeDomain(r.domain), r.unlock_minutes]).filter(([k]) => k)
+        );
+        const dur = {};
+        for (const d of domainList) {
+          const key = normalizeDomain(d);
+          if (!key) continue;
+          const saved = parseInt(savedMins[key], 10);
+          const legacy = parseInt(legacyByDomain[key], 10);
+          dur[key] = Number.isFinite(saved) && saved > 0 ? clampMins(saved)
+                   : Number.isFinite(legacy) && legacy > 0 ? clampMins(legacy)
+                   : DEFAULT_UNLOCK_MINUTES;
+        }
+        setDurations(dur);
+
+        const n = parseInt(meta.articles_required, 10);
+        if (Number.isFinite(n) && n > 0) setArticlesRequired(n);
+        setOnboarded(!!meta.onboarded);
+      } catch (e) {
+        setErr(e.message);
+      }
+    })();
   }, []);
 
   // The saved check only reflects the last successful save — any edit clears it.
@@ -162,8 +185,20 @@ export default function Settings() {
 
       // Persist the previewed theme locally now (not on click).
       commit(pendingTheme);
-      // Theme + minimum-articles → auth metadata in one write (shared with the gate).
-      await supabase.auth.updateUser({ data: { theme: pendingTheme, articles_required: articlesRequired, onboarded: true } });
+
+      // Per-site unlock minutes → auth metadata as a { domain: minutes } map, keyed by the
+      // same normalized domain the gate looks up. This is the source of truth for how long a
+      // site stays unlocked; storing it here (not in a blocklist column) is what makes the
+      // saved value actually stick and get enforced, regardless of which DB migrations ran.
+      const wantList = [...new Set(domains.map(normalizeDomain).filter(Boolean))];
+      const unlockMinutes = {};
+      for (const d of wantList) unlockMinutes[d] = clampMins(durations[d]);
+
+      // Theme + minimum-articles + per-site unlock minutes → auth metadata in one write
+      // (all shared with the gate/extension).
+      await supabase.auth.updateUser({
+        data: { theme: pendingTheme, articles_required: articlesRequired, unlock_minutes: unlockMinutes, onboarded: true },
+      });
 
       // interests + custom feeds → profiles. If the DB hasn't had the custom_feeds
       // migration (0002) applied, that column is missing and PostgREST rejects the whole
@@ -179,25 +214,18 @@ export default function Settings() {
       }
       if (pErr) throw pErr;
 
-      // blocklist → delete removed sites, then upsert each wanted site with its per-site
-      // unlock time (upsert both inserts new domains and updates the minutes on existing ones).
-      const wantList = [...new Set(domains.map(normalizeDomain).filter(Boolean))];
+      // blocklist → delete removed sites, then upsert each wanted domain. The blocklist table
+      // holds only the domain list; per-site unlock minutes live in auth metadata (written
+      // above), so this write no longer touches an optional column that may not exist.
       const want = new Set(wantList);
       const { data: existing } = await supabase.from("blocklist").select("id,domain");
 
       const toDelete = (existing || []).filter((r) => !want.has(normalizeDomain(r.domain))).map((r) => r.id);
       if (toDelete.length) await supabase.from("blocklist").delete().in("id", toDelete);
 
-      const rows = wantList.map((d) => ({ user_id: uid, domain: d, unlock_minutes: clampMins(durations[d]) }));
-      let bErr = null;
+      const rows = wantList.map((d) => ({ user_id: uid, domain: d }));
       if (rows.length) {
-        ({ error: bErr } = await supabase.from("blocklist").upsert(rows, { onConflict: "user_id,domain" }));
-        if (bErr && (bErr.code === "PGRST204" || /unlock_minutes/i.test(bErr.message || ""))) {
-          // DB predates migration 0004 (no unlock_minutes column) — save the domains without
-          // it so the blocklist still works; per-site times take effect once 0004 is applied.
-          ({ error: bErr } = await supabase.from("blocklist")
-            .upsert(wantList.map((d) => ({ user_id: uid, domain: d })), { onConflict: "user_id,domain" }));
-        }
+        const { error: bErr } = await supabase.from("blocklist").upsert(rows, { onConflict: "user_id,domain" });
         if (bErr) throw bErr;
       }
 
