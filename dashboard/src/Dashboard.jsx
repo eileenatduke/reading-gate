@@ -4,7 +4,6 @@ import Overview from "./pages/Overview.jsx";
 import Library from "./pages/Library.jsx";
 import Settings from "./pages/Settings.jsx";
 import ImpulseHistory from "./pages/ImpulseHistory.jsx";
-import Garden from "./pages/Garden.jsx";
 
 // The authenticated app shell: sidebar + the themed dashboard pages. Rendered
 // only when a user is signed in. New users default to the Mono (black & white)
@@ -20,7 +19,6 @@ export default function Dashboard() {
           <Route path="/library" element={<Library />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/impulses" element={<ImpulseHistory />} />
-          <Route path="/garden" element={<Garden />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
