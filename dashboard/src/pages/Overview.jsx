@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
-  fetchReadingLog, fetchImpulseLog, impulsesThisWeek, currentStreak,
-  streakMood, growthStage, articlesToNextFlower, flowerCount,
+  fetchReadingLog, fetchImpulseLog, impulsesThisWeek, currentStreak, streakMood,
 } from "../lib/data.js";
-import { Seedling } from "../components/garden/flowers.jsx";
 import PaperStatCard from "../components/paper/PaperStatCard.jsx";
 import PaperArticlesChart from "../components/paper/PaperArticlesChart.jsx";
 import PaperCrossoverChart from "../components/paper/PaperCrossoverChart.jsx";
@@ -18,7 +15,6 @@ export default function Overview() {
   const [reading, setReading] = useState(null);
   const [impulses, setImpulses] = useState([]);
   const [err, setErr] = useState("");
-  const nav = useNavigate();
 
   useEffect(() => {
     Promise.all([fetchReadingLog(), fetchImpulseLog()])
@@ -32,12 +28,6 @@ export default function Overview() {
   if (reading === null) return <div className="loading">Loading…</div>;
 
   const mood = streakMood(reading);
-  const flowers = flowerCount(reading);
-  const toNext = articlesToNextFlower(reading);
-  const gardenCaption =
-    reading.length === 0 ? "Read 5 articles to grow your first flower 🌱"
-      : flowers === 0 ? `${toNext} more to grow your first flower 🌱`
-        : `${flowers} flower${flowers === 1 ? "" : "s"} grown, ${toNext} to your next 🌸`;
 
   return (
     <div className="overview-paper">
@@ -54,14 +44,6 @@ export default function Overview() {
         <div className="ov-progress">
           <PaperArticlesChart reading={reading} />
           <div className="ov-statcol">
-            <PaperStatCard
-              value={reading.length}
-              label="Articles read"
-              adornment={<Seedling stage={growthStage(reading)} size={44} className="stat-seedling" />}
-              caption={gardenCaption}
-              cta="See your garden"
-              onClick={() => nav("/garden")}
-            />
             <PaperStatCard
               value={currentStreak(reading)}
               label="Day streak"
