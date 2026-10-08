@@ -71,22 +71,6 @@ export function currentStreak(reading) {
   return streak;
 }
 
-// ---------- reading garden: flowers earned + seedling progress ----------
-// Five completed reads grow one flower; the garden on the Articles-read drill-in shows
-// every flower earned. All derived from reading.length — no new storage.
-export const ARTICLES_PER_FLOWER = 5;
-export function flowerCount(reading) {
-  return Math.floor(reading.length / ARTICLES_PER_FLOWER);
-}
-// 0..4 — how far the in-progress seedling has grown toward the next flower.
-export function growthStage(reading) {
-  return reading.length % ARTICLES_PER_FLOWER;
-}
-// Articles still needed to complete the next flower (1..5).
-export function articlesToNextFlower(reading) {
-  return ARTICLES_PER_FLOWER - growthStage(reading);
-}
-
 // ---------- day-streak mood ----------
 // A face for the streak card, from the streak plus this week's pace vs. the user's own
 // weekly average. Four moods: falling off feels different from thriving.
