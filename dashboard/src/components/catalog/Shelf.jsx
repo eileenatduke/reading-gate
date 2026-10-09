@@ -6,7 +6,8 @@ const HEIGHTS = [92, 78, 100, 84, 72, 96, 80];
 const MAX_GENRES = 5;     // more than this and the rest fold into "Other"
 const MAX_BOOKS = 18;     // what fits on one shelf; past this, each spine stands for several articles
 
-// "Your shelf" — one book spine per article read, grouped and colored by genre.
+// "Your shelf" — one book spine per article read, grouped and colored by genre. Spines
+// are unlabeled (too narrow to read); the key underneath names each color.
 export default function Shelf({ reading }) {
   const dist = genreDistribution(reading);
   const top = dist.slice(0, MAX_GENRES);
@@ -19,14 +20,14 @@ export default function Shelf({ reading }) {
     const n = Math.max(1, Math.round(g.count / per));
     for (let i = 0; i < n; i++) {
       books.push({
-        key: g.genre + i, title: i === 0 ? g.genre : "", color: COLORS[gi] || COLORS[COLORS.length - 1],
-        h: HEIGHTS[books.length % HEIGHTS.length], w: i === 0 ? 22 : 16,
+        key: g.genre + i, genre: g.genre, color: COLORS[gi] || COLORS[COLORS.length - 1],
+        h: HEIGHTS[books.length % HEIGHTS.length],
       });
     }
   });
 
   return (
-    <section className="cc-card cc-tilt-s">
+    <section className="cc-card cc-tilt-s cc-fill">
       <div className="cc-head"><h2 className="cc-title">Subject headings · your shelf</h2></div>
       {reading.length === 0 ? (
         <p className="cc-note">Your shelf is empty. Every article you read adds a book.</p>
@@ -34,9 +35,7 @@ export default function Shelf({ reading }) {
         <>
           <div className="cc-shelf" role="img" aria-label={groups.map((g) => `${g.genre}: ${g.count}`).join(", ")}>
             {books.map((b) => (
-              <div key={b.key} className="cc-book" style={{ width: b.w, height: b.h, background: b.color }}>
-                {b.title && <span>{b.title}</span>}
-              </div>
+              <div key={b.key} className="cc-book" title={b.genre} style={{ height: b.h, backgroundColor: b.color }} />
             ))}
           </div>
           <div className="cc-key">

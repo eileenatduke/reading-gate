@@ -3,7 +3,6 @@ import Nav from "./components/Nav.jsx";
 import Overview from "./pages/Overview.jsx";
 import Library from "./pages/Library.jsx";
 import Settings from "./pages/Settings.jsx";
-import ReadingStats from "./pages/ReadingStats.jsx";
 import ImpulseHistory from "./pages/ImpulseHistory.jsx";
 
 // The authenticated app shell: folder-tab top bar + the card-catalog pages.
@@ -17,7 +16,6 @@ export default function Dashboard() {
           <Route path="/" element={<Overview />} />
           <Route path="/library" element={<Library />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/reading" element={<ReadingStats />} />
           <Route path="/impulses" element={<ImpulseHistory />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
