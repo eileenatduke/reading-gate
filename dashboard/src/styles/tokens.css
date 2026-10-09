@@ -19,34 +19,26 @@ html { font-size: 100%; }
   --font-body: 'Courier Prime', 'Courier New', monospace;      /* body copy */
   --font-num: 'Bebas Neue', 'Arial Narrow', sans-serif;        /* big numbers, labels */
 
-  /* Trying "Powder Blue & Cobalt". To go back to the library-green desk + navy ink, restore:
-     --desk #23372D, --desk-shadow #142019, --desk-ink #F1EBDA, --desk-muted #B8C4B5,
-     --plaque-ink #23372D, --scroll-thumb rgba(241,235,218,.55), --rule #B8C6E3,
-     --accent #1B2A6B (rgb 27,42,107), --bar-main #1B2A6B, --resist-strong #1B2A6B,
-     --resist-soft #8C9BD0, --heat-dark #0F1A45. */
-
   /* the desk the cards sit on */
-  --desk: #B7C9D6;
-  --desk-shadow: #8A9FAE;
-  --desk-ink: #16222D;        /* text placed directly on the desk */
-  --desk-muted: #34485A;
-  --plaque-ink: #16222D;      /* lettering on the brass name plaque */
-  --scroll-thumb: rgba(22, 34, 45, .35);
+  --desk: #23372D;
+  --desk-shadow: #142019;
+  --desk-ink: #F1EBDA;        /* text placed directly on the desk */
+  --desk-muted: #B8C4B5;
 
   /* card stock */
   --surface: #FBF8EF;
   --surface-2: #F2ECDC;
   --manila: #F3E3B5;
   --border: #D9D2BC;
-  --rule: #C3D0EE;            /* blue ruled lines */
+  --rule: #B8C6E3;            /* blue ruled lines */
   --text: #1F1F1F;
   --muted: #5A554A;
   --faint: #8A8577;
 
   /* inks */
-  --accent: #1F45A8;          /* cobalt ink: links, buttons, bars */
-  --accent-rgb: 31, 69, 168;
-  --accent-weak: rgba(31, 69, 168, .08);
+  --accent: #1B2A6B;          /* fountain-pen blue: links, buttons, bars */
+  --accent-rgb: 27, 42, 107;
+  --accent-weak: rgba(27, 42, 107, .08);
   --stamp: #B3261E;           /* rubber-stamp red */
   --brass: #C9A961;
   --link-hover: #B3261E;
@@ -54,7 +46,7 @@ html { font-size: 100%; }
   --success: #2F5D46;
 
   /* chart roles (used by the SVG charts) */
-  --bar-main: #1F45A8;
+  --bar-main: #1B2A6B;
   --line: #B3261E;
   --dot: #FBF8EF;
   --grid: rgba(31, 31, 31, .14);
@@ -62,9 +54,9 @@ html { font-size: 100%; }
   --axis-right: #5A554A;
   --xlabel: #5A554A;
   --track: #EFE8D6;
-  --resist-strong: #1F45A8;
-  --resist-soft: #97ACE0;
-  --heat-dark: #0F2668;
+  --resist-strong: #1B2A6B;
+  --resist-soft: #8C9BD0;
+  --heat-dark: #0F1A45;
   --tip-bg: #FBF8EF;
   --tip-text: #1F1F1F;
   --shadow: 0 6px 0 var(--desk-shadow);
@@ -85,11 +77,11 @@ a:hover { color: var(--link-hover); }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--scroll-thumb);
+  background: rgba(241, 235, 218, .55);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
-html { scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) transparent; }
+html { scrollbar-width: thin; scrollbar-color: rgba(241, 235, 218, .55) transparent; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
