@@ -49,10 +49,8 @@
    of green, pink, etc.). Pinning the document background to the editorial ink
    and disabling the bounce removes that color flash for any saved theme. */
 html:has(.rg-landing),
-html:has(.rg-auth),
 html:has(.rg-about),
 html:has(.rg-landing) body,
-html:has(.rg-auth) body,
 html:has(.rg-about) body {
   background: var(--rg-ink);
   overscroll-behavior: none;
@@ -163,71 +161,91 @@ html:has(.rg-about) body {
 }
 
 /* ---------------------------------------------------------------------------
-   Auth (Log in / Sign up) — same dark editorial surface, centred card.
+   Auth (Log in / Sign up) — unlike the other public pages, this one uses the
+   dashboard's "Card Catalog" look (tokens.css): a cream index card on the green
+   library desk, typewriter fonts and navy ink, so logging in leads straight into
+   the same world as the dashboard.
 --------------------------------------------------------------------------- */
+.rg-auth {
+  background: var(--desk); color: var(--desk-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+/* Keep the overscroll gutter the desk color too. */
+html:has(.rg-auth),
+html:has(.rg-auth) body {
+  background: var(--desk);
+  overscroll-behavior: none;
+}
 .rg-auth, .rg-about { overflow-y: auto; }
 .rg-auth-scroll {
   min-height: 100%;
   display: grid; place-items: center; padding: 2.5rem 1.5rem;
 }
-.rg-auth-card { width: 100%; max-width: 23.75rem; }
+.rg-auth-stack { width: 100%; max-width: 26rem; }
 
-.rg-back {
-  position: absolute; top: 2.25rem; left: 2.5rem; z-index: 2;
-  font-size: 0.875rem; font-weight: 500; color: rgba(244,244,242,.7);
+.rg-auth-plaque {
+  display: inline-block; margin-bottom: 1.5rem;
+  background: var(--brass); color: var(--desk); border-radius: 3px;
+  font-family: var(--font-num); font-size: 1.875rem; letter-spacing: .06em; line-height: 1;
+  padding: 0.4rem 1rem 0.2rem;
 }
-.rg-back:hover { color: var(--rg-paper); }
+
+.rg-auth-card {
+  background: var(--surface); color: var(--text);
+  border-radius: 2px; box-shadow: var(--shadow);
+  padding: 2rem 1.75rem 1.75rem;
+}
+
+.rg-auth a.rg-back {
+  position: absolute; top: 2.25rem; left: 2.5rem; z-index: 2;
+  font-size: 0.875rem; font-weight: 700; color: var(--desk-ink);
+}
+.rg-auth a.rg-back:hover { color: var(--brass); }
 
 .rg-auth-title {
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 2.5rem; line-height: 1; font-weight: 500; margin: 0 0 0.375rem;
-  letter-spacing: -.02em;
+  font-family: var(--font-display);
+  font-size: 1.875rem; line-height: 1.15; font-weight: 400; margin: 0 0 0.5rem;
+  border-bottom: 1px solid var(--text); padding-bottom: 0.5rem;
+  text-wrap: balance;
 }
-.rg-auth-sub { color: rgba(244,244,242,.6); font-size: 0.9375rem; margin: 0 0 1.75rem; }
-
+.rg-auth-sub { color: var(--muted); font-size: 0.9375rem; margin: 0 0 1.5rem; }
 
 .rg-field { margin-bottom: 0.875rem; }
-.rg-label {
-  display: block; font-size: 0.8125rem; font-weight: 600;
-  color: rgba(244,244,242,.75); margin-bottom: 0.4375rem;
-}
 .rg-input {
   width: 100%; font: inherit; font-size: 0.9375rem;
-  padding: 0.8125rem 0.9375rem; color: var(--rg-paper);
-  background: rgba(244,244,242,.06);
-  border: 1px solid rgba(244,244,242,.22); border-radius: 0.75rem;
-  transition: border-color .18s ease, background .18s ease;
+  padding: 0.75rem 0.875rem; color: var(--text);
+  background: var(--surface);
+  border: 1.5px solid var(--border); border-radius: 3px;
+  transition: border-color .15s ease;
 }
-.rg-input::placeholder { color: rgba(244,244,242,.35); }
-.rg-input:focus {
-  outline: none; border-color: rgba(244,244,242,.7);
-  background: rgba(244,244,242,.09);
-}
+.rg-input::placeholder { color: var(--faint); }
+.rg-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
 
 .rg-submit {
-  width: 100%; margin-top: 0.375rem; padding: 0.875rem 1.125rem;
-  font-family: "Source Sans 3", system-ui, sans-serif;
-  font-size: 0.9375rem; font-weight: 700; letter-spacing: .02em; cursor: pointer;
-  border-radius: 62.4375rem; border: none;
-  background: var(--rg-paper); color: var(--rg-ink);
-  transition: opacity .18s ease;
+  width: 100%; margin-top: 0.375rem; padding: 0.8125rem 1.125rem;
+  font-family: var(--font-body);
+  font-size: 0.9375rem; font-weight: 700; cursor: pointer;
+  border-radius: 3px; border: none;
+  background: var(--accent); color: var(--surface);
+  transition: filter .15s ease;
 }
-.rg-submit:hover { opacity: .9; }
-.rg-submit:disabled { opacity: .5; cursor: default; }
+.rg-submit:hover { filter: brightness(1.15); }
+.rg-submit:disabled { opacity: .6; cursor: default; filter: none; }
 
 .rg-switch {
-  text-align: center; font-size: 0.875rem; margin-top: 1.25rem;
-  color: rgba(244,244,242,.6);
+  text-align: center; font-size: 0.875rem; margin: 1.25rem 0 0;
+  color: var(--muted);
 }
 .rg-switch button {
   background: none; border: none; cursor: pointer; padding: 0;
-  font: inherit; font-weight: 600; color: var(--rg-paper);
+  font: inherit; font-weight: 700; color: var(--accent);
   text-decoration: underline; text-underline-offset: 3px;
 }
 
-.rg-msg { font-size: 0.875rem; margin: 0 0 1rem; line-height: 1.4; }
-.rg-msg.err { color: #ff9d9d; }
-.rg-msg.ok  { color: #9de8b0; }
+.rg-msg { font-size: 0.875rem; margin: 0 0 1rem; line-height: 1.4; padding: 0.625rem 0.75rem; border-radius: 3px; }
+.rg-msg.err { color: var(--stamp); background: rgba(179, 38, 30, .08); border-left: 3px solid var(--stamp); }
+.rg-msg.ok  { color: var(--success); background: rgba(47, 93, 70, .08); border-left: 3px solid var(--success); }
 
 /* ---------------------------------------------------------------------------
    About — editorial long-form page (design handoff: Layout 1A).

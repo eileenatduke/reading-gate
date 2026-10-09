@@ -39,6 +39,8 @@ export default function Login() {
     <div className="rg-auth">
       <Link className="rg-back" to="/">← Back</Link>
       <div className="rg-auth-scroll">
+        <div className="rg-auth-stack">
+        <div className="rg-auth-plaque">Reading Gate</div>
         <div className="rg-auth-card">
           <h1 className="rg-auth-title">{isSignup ? "Create account" : "Welcome back"}</h1>
           <p className="rg-auth-sub">
@@ -71,6 +73,7 @@ export default function Login() {
               {isSignup ? "Log in" : "Create one"}
             </button>
           </p>
+        </div>
         </div>
       </div>
     </div>
