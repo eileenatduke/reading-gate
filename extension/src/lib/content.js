@@ -123,20 +123,41 @@ export async function refillPool() {
 
   // Insert up to (target - unread) fresh rows. upsert on (user_id,url) to be safe.
   const need = cfg.POOL_TARGET - unread;
-  const rows = fresh.slice(0, Math.max(need, cfg.POOL_TARGET)).map((a) => ({
+  const chosen = fresh.slice(0, Math.max(need, cfg.POOL_TARGET));
+  // The columns every article_pool has had since 0001_init — safe to write on any DB.
+  const baseRow = (a) => ({
     user_id: uid,
     title: a.title,
     url: a.url,
     source: a.source,
     genre: a.genre,
     blurb: a.blurb || null,
-    published_at: a.published ? new Date(a.published).toISOString() : null,
     served: false,
+  });
+  // published_at (migration 0005) powers the freshness prune. It's kept separable so it
+  // can be dropped on retry: a DB that predates 0005 has no such column, and PostgREST
+  // rejects the WHOLE insert with a 400 — which, without the fallback below, makes every
+  // refill add zero rows so the pool never fills and the gate dead-ends on "No articles
+  // are ready yet". The read paths already tolerate the older schema (they select("*"));
+  // this makes the write path just as forgiving. Once 0005 is applied the prune resumes.
+  const rows = chosen.map((a) => ({
+    ...baseRow(a),
+    published_at: a.published ? new Date(a.published).toISOString() : null,
   }));
 
   try {
     await db("article_pool").upsert(rows, "user_id,url");
   } catch (e) {
+    if (/published_at/i.test(e.message || "")) {
+      // Older DB without the published_at column — retry without it so the pool still fills.
+      try {
+        await db("article_pool").upsert(chosen.map(baseRow), "user_id,url");
+      } catch (e2) {
+        console.warn("[content:insert]", e2.message);
+        return { added: 0, reason: "insert-failed" };
+      }
+      return { added: chosen.length, reason: "no-published-at" };
+    }
     console.warn("[content:insert]", e.message);
     return { added: 0, reason: "insert-failed" };
   }
