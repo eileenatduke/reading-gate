@@ -281,7 +281,6 @@ export default function Settings() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Blocked sites</h2>
-        <p className="sub">Tap a popular site to block it, or paste in any other URL below.</p>
         <div className="group-heading" style={{ marginBottom: 8 }}>Popular sites</div>
         <div className="row" style={{ marginBottom: 16 }}>
           {PRESET_SITES.map(({ label, domain }) => {
@@ -347,7 +346,7 @@ export default function Settings() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Reading goal</h2>
-        <p className="sub">How many articles you must read before a blocked site unlocks. You can always keep reading beyond it.</p>
+        <p className="sub">Minimum number of articles you must read before you can unlock a site. You can always keep reading beyond it.</p>
         <div className="row" style={{ alignItems: "center", gap: 12 }}>
           <button className="btn ghost" aria-label="Fewer" onClick={() => setArticlesRequired((v) => clampReq(v - 1))} style={{ padding: "8px 16px", fontSize: 18, lineHeight: 1 }}>−</button>
           <input className="input" type="number" min="1" max="20" value={articlesRequired}
@@ -360,7 +359,7 @@ export default function Settings() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Where your articles come from</h2>
-        <p className="sub">For transparency, here are all the publishers Reading Gate pulls news from. This is a read-only list — nothing to pick here.</p>
+        <p className="sub">For transparency, here are all the publishers Reading Gate pulls news from.</p>
         <p style={{ margin: 0, fontSize: 14, lineHeight: 1.85, color: "var(--muted)" }}>
           {SOURCES.join("  ·  ")}
         </p>
@@ -369,8 +368,8 @@ export default function Settings() {
       <div className="card" style={{ marginBottom: 20 }}>
         <h2>Custom sources</h2>
         <p className="sub">
-          If you are subscribed to something that isn't on our feed, such as the New York Times, WSJ, a
-          favorite blog, add it here and Reading Gate will pull from those sites too.
+          If you are subscribed to something that isn't on our feed, add it
+          here and Reading Gate will pull from those sites too.
         </p>
         <div className="row" style={{ marginBottom: 16 }}>
           {customFeeds.length === 0 && <span className="muted">No custom sources yet.</span>}
