@@ -1,78 +1,87 @@
-/* Base + glass system — ported from the Reading Gate Dashboard design.
-   All colors come from CSS variables set at runtime by the theme engine
-   (src/lib/themes.js + theme-context.jsx). Do not hardcode theme colors. */
+/* Base tokens — the "Card Catalog" look: index cards on a green library desk.
+   One fixed palette (the old theme picker is gone). Components read these variables,
+   so change a color here and it changes everywhere. */
 
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; padding: 0; }
 
 /* Responsive up-scaling for large monitors. The whole UI sizes in rem, so nudging the root
-   font-size enlarges everything proportionally on big screens — fixing the "looks tiny on a
-   large monitor" problem — while laptops stay at the designed 16px baseline. Percentages
-   (not px) so a user's own browser font-size preference is still respected. */
+   font-size enlarges everything proportionally on big screens while laptops stay at the
+   designed 16px baseline. Percentages (not px) so a user's browser font-size still counts. */
 html { font-size: 100%; }
 @media (min-width: 1600px) { html { font-size: 106.25%; } } /* ~17px */
 @media (min-width: 1920px) { html { font-size: 112.5%; } }  /* ~18px */
 @media (min-width: 2560px) { html { font-size: 125%; } }    /* ~20px */
+
+:root {
+  /* type */
+  --font-display: 'Special Elite', 'Courier New', monospace;   /* typed card headings */
+  --font-body: 'Courier Prime', 'Courier New', monospace;      /* body copy */
+  --font-num: 'Bebas Neue', 'Arial Narrow', sans-serif;        /* big numbers, labels */
+
+  /* the desk the cards sit on */
+  --desk: #23372D;
+  --desk-shadow: #142019;
+  --desk-ink: #F1EBDA;        /* text placed directly on the desk */
+  --desk-muted: #B8C4B5;
+
+  /* card stock */
+  --surface: #FBF8EF;
+  --surface-2: #F2ECDC;
+  --manila: #F3E3B5;
+  --border: #D9D2BC;
+  --rule: #B8C6E3;            /* blue ruled lines */
+  --text: #1F1F1F;
+  --muted: #5A554A;
+  --faint: #8A8577;
+
+  /* inks */
+  --accent: #1B2A6B;          /* fountain-pen blue: links, buttons, bars */
+  --accent-rgb: 27, 42, 107;
+  --accent-weak: rgba(27, 42, 107, .08);
+  --stamp: #B3261E;           /* rubber-stamp red */
+  --brass: #C9A961;
+  --link-hover: #B3261E;
+  --danger: #B3261E;
+  --success: #2F5D46;
+
+  /* chart roles (used by the SVG charts) */
+  --bar-main: #1B2A6B;
+  --line: #B3261E;
+  --dot: #FBF8EF;
+  --grid: rgba(31, 31, 31, .14);
+  --axis-left: #5A554A;
+  --axis-right: #5A554A;
+  --xlabel: #5A554A;
+  --track: #EFE8D6;
+  --resist-strong: #1B2A6B;
+  --resist-soft: #8C9BD0;
+  --heat-dark: #0F1A45;
+  --tip-bg: #FBF8EF;
+  --tip-text: #1F1F1F;
+  --shadow: 0 6px 0 var(--desk-shadow);
+
+  --fs-sm: 13.5px; --sp-4: 16px;
+}
+
 body {
-  background: var(--app-bg, #f7f7f5);
-  background-attachment: fixed;
-  color: var(--text, #161615);
-  font-family: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  background: #f7f7f5;
+  color: var(--text);
+  font-family: var(--font-body);
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
-  transition: background .5s ease, color .4s ease;
 }
 a { color: var(--accent); text-decoration: none; }
-a:hover { color: var(--link-hover, var(--text)); }
+a:hover { color: var(--link-hover); }
 
-/* Slim white scrollbar across the whole app (was theme-tinted via --border).
-   The transparent border + padding-box clip makes the thumb a thin, inset white
-   bar that doesn't touch the track ends. */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, .85);
+  background: rgba(241, 235, 218, .55);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
-::-webkit-scrollbar-thumb:hover { background: #fff; background-clip: padding-box; }
-/* Firefox */
-html { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .85) transparent; }
-
-.serif { font-family: 'Playfair Display', Georgia, serif; font-weight: 400; }
-
-/* compatibility aliases for a few older inline references */
-:root { --danger: #d9534f; --success: var(--accent); --fs-sm: 13.5px; --sp-4: 16px; }
-
-/* ---- glass panels: auto-applied to cards/stats/nav under a glass theme ---- */
-:root[data-theme-group="glass"] :is(.card, .stat, aside.nav) {
-  -webkit-backdrop-filter: blur(7px) saturate(1.8);
-  backdrop-filter: blur(7px) saturate(1.8);
-  position: relative;
-}
-:root[data-theme-group="glass"] :is(.card, .stat) > * { position: relative; z-index: 1; }
-/* nav-inner is position:sticky — give it z-index without forcing position:relative
-   (which would break the sticky behavior). */
-:root[data-theme-group="glass"] aside.nav > .nav-inner { z-index: 1; }
-:root[data-theme-group="glass"] :is(.card, .stat)::before {
-  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
-  background: radial-gradient(150% 95% at 50% -46%, rgba(255,255,255,.72) 0%, rgba(255,255,255,.5) 42%, rgba(255,255,255,0) 60%);
-}
-:root[data-theme-group="glass"] :is(.card, .stat):nth-of-type(even)::before { background: radial-gradient(150% 98% at 22% -50%, rgba(255,255,255,.7) 0%, rgba(255,255,255,.44) 44%, rgba(255,255,255,0) 62%); }
-:root[data-theme-group="glass"] :is(.card, .stat):nth-of-type(3n)::before { background: radial-gradient(130% 88% at 82% -40%, rgba(255,255,255,.72) 0%, rgba(255,255,255,.4) 40%, rgba(255,255,255,0) 58%); }
-:root[data-theme-group="glass"] aside.nav::before {
-  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
-  background: radial-gradient(150% 55% at 50% -26%, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 52%);
-}
-:root[data-theme-group="glass"] :is(.card, .stat, aside.nav)::after {
-  content:''; position:absolute; inset:var(--rim-inset,3px); border-radius:inherit; pointer-events:none; z-index:0;
-  box-shadow:
-    inset calc(-1 * var(--rim-w,1.4px)) calc(-1.4 * var(--rim-w,1.4px)) 0 0 rgba(255,255,255,var(--rim-a,.85)),
-    inset calc(0.35 * var(--rim-w,1.4px)) calc(0.35 * var(--rim-w,1.4px)) 0 0 rgba(255,255,255,calc(var(--rim-a,.85) * 0.32)),
-    inset calc(-0.6 * var(--rim-glow,7px)) calc(-0.8 * var(--rim-glow,7px)) var(--rim-glow,7px) 0 rgba(255,255,255,var(--rim-glow-a,.5)),
-    inset calc(-1 * var(--rim-br-w,0px)) calc(-1 * var(--rim-br-w,0px)) 0 0 rgba(255,255,255,var(--rim-br-a,0)),
-    inset calc(-1 * var(--rim-br-glow,0px)) calc(-1 * var(--rim-br-glow,0px)) var(--rim-br-glow,0px) 0 rgba(255,255,255,var(--rim-br-glow-a,0));
-}
+html { scrollbar-width: thin; scrollbar-color: rgba(241, 235, 218, .55) transparent; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

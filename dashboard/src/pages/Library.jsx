@@ -57,9 +57,9 @@ export default function Library() {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="muted">No articles match.</p>
+        <p className="lib-empty">No articles match.</p>
       ) : (
-        filtered.map((r) => (
+        <div className="lib-list">{filtered.map((r) => (
           <div className="lib-row" key={r.id}>
             <div className="top">
               <a className="title" href={r.article_url} target="_blank" rel="noopener noreferrer">{r.article_title}</a>
@@ -74,7 +74,7 @@ export default function Library() {
               <Stars value={r.preference_rating} label="Interest" />
             </div>
           </div>
-        ))
+        ))}</div>
       )}
     </>
   );

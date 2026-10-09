@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { fetchImpulseLog, impulseTrend } from "../lib/data.js";
+import PaperCrossoverChart from "../components/paper/PaperCrossoverChart.jsx";
 
 const PLOT_H = 210;                 // plot height in px (matches the "4e" design)
 const NUM_WEEKS = 8;
-const MONO = "ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace";
-const SERIF = "'Playfair Display', Georgia, serif";
-// Completed = the accent; bailed = a pale tint of it. Mixing toward opaque white keeps
-// the tint readable on both translucent glass and solid themes, whatever the accent hue.
+const MONO = "var(--font-body)";
+const SERIF = "var(--font-display)";
+// Completed = the ink accent; bailed = a pale tint of it.
 const COMPLETED = "var(--accent)";
 const BAILED = "color-mix(in srgb, var(--accent) 30%, #ffffff)";
 
@@ -43,14 +43,12 @@ function deltaColor(m) {
   return good ? "var(--success)" : "var(--danger)";
 }
 
-// Drill-in reached by clicking the Impulse counter on Overview (Spec §8).
-// Layout follows the Claude Design "4e" (aligned table): a stacked completed-vs-bailed
-// bar chart beside a metrics table, with every colour sourced from theme variables so
-// it re-skins with whichever theme the user picks in Settings.
+// Drill-in reached from the Overview's impulse cards (Spec §8): a stacked
+// completed-vs-bailed bar chart beside a metrics table, then the "Did you resist the
+// site?" chart over time.
 export default function ImpulseHistory() {
   const [impulses, setImpulses] = useState(null);
   const [err, setErr] = useState("");
-  const nav = useNavigate();
 
   useEffect(() => {
     fetchImpulseLog().then(setImpulses).catch((e) => setErr(e.message));
@@ -75,10 +73,10 @@ export default function ImpulseHistory() {
 
   return (
     <>
-      <button className="btn ghost" style={{ marginBottom: 20 }} onClick={() => nav("/")}>← Overview</button>
+      <Link to="/" className="cc-back">← Overview</Link>
       <div className="page-head">
         <div>
-          <h1 className="page-title">Impulse history</h1>
+          <h1 className="page-title">Impulse record</h1>
           <p className="page-sub">Every gate trigger over the last {NUM_WEEKS} weeks — how often each site called, and how often you read through instead of bailing.</p>
         </div>
       </div>
@@ -150,7 +148,7 @@ export default function ImpulseHistory() {
             {/* ---- Right: aligned metrics table (headers state the columns once) ---- */}
             <div style={{
               flex: "1 1 300px", minWidth: 260, display: "flex", flexDirection: "column",
-              background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 16, padding: "20px 24px",
+              background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 3, padding: "20px 24px",
             }}>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 12, padding: "0 0 12px", borderBottom: "1.5px solid var(--border)" }}>
                 <div style={{ ...hLabel, flex: 1, textAlign: "left" }}>Metric</div>
@@ -168,8 +166,8 @@ export default function ImpulseHistory() {
                       borderBottom: i < metrics.length - 1 ? "1px solid var(--border)" : "none",
                     }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ font: "500 13px/1.25 'Source Sans 3', system-ui, sans-serif", color: "var(--text)" }}>{m.name}</div>
-                        {m.sub && <div style={{ font: "400 10.5px/1.3 'Source Sans 3', system-ui, sans-serif", color: "var(--muted)", marginTop: 3 }}>{m.sub}</div>}
+                        <div style={{ font: "500 13px/1.25 var(--font-body)", color: "var(--text)" }}>{m.name}</div>
+                        {m.sub && <div style={{ font: "400 10.5px/1.3 var(--font-body)", color: "var(--muted)", marginTop: 3 }}>{m.sub}</div>}
                       </div>
                       <div style={{ width: 46, textAlign: "center", font: `19px ${SERIF}`, color: "var(--text)" }}>{m.value}</div>
                       <div style={{ width: 56, textAlign: "center", whiteSpace: "nowrap", font: `600 10px ${MONO}`, color: deltaColor(m) }}>{fmtDelta(m)}</div>
@@ -188,13 +186,17 @@ export default function ImpulseHistory() {
           </div>
         )}
       </div>
+
+      <div style={{ marginTop: "1.625rem" }}>
+        <PaperCrossoverChart impulses={impulses} />
+      </div>
     </>
   );
 }
 
 function Legend({ swatch, label }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 7, font: "500 12px 'Source Sans 3', system-ui, sans-serif", color: "var(--muted)" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 7, font: "500 12px var(--font-body)", color: "var(--muted)" }}>
       <span style={{ width: 12, height: 12, borderRadius: 3, background: swatch }} />
       {label}
     </span>

@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase.js";
 import { fetchProfile, fetchBlocklist } from "../lib/data.js";
 import { GENRE_GROUPS, SOURCES } from "../lib/genres.js";
-import { useTheme } from "../lib/theme-context.jsx";
-import { THEME_GROUPS, THEMES, swatchBg } from "../lib/themes.js";
 
 function normalizeDomain(d) {
   return (d || "").trim().toLowerCase()
@@ -51,12 +49,6 @@ function normalizeFeed(name, url) {
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { theme, preview, commit, resetPreview } = useTheme();
-  const [pendingTheme, setPendingTheme] = useState(theme);
-  // Follow the saved theme until the user picks a different one.
-  useEffect(() => { setPendingTheme(theme); }, [theme]);
-  // Revert any unsaved theme preview when leaving the page.
-  useEffect(() => () => resetPreview(), [resetPreview]);
 
   const [interests, setInterests] = useState(new Set());
   const [domains, setDomains] = useState([]);
@@ -122,7 +114,7 @@ export default function Settings() {
   }, []);
 
   // The saved check only reflects the last successful save — any edit clears it.
-  useEffect(() => { setStatus(""); }, [pendingTheme, interests, domains, durations, customFeeds, articlesRequired]);
+  useEffect(() => { setStatus(""); }, [interests, domains, durations, customFeeds, articlesRequired]);
 
   // Let Escape dismiss the welcome modal.
   useEffect(() => {
@@ -183,9 +175,6 @@ export default function Settings() {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user.id;
 
-      // Persist the previewed theme locally now (not on click).
-      commit(pendingTheme);
-
       // Per-site unlock minutes → auth metadata as a { domain: minutes } map, keyed by the
       // same normalized domain the gate looks up. This is the source of truth for how long a
       // site stays unlocked; storing it here (not in a blocklist column) is what makes the
@@ -194,22 +183,22 @@ export default function Settings() {
       const unlockMinutes = {};
       for (const d of wantList) unlockMinutes[d] = clampMins(durations[d]);
 
-      // Theme + minimum-articles + per-site unlock minutes → auth metadata in one write
-      // (all shared with the gate/extension).
+      // Minimum-articles + per-site unlock minutes → auth metadata in one write
+      // (both shared with the gate/extension).
       await supabase.auth.updateUser({
-        data: { theme: pendingTheme, articles_required: articlesRequired, unlock_minutes: unlockMinutes, onboarded: true },
+        data: { articles_required: articlesRequired, unlock_minutes: unlockMinutes, onboarded: true },
       });
 
       // interests + custom feeds → profiles. If the DB hasn't had the custom_feeds
       // migration (0002) applied, that column is missing and PostgREST rejects the whole
-      // upsert (code PGRST204). Detect that and retry without custom_feeds so theme,
+      // upsert (code PGRST204). Detect that and retry without custom_feeds so
       // interests, and the blocklist still save — the rest of Settings keeps working.
       const base = { user_id: uid, interests: [...interests] };
       let { error: pErr } = await supabase.from("profiles")
         .upsert({ ...base, custom_feeds: customFeeds }, { onConflict: "user_id" });
       if (pErr && (pErr.code === "PGRST204" || /custom_feeds/i.test(pErr.message || ""))) {
         // custom_feeds column missing (migration 0002 not applied) — retry without it so
-        // theme, interests, and the blocklist still save.
+        // interests, and the blocklist still save.
         ({ error: pErr } = await supabase.from("profiles").upsert(base, { onConflict: "user_id" }));
       }
       if (pErr) throw pErr;
@@ -264,7 +253,7 @@ export default function Settings() {
       <div className="page-head">
         <div>
           <h1 className="page-title">Settings</h1>
-          <p className="page-sub">Personalize your reading and your view.</p>
+          <p className="page-sub">Personalize your reading.</p>
         </div>
       </div>
 
@@ -285,7 +274,6 @@ export default function Settings() {
             <li><b>Block distracting sites</b> — tap a popular site or paste any URL.</li>
             <li><b>Set your reading goal</b> — how many articles unlock a site.</li>
             <li><b>Pick your interests</b> — and add any custom sources you subscribe to.</li>
-            <li><b>Choose a theme</b> — make the dashboard yours.</li>
             <li><b>Save changes</b> — your gate goes live right away.</li>
           </ol>
         </div>
@@ -425,32 +413,6 @@ export default function Settings() {
         ))}
       </div>
 
-      <div className="card" style={{ marginBottom: 20 }}>
-        <h2>Theme</h2>
-        {THEME_GROUPS.map(({ label, keys }) => (
-          <div key={label} style={{ marginBottom: 16 }}>
-            <div className="group-heading">{label}</div>
-            <div className="swatches">
-              {keys.map((k) => (
-                <button
-                  key={k}
-                  title={THEMES[k].name}
-                  aria-label={`${THEMES[k].name} theme`}
-                  aria-pressed={pendingTheme === k}
-                  onClick={() => { setPendingTheme(k); preview(k); }}
-                  className="swatch"
-                  style={{ background: swatchBg(k), boxShadow: pendingTheme === k ? "0 0 0 2px var(--accent)" : "0 0 0 1px rgba(0,0,0,.08)" }}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-        <div className="muted" style={{ fontSize: 13 }}>
-          Selected: <b style={{ color: "var(--text)" }}>{THEMES[pendingTheme].name}</b>
-          {pendingTheme !== theme && <span style={{ color: "var(--accent)" }}> · unsaved</span>}
-        </div>
-      </div>
-
       <div className="row" style={{ alignItems: "center" }}>
         <button className="btn" onClick={save}>Save changes</button>
         {status === "saved" && (
@@ -468,7 +430,7 @@ export default function Settings() {
           <div className="card" onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: 520, width: "100%", textAlign: "center", padding: "44px 40px" }}>
             <div style={{ fontSize: 52, lineHeight: 1, marginBottom: 18 }}>🎉</div>
-            <h2 id="welcome-title" style={{ margin: "0 0 14px", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 34, letterSpacing: "-.01em", color: "var(--text)" }}>You're all set</h2>
+            <h2 id="welcome-title" style={{ margin: "0 0 14px", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 34, letterSpacing: "-.01em", color: "var(--text)" }}>You're all set</h2>
             <p style={{ margin: "0 auto 28px", maxWidth: 400, fontSize: 17, lineHeight: 1.6, color: "var(--muted)" }}>
               Your reading gate is live! Try it on a blocked site to see it in action, or explore your dashboard.
             </p>
