@@ -16,7 +16,7 @@ button { font-family: inherit; }
 }
 .brand { display: flex; align-items: center; gap: 1rem; padding-bottom: 0.75rem; }
 .brand-plaque {
-  background: var(--brass); color: var(--desk); border-radius: 3px;
+  background: var(--brass); color: var(--plaque-ink); border-radius: 3px;
   font-family: var(--font-num); font-size: 1.875rem; letter-spacing: .06em; line-height: 1;
   padding: 0.4rem 1rem 0.2rem;
 }
