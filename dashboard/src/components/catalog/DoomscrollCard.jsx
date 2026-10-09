@@ -26,7 +26,7 @@ export default function DoomscrollCard({ impulses }) {
           less {[0, 1, 2, 3, 4].map((l) => <span key={l} style={{ background: ramp(l) }} />)} more
         </span>
       </div>
-      <p className="cc-note">When the gate catches you, by day and time.</p>
+      <p className="cc-note">Your doomscroll patterns</p>
       <div className="cc-heat" role="img" aria-label="Gate triggers by weekday and two-hour slot">
         <span />
         {HOURS.map((h) => <span key={h} className="cc-heat-h">{h}</span>)}

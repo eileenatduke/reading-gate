@@ -11,7 +11,7 @@ export default function DueSlip({ reading }) {
   return (
     <section className="cc-card cc-ruled cc-tilt-l">
       <div className="cc-head red">
-        <h2 className="cc-title lg">Articles read — date due slip</h2>
+        <h2 className="cc-title lg">Articles read</h2>
         <span className="cc-head-note">Week of {weekOf}</span>
       </div>
       <div className="cc-slip">

@@ -15,7 +15,7 @@ export default function BorrowerRecord({ reading, impulses }) {
 
   return (
     <section className="cc-card cc-tilt-r">
-      <div className="cc-head"><h2 className="cc-title">Borrower record</h2></div>
+      <div className="cc-head"><h2 className="cc-title">Reader record</h2></div>
       <div className="cc-stats">
         {stats.map((s) => {
           const body = (
