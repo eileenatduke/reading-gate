@@ -2,7 +2,6 @@ import { getConfig } from "../lib/config.js";
 import { currentUser, db, signIn, signUp, getUserFresh, getSession } from "../lib/sb.js";
 import { pickArticle, markArticleServed } from "../lib/recommender.js";
 import { verifySummary } from "../lib/verify.js";
-import { applyTheme, DEFAULT_THEME } from "../lib/themes.js";
 
 const params = new URLSearchParams(location.search);
 const domain = params.get("domain") || "";
@@ -284,9 +283,9 @@ async function accessSite() {
   location.href = dest;
 }
 
-// Load the user's prefs (theme + minimum articles + per-site unlock minutes) from auth
+// Load the user's prefs (minimum articles + per-site unlock minutes) from auth
 // metadata. Per-site unlock minutes are a { domain: minutes } map the dashboard writes to
-// user_metadata — the same store used for theme/articles_required. Keeping them here (rather
+// user_metadata — the same store used for articles_required. Keeping them here (rather
 // than in a blocklist column that needs a migration to exist) is what makes "the time you
 // saved is the time the site stays unlocked" hold on any database.
 async function loadPrefs() {
@@ -296,14 +295,6 @@ async function loadPrefs() {
     meta = user?.user_metadata || {};
   } catch {
     meta = {};
-  }
-  if (meta.theme) {
-    applyTheme(meta.theme);
-    chrome.storage.local.set({ gate_theme: meta.theme });
-  } else {
-    // No saved theme → Mono default. Don't keep a theme cached from a different account.
-    applyTheme(DEFAULT_THEME);
-    chrome.storage.local.set({ gate_theme: DEFAULT_THEME });
   }
   const n = parseInt(meta.articles_required, 10);
   required = Number.isFinite(n) && n > 0 ? n : 1;
@@ -387,7 +378,7 @@ async function init() {
   const s = parseInt(cfg.MIN_READ_SECONDS, 10);
   minReadSecs = Number.isFinite(s) && s >= 0 ? s : 60;
   await ensureImpulse();    // record the trigger now (backfills if we just logged in)
-  await loadPrefs();        // theme + minimum-articles requirement
+  await loadPrefs();        // minimum-articles requirement
   await loadNextArticle();
 }
 
@@ -451,6 +442,4 @@ $("go-dashboard").addEventListener("click", () => openDashboard("/login"));
 // actually read and summarized, not the one first offered.
 $("refresh-article").addEventListener("click", loadNextArticle);
 
-// Instant paint from the cached theme, then refine from the server in loadTheme().
-chrome.storage.local.get("gate_theme").then(({ gate_theme }) => applyTheme(gate_theme || DEFAULT_THEME));
 init();

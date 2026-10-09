@@ -1,182 +1,193 @@
+/* Gate page — the same "Card Catalog" look as the dashboard: cream index cards on a green
+   library desk, typewriter headings, fountain-pen blue ink and a rubber-stamp red.
+   Colors and fonts mirror dashboard/src/styles/tokens.css; keep the two in sync. */
+:root {
+  --font-display: 'Special Elite', 'Courier New', monospace;   /* typed card headings */
+  --font-body: 'Courier Prime', 'Courier New', monospace;      /* body copy */
+  --font-num: 'Bebas Neue', 'Arial Narrow', sans-serif;        /* plaque, labels */
+
+  /* the desk the cards sit on */
+  --desk: #23372D;
+  --desk-shadow: #142019;
+  --desk-ink: #F1EBDA;
+  --desk-muted: #B8C4B5;
+
+  /* card stock */
+  --surface: #FBF8EF;
+  --surface-2: #F2ECDC;
+  --manila: #F3E3B5;
+  --border: #D9D2BC;
+  --rule: #B8C6E3;
+  --text: #1F1F1F;
+  --muted: #5A554A;
+  --faint: #8A8577;
+
+  /* inks */
+  --accent: #1B2A6B;
+  --accent-weak: rgba(27, 42, 107, .08);
+  --stamp: #B3261E;
+  --brass: #C9A961;
+  --success: #2F5D46;
+  --danger: #B3261E;
+
+  --radius: 3px;
+  --shadow: 0 6px 0 var(--desk-shadow);
+}
+
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; }
+html, body { margin: 0; min-height: 100%; }
 body {
-  background: var(--app-bg);
-  background-attachment: fixed;
-  color: var(--text);
-  font-family: var(--font-sans);
+  background: var(--desk);
+  color: var(--desk-ink);
+  font-family: var(--font-body);
   font-size: var(--fs-base);
+  font-variant-numeric: tabular-nums;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
   display: flex;
   justify-content: center;
   padding: var(--sp-7) var(--sp-4);
-  transition: background .5s ease, color .4s ease;
-}
-
-/* glass panels when a glass theme is active */
-:root[data-theme-group="glass"] .card {
-  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
-  position: relative;
-}
-:root[data-theme-group="glass"] .card > * { position: relative; z-index: 1; }
-:root[data-theme-group="glass"] .card::before {
-  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
-  background: radial-gradient(150% 95% at 50% -46%, rgba(255,255,255,.7) 0%, rgba(255,255,255,.46) 42%, rgba(255,255,255,0) 60%);
-}
-:root[data-theme-group="glass"] .card::after {
-  content:''; position:absolute; inset:3px; border-radius:inherit; pointer-events:none; z-index:0;
-  box-shadow: inset -1.4px -2px 0 0 rgba(255,255,255,.85), inset -5px -6px 8px 0 rgba(255,255,255,.5);
 }
 .wrap { width: 100%; max-width: 40rem; }
 
+/* Brass name plaque, as in the dashboard top bar. */
 .brand {
-  display: flex; align-items: center; gap: var(--sp-2);
-  color: var(--muted); font-size: var(--fs-sm);
-  margin-bottom: var(--sp-4);
+  display: inline-block;
+  background: var(--brass); color: var(--desk); border-radius: var(--radius);
+  font-family: var(--font-num); font-size: 1.75rem; letter-spacing: .06em; line-height: 1;
+  padding: 0.4rem 1rem 0.2rem;
+  margin-bottom: var(--sp-5);
 }
-.brand .dot { width: .625rem; height: .625rem; border-radius: 50%; background: var(--accent); }
 
+/* Index cards */
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  color: var(--text);
+  border-radius: 2px;
   box-shadow: var(--shadow);
   padding: var(--sp-6);
-  margin-bottom: var(--sp-5);
+  margin-bottom: var(--sp-6);
 }
 
 .pills { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); flex-wrap: wrap; }
 .pill {
-  font-size: var(--fs-xs); font-weight: 600; letter-spacing: .02em;
-  padding: 3px 10px; border-radius: var(--radius-pill);
-  background: var(--surface-2); color: var(--muted);
+  font-size: var(--fs-xs); font-weight: 700;
+  padding: 0.2rem 0.625rem; border-radius: var(--radius);
+  background: var(--surface-2); color: var(--muted); border: 1px solid var(--border);
 }
-.pill.source { background: var(--accent-weak); color: var(--accent); }
-.pill.serendipity { background: var(--accent); color: #fff; }
+.pill.source { background: transparent; color: var(--stamp); border: 1.5px solid var(--stamp); }
+.pill.serendipity { background: var(--manila); color: var(--text); border-color: var(--brass); }
 
 .headline {
-  font-family: var(--font-serif);
-  /* Playfair Display is an editorial display serif — 400 matches the dashboard
-     headings; the -.035em left margin optically compensates its glyph
-     side-bearing so the headline lines up with the blurb beneath it. */
-  font-size: var(--fs-2xl); font-weight: 400; line-height: 1.2;
-  margin: 0 0 var(--sp-3) -.035em;
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl); font-weight: 400; line-height: 1.25;
+  margin: 0 0 var(--sp-3);
+  text-wrap: balance;
 }
 .blurb { color: var(--muted); margin: 0 0 var(--sp-5); }
 
 .btn {
-  font: inherit; font-weight: 600; cursor: pointer;
-  /* Transparent 1.5px border reserved on every button so switching between
-     filled / bordered / disabled states never shifts the layout. */
+  font: inherit; font-weight: 700; cursor: pointer; text-decoration: none;
+  /* Transparent border reserved on every button so switching between filled /
+     bordered / disabled states never shifts the layout. */
   border: 1.5px solid transparent; border-radius: var(--radius);
   padding: var(--sp-3) var(--sp-5);
-  transition: filter 120ms var(--ease), background 120ms var(--ease);
+  transition: filter .15s ease, background .15s ease;
 }
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { filter: brightness(1.05); }
+.btn-primary { background: var(--accent); color: var(--surface); }
+.btn-primary:hover { filter: brightness(1.15); }
 .btn-primary:disabled {
-  /* Still obviously a button when disabled — dimmed, but with an on-brand
-     border so it doesn't melt into the card. */
-  background: var(--surface-2); color: var(--muted);
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  background: var(--surface-2); color: var(--faint);
+  border-color: var(--border);
   cursor: not-allowed; filter: none;
 }
-.btn-ghost {
-  /* A real bordered button in the brand accent, not bare text on the card. */
-  background: var(--accent-weak); color: var(--accent);
-  border: 1.5px solid var(--accent);
-}
-.btn-ghost:hover { background: color-mix(in srgb, var(--accent) 18%, var(--surface)); }
+.btn-ghost { background: transparent; color: var(--accent); border-color: var(--accent); }
+.btn-ghost:hover { background: var(--accent-weak); }
 .read-btn { display: inline-flex; align-items: center; gap: var(--sp-2); }
 
 /* Row above the article card: reading progress on the left, dashboard link on the right. */
-.gate-top { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+.gate-top { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-5); flex-wrap: wrap; }
 .gate-top .progress { margin-bottom: 0; }
 .gate-top #go-dashboard { margin-left: auto; }
+/* This button sits on the desk, not a card, so it uses the desk's light ink. */
+.gate-top .btn-primary { background: transparent; color: var(--desk-ink); border-color: var(--desk-ink); }
+.gate-top .btn-primary:hover { background: rgba(241, 235, 218, .1); filter: none; }
 
 /* Read + refresh actions share a row and wrap on narrow widths. */
 .card-actions { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
 
 .section-label {
-  font-size: var(--fs-sm); font-weight: 600; color: var(--text);
-  margin-bottom: var(--sp-2); display: block;
+  font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 400; color: var(--text);
+  text-transform: uppercase; letter-spacing: .02em;
+  border-bottom: 1px solid var(--text); padding-bottom: var(--sp-1);
+  margin-bottom: var(--sp-3); display: block;
 }
 .hint { font-size: var(--fs-sm); color: var(--muted); margin: 0 0 var(--sp-4); }
 
+/* Summary box drawn as ruled index-card paper. */
 textarea {
-  width: 100%; min-height: 10rem; resize: vertical;
-  font: inherit; color: var(--text);
-  /* Recessed surface + accent-tinted border so it clearly reads as an editable
-     field instead of matching the card behind it. */
-  background: var(--surface-2);
-  border: 1.5px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  width: 100%; min-height: 10.5rem; resize: vertical;
+  font: inherit; color: var(--text); line-height: 1.75rem;
+  background-color: var(--surface);
+  background-image: repeating-linear-gradient(transparent 0 calc(1.75rem - 1px), var(--rule) calc(1.75rem - 1px) 1.75rem);
+  background-position: 0 var(--sp-3);
+  background-attachment: local;
+  border: 1.5px solid var(--border);
   border-radius: var(--radius); padding: var(--sp-3);
 }
 textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .counter { font-size: var(--fs-sm); color: var(--muted); margin-top: var(--sp-2); }
-.counter.ok { color: var(--success); font-weight: 600; }
+.counter.ok { color: var(--success); font-weight: 700; }
 
-.rating-row { display: flex; align-items: center; justify-content: space-between; margin: var(--sp-4) 0; }
-.rating-row .label { font-weight: 600; }
-.rating-row .sub { font-size: var(--fs-sm); color: var(--muted); }
-.stars { display: flex; gap: var(--sp-1); }
-.star {
-  font-size: 1.6rem; line-height: 1; cursor: pointer; background: none; border: none;
-  color: var(--border); transition: color 120ms var(--ease); padding: 0 2px;
-}
-.star.filled { color: var(--accent); }
-/* On the liquid-pastel (glass) themes the border color is translucent white and
-   reads too faint, so make unselected stars solid white. Filled stars keep --accent. */
-:root[data-theme-group="glass"] .star:not(.filled) { color: #ffffff; }
-.star:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
-
-/* "Teach your feed" reaction row — replaces the star ratings. One tap sets the interest
-   signal (👎/👍/🔥) that biases which genres get recommended next. */
-.react-block { margin: var(--sp-4) 0; }
-.react-block .label { font-weight: 600; }
+/* "Teach your feed" reaction row. One tap sets the interest signal that biases
+   which genres get recommended next. */
+.react-block { margin: var(--sp-5) 0 var(--sp-4); }
+.react-block .label { font-weight: 700; }
 .react-block .sub { font-size: var(--fs-sm); color: var(--muted); margin-bottom: var(--sp-3); }
 .reactions { display: flex; gap: var(--sp-3); flex-wrap: wrap; }
 .reaction {
   display: inline-flex; align-items: center; gap: var(--sp-2);
   font: inherit; cursor: pointer;
-  background: var(--surface); color: var(--text);
-  border: 1px solid var(--border); border-radius: 999px;
-  padding: var(--sp-2) var(--sp-4); transition: all 120ms var(--ease);
+  background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: var(--sp-2) var(--sp-4); transition: all .15s ease;
 }
 .reaction .emoji { font-size: 1.25rem; line-height: 1; }
 .reaction:hover { border-color: var(--accent); }
 .reaction.selected {
-  border-color: var(--accent); color: var(--accent); font-weight: 600;
-  background: var(--accent-weak);
+  border-color: var(--accent); color: var(--surface); font-weight: 700;
+  background: var(--accent);
 }
-/* Glass themes use a translucent-white --border that reads too faint on the pastel
-   surface; give unselected pills a slightly firmer edge so they still look tappable. */
-:root[data-theme-group="glass"] .reaction { border-color: rgba(255,255,255,0.55); }
-.reaction:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.reaction:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
-.submit-row { margin-top: var(--sp-5); display: flex; align-items: center; gap: var(--sp-4); }
+.submit-row { margin-top: var(--sp-5); display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; }
 .submit-row .why { font-size: var(--fs-sm); color: var(--muted); }
 
 .notice {
-  background: var(--accent-weak); color: var(--accent);
+  background: var(--manila); color: var(--text);
+  border-left: 3px solid var(--stamp);
   border-radius: var(--radius); padding: var(--sp-4); font-size: var(--fs-sm);
 }
 .field {
   width: 100%; font: inherit; color: var(--text);
-  background: var(--surface-2);
-  border: 1.5px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  background: var(--surface);
+  border: 1.5px solid var(--border);
   border-radius: var(--radius); padding: var(--sp-3);
-  margin-bottom: var(--sp-3); box-sizing: border-box;
+  margin-bottom: var(--sp-3);
 }
 .field:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Reading progress, typed onto a manila tab on the desk. */
 .progress {
-  display: inline-block; font-size: var(--fs-sm); font-weight: 600;
-  color: var(--accent); background: var(--accent-weak);
-  padding: 6px 14px; border-radius: var(--radius-pill); margin-bottom: var(--sp-4);
+  display: inline-block; font-size: var(--fs-sm); font-weight: 700;
+  color: var(--text); background: var(--manila);
+  padding: 6px 14px; border-radius: var(--radius); margin-bottom: var(--sp-4);
+  box-shadow: 0 3px 0 var(--desk-shadow);
 }
 .center { text-align: center; }
 .hidden { display: none !important; }
 a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
