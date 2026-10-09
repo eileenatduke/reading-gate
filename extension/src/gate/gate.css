@@ -1,38 +1,6 @@
 /* Gate page — the same "Card Catalog" look as the dashboard: cream index cards on a green
    library desk, typewriter headings, fountain-pen blue ink and a rubber-stamp red.
-   Colors and fonts mirror dashboard/src/styles/tokens.css; keep the two in sync. */
-:root {
-  --font-display: 'Special Elite', 'Courier New', monospace;   /* typed card headings */
-  --font-body: 'Courier Prime', 'Courier New', monospace;      /* body copy */
-  --font-num: 'Bebas Neue', 'Arial Narrow', sans-serif;        /* plaque, labels */
-
-  /* the desk the cards sit on */
-  --desk: #23372D;
-  --desk-shadow: #142019;
-  --desk-ink: #F1EBDA;
-  --desk-muted: #B8C4B5;
-
-  /* card stock */
-  --surface: #FBF8EF;
-  --surface-2: #F2ECDC;
-  --manila: #F3E3B5;
-  --border: #D9D2BC;
-  --rule: #B8C6E3;
-  --text: #1F1F1F;
-  --muted: #5A554A;
-  --faint: #8A8577;
-
-  /* inks */
-  --accent: #1B2A6B;
-  --accent-weak: rgba(27, 42, 107, .08);
-  --stamp: #B3261E;
-  --brass: #C9A961;
-  --success: #2F5D46;
-  --danger: #B3261E;
-
-  --radius: 3px;
-  --shadow: 0 6px 0 var(--desk-shadow);
-}
+   Colors and fonts come from tokens.css. */
 
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; }

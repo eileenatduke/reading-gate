@@ -3,65 +3,75 @@
 <head>
   <meta charset="utf-8" />
   <title>Welcome to Reading Gate</title>
-  <!-- Brand fonts: Source Sans 3 (body/UI) + Playfair Display (headings), same source
-       as the dashboard so the type matches exactly. -->
+  <!-- Same fonts as the dashboard: Special Elite (headings), Courier Prime (body),
+       Bebas Neue (name plaque). -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Courier+Prime:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="gate/tokens.css" />
   <style>
-    html, body { height: 100%; }
+    /* "Card Catalog" look, matching the dashboard: a cream index card on a green library
+       desk. Colors and fonts come from gate/tokens.css. */
+    html, body { min-height: 100%; }
     body {
       margin: 0;
-      font-family: var(--font-sans);
-      background: var(--app-bg);
+      font-family: var(--font-body);
+      background: var(--desk);
       color: var(--text);
+      -webkit-font-smoothing: antialiased;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: var(--sp-5);
       box-sizing: border-box;
     }
+    .stack { width: 100%; max-width: 28rem; }
+    .brand {
+      display: inline-block; background: var(--brass); color: var(--desk); border-radius: var(--radius);
+      font-family: var(--font-num); font-size: 1.75rem; letter-spacing: .06em; line-height: 1;
+      padding: 0.4rem 1rem 0.2rem; margin-bottom: var(--sp-5);
+    }
     .card {
       width: 100%;
-      max-width: 26.25rem;
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      border-radius: 2px;
       box-shadow: var(--shadow);
       padding: var(--sp-6);
       box-sizing: border-box;
     }
-    /* Body / UI text: Source Sans 3 (falls back to the system sans stack in --font-sans). */
-    body { font-family: var(--font-sans); }
-    .brand { font-weight:700; font-size: var(--fs-lg); margin-bottom: var(--sp-5); }
-    /* Headings: Playfair Display (serif display), per the brand type guidelines. */
-    h1 { font-family: var(--font-serif); font-weight: 600; font-size: var(--fs-2xl); line-height: 1.1; margin: 0 0 var(--sp-3); }
-    .lead { color: var(--muted); font-size: var(--fs-lg); margin: 0 0 var(--sp-4); line-height: 1.55; }
-    label { display:block; font-size: var(--fs-base); font-weight:600; margin-bottom: var(--sp-1); }
+    h1 {
+      font-family: var(--font-display); font-weight: 400; font-size: var(--fs-2xl); line-height: 1.2;
+      margin: 0 0 var(--sp-3); text-wrap: balance;
+      border-bottom: 1px solid var(--text); padding-bottom: var(--sp-2);
+    }
+    .lead { color: var(--muted); font-size: var(--fs-base); margin: 0 0 var(--sp-5); line-height: 1.6; }
     input {
-      width:100%; font:inherit; font-size: var(--fs-lg); padding: var(--sp-3); margin-bottom: var(--sp-4);
-      border:1px solid var(--border); border-radius: var(--radius);
+      width:100%; font:inherit; font-size: var(--fs-base); padding: var(--sp-3); margin-bottom: var(--sp-4);
+      border:1.5px solid var(--border); border-radius: var(--radius);
       background: var(--surface); color: var(--text); box-sizing:border-box;
     }
     input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
     .btn {
-      width:100%; font:inherit; font-size: var(--fs-base); font-weight:600; cursor:pointer;
+      width:100%; font:inherit; font-size: var(--fs-base); font-weight:700; cursor:pointer;
       border:none; border-radius: var(--radius); padding: var(--sp-3);
-      background: var(--accent); color:#fff;
+      background: var(--accent); color: var(--surface);
     }
-    .btn:disabled { opacity:.6; cursor:default; }
-    .toggle-link { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; text-decoration: underline; }
-    .switch { text-align:center; margin-top: var(--sp-4); font-size: var(--fs-base); color: var(--muted); }
+    .btn:hover { filter: brightness(1.15); }
+    .btn:disabled { opacity:.6; cursor:default; filter: none; }
+    .toggle-link { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; font-weight: 700; padding:0; text-decoration: underline; }
+    .switch { text-align:center; margin-top: var(--sp-4); font-size: var(--fs-sm); color: var(--muted); }
     .err { color: var(--danger); font-size: var(--fs-sm); margin-bottom: var(--sp-3); min-height: 1em; }
     /* Don't reserve empty vertical space above the email field when there's no error. */
     .err:empty { min-height: 0; margin-bottom: 0; }
+    :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
     .hidden { display:none; }
   </style>
 </head>
 <body>
+  <div class="stack">
+  <div class="brand">Reading Gate</div>
   <div class="card">
-    <div class="brand">Reading Gate</div>
 
     <!-- Step 1: create an account -->
     <div id="create" class="hidden">
@@ -84,10 +94,11 @@
       <h1>You're all set — one quick step</h1>
       <p class="lead">
         Head to your <b>Settings</b> page to choose the sites to block, your reading
-        interests, and a theme. You're already signed in there with this account.
+        interests. You're already signed in there with this account.
       </p>
       <button class="btn" id="go-settings">Go to Settings</button>
     </div>
+  </div>
   </div>
   <script type="module" src="welcome.js"></script>
 </body>
