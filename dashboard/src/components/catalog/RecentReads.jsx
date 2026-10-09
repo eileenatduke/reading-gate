@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 export default function RecentReads({ reading, limit = 5 }) {
   const recent = reading.slice(-limit).reverse();
   return (
-    <section className="cc-card cc-ruled cc-tilt-s">
+    <section className="cc-card cc-ruled cc-tilt-s cc-fill">
       <div className="cc-head red"><h2 className="cc-title lg">Recently checked out</h2></div>
       {recent.length === 0 ? (
         <p className="cc-note">Nothing yet — articles you read at the gate land here.</p>

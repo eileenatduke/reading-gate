@@ -8,7 +8,7 @@ import Shelf from "../components/catalog/Shelf.jsx";
 import DoomscrollCard from "../components/catalog/DoomscrollCard.jsx";
 
 // Overview — "Card Catalog" design: index cards on the desk, all from live Supabase data.
-// Reading cards open /reading; impulse cards open /impulses.
+// Impulse cards open /impulses.
 export default function Overview() {
   const [reading, setReading] = useState(null);
   const [impulses, setImpulses] = useState([]);
@@ -29,7 +29,7 @@ export default function Overview() {
       <div className="cc-grid">
         <div className="cc-col">
           <DueSlip reading={reading} />
-          <RecentReads reading={reading} limit={8} />
+          <RecentReads reading={reading} limit={10} />
         </div>
         <div className="cc-col">
           <BorrowerRecord reading={reading} impulses={impulses} />

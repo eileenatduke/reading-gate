@@ -233,41 +233,6 @@ export function heatmap(impulses) {
   return { grid, max };
 }
 
-// ---------- source scorecard ----------
-export function sourceScorecard(reading) {
-  const m = new Map();
-  for (const r of reading) {
-    const s = m.get(r.source) || { source: r.source, n: 0, i: 0 };
-    s.n++; s.i += r.preference_rating;
-    m.set(r.source, s);
-  }
-  return [...m.values()]
-    .map((s) => ({ source: s.source, count: s.n, interest: s.i / s.n }))
-    .sort((a, b) => b.count - a.count || b.interest - a.interest);
-}
-
-// ---------- reading stats drill-in ----------
-// All-time reads per weekday (Mon–Sun), for "which days do you read?".
-export function readsByWeekday(reading) {
-  const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const counts = Array(7).fill(0);
-  for (const r of reading) counts[(new Date(r.created_at).getDay() + 6) % 7]++;
-  return labels.map((label, i) => ({ label, count: counts[i] }));
-}
-
-// Average interest rating (1–5, from the gate's reaction) per genre, most-liked first.
-export function interestByGenre(reading) {
-  const m = new Map();
-  for (const r of reading) {
-    const g = m.get(r.genre) || { genre: r.genre, n: 0, sum: 0 };
-    g.n++; g.sum += r.preference_rating;
-    m.set(r.genre, g);
-  }
-  return [...m.values()]
-    .map((g) => ({ genre: g.genre, count: g.n, interest: g.sum / g.n }))
-    .sort((a, b) => b.interest - a.interest || b.count - a.count);
-}
-
 // This week's "did you resist the site?" tally: of the gates completed this week with a
 // recorded outcome, how many ended somewhere other than the site.
 export function resistThisWeek(impulses) {

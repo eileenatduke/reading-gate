@@ -2,7 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase.js";
 
 // Overview's drill-in pages keep the Overview tab open.
-const OVERVIEW_PATHS = ["/", "/reading", "/impulses"];
+const OVERVIEW_PATHS = ["/", "/impulses"];
 
 // Top bar: a brass name plaque on the desk, and folder tabs for each page.
 export default function Nav() {
