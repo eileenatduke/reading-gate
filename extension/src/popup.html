@@ -3,33 +3,63 @@
 <head>
   <meta charset="utf-8" />
   <title>Reading Gate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Courier+Prime:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="gate/tokens.css" />
   <style>
-    body { width: 320px; margin: 0; font-family: var(--font-sans); background: var(--bg); color: var(--text); }
-    .p { padding: var(--sp-5); }
-    .brand { display:flex; align-items:center; gap: var(--sp-2); font-weight:700; margin-bottom: var(--sp-4); }
-    .brand .dot { width:10px; height:10px; border-radius:50%; background:var(--accent); }
+    /* Same "Card Catalog" look as the dashboard and gate: a cream index card on a green
+       library desk. Colors mirror dashboard/src/styles/tokens.css. */
+    :root {
+      --font-display: 'Special Elite', 'Courier New', monospace;
+      --font-body: 'Courier Prime', 'Courier New', monospace;
+      --font-num: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      --desk: #23372D; --desk-shadow: #142019; --desk-ink: #F1EBDA; --desk-muted: #B8C4B5;
+      --surface: #FBF8EF; --surface-2: #F2ECDC; --border: #D9D2BC;
+      --text: #1F1F1F; --text-muted: #5A554A;
+      --accent: #1B2A6B; --accent-weak: rgba(27, 42, 107, .08);
+      --stamp: #B3261E; --brass: #C9A961; --danger: #B3261E;
+      --radius: 3px;
+    }
+    body { width: 320px; margin: 0; font-family: var(--font-body); background: var(--desk); color: var(--text);
+      font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+    .p { padding: var(--sp-4); }
+    .brand { display:flex; align-items:center; gap: var(--sp-2); margin-bottom: var(--sp-4); }
+    .plaque { background: var(--brass); color: var(--desk); border-radius: var(--radius);
+      font-family: var(--font-num); font-size: 1.375rem; letter-spacing: .06em; line-height: 1; padding: 0.35rem 0.75rem 0.15rem; }
+    .brand #version { color: var(--desk-muted); font-size: var(--fs-xs); margin-left: auto; }
+    .card { background: var(--surface); border-radius: 2px; box-shadow: 0 5px 0 var(--desk-shadow); padding: var(--sp-5) var(--sp-4); }
+    .card-title { margin: 0 0 var(--sp-3); font-family: var(--font-display); font-weight: 400; font-size: var(--fs-lg);
+      text-transform: uppercase; letter-spacing: .02em; border-bottom: 1px solid var(--text); padding-bottom: var(--sp-1); }
     input { width:100%; font:inherit; padding: var(--sp-3); margin-bottom: var(--sp-3);
-      border:1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); box-sizing:border-box; }
-    .btn { width:100%; font:inherit; font-weight:600; cursor:pointer; border:none; border-radius: var(--radius);
-      padding: var(--sp-3); background: var(--accent); color:#fff; margin-bottom: var(--sp-2); }
-    .btn.ghost { background: transparent; color: var(--accent); border:1px solid var(--border); }
+      border:1.5px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); box-sizing:border-box; }
+    input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .btn { width:100%; font:inherit; font-weight:700; cursor:pointer; border:1.5px solid transparent; border-radius: var(--radius);
+      padding: var(--sp-3); background: var(--accent); color: var(--surface); margin-bottom: var(--sp-2); }
+    .btn:hover { filter: brightness(1.15); }
+    .btn.ghost { background: transparent; color: var(--accent); border-color: var(--accent); }
+    .btn.ghost:hover { background: var(--accent-weak); filter: none; }
     .row { display:flex; gap: var(--sp-2); }
     .row .btn { margin-bottom:0; }
     .muted { color: var(--text-muted); font-size: var(--fs-sm); }
     .err { color: var(--danger); font-size: var(--fs-sm); margin-bottom: var(--sp-2); min-height: 1em; }
-    .stat { display:flex; justify-content:space-between; padding: var(--sp-2) 0; border-bottom:1px solid var(--border); }
-    .stat b { font-size: var(--fs-lg); }
+    .stat { display:flex; justify-content:space-between; align-items:baseline; padding: var(--sp-2) 0; border-bottom:1px solid var(--border); }
+    .stat b { font-family: var(--font-num); font-weight: 400; font-size: 1.75rem; line-height: 1; }
     a { color: var(--accent); }
+    .card > div > :first-child { margin-top: 0; }
     .hidden { display:none; }
-    .toggle-link { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; }
+    .toggle-link { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; font-size: var(--fs-sm); padding:0; text-decoration: underline; }
+    :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
   </style>
 </head>
 <body>
   <div class="p">
-    <div class="brand">Reading Gate
-      <span id="version" class="muted" style="font-weight:400;font-size:var(--fs-xs);margin-left:auto"></span>
+    <div class="brand">
+      <span class="plaque">Reading Gate</span>
+      <span id="version"></span>
     </div>
+
+    <div class="card">
 
 
     <div id="auth" class="hidden">
@@ -41,10 +71,10 @@
     </div>
 
     <div id="onboard" class="hidden">
-      <p style="font-weight:700;font-size:var(--fs-lg);margin:0 0 var(--sp-2)">You're all set — one quick step</p>
+      <h2 class="card-title">You're all set</h2>
       <p class="muted" style="margin:0 0 var(--sp-4)">
         Head to your <b>Settings</b> page to choose the sites to block, your reading
-        interests, and a theme. You're already signed in there with this account.
+        interests. You're already signed in there with this account.
       </p>
       <button class="btn" id="open-settings">Settings</button>
       <button class="toggle-link" id="onboard-later">I'll do it later</button>
@@ -61,6 +91,7 @@
       <a id="dashboard-link" class="muted" href="#" target="_blank">Go to dashboard ↗</a>
       <div style="height: var(--sp-3)"></div>
       <button class="toggle-link" id="signout">Log out</button>
+    </div>
     </div>
   </div>
   <script type="module" src="popup.js"></script>
