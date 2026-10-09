@@ -8,7 +8,7 @@ import { crossoverSeries } from "../../lib/data.js";
 
 function seg(active) {
   return {
-    padding: "6px 13px", fontFamily: "'Source Sans 3',sans-serif", fontSize: 12.5, fontWeight: active ? 600 : 500,
+    padding: "6px 13px", fontFamily: "var(--font-body)", fontSize: 12.5, fontWeight: active ? 600 : 500,
     border: "none", borderRadius: 999, cursor: "pointer", background: active ? "var(--accent)" : "transparent",
     color: active ? "#fff" : "var(--muted)", transition: "all .15s", lineHeight: 1.2, whiteSpace: "nowrap",
   };
@@ -88,13 +88,13 @@ function buildPlot(data, mode) {
         yCur = y;
       });
     }
-    els.push(h("text", { key: "xl" + i, x: cx(i), y: baseY + 15, textAnchor: "middle", fontSize: 9.5, fontFamily: "'Source Sans 3',sans-serif", style: { fill: "var(--xlabel)" } }, d.label));
+    els.push(h("text", { key: "xl" + i, x: cx(i), y: baseY + 15, textAnchor: "middle", fontSize: 9.5, fontFamily: "var(--font-body)", style: { fill: "var(--xlabel)" } }, d.label));
   });
 
   const yl = mode === "share"
     ? [{ f: 0, t: "0" }, { f: 0.5, t: "50%" }, { f: 1, t: "100%" }]
     : [{ f: 0, t: "0" }, { f: 1, t: "" + maxTotal }];
-  yl.forEach((L, li) => els.push(h("text", { key: "yl" + li, x: padL - 8, y: baseY - L.f * plotH + 3, textAnchor: "end", fontSize: 9.5, fontFamily: "'Source Sans 3',sans-serif", style: { fill: "var(--muted)" } }, L.t)));
+  yl.forEach((L, li) => els.push(h("text", { key: "yl" + li, x: padL - 8, y: baseY - L.f * plotH + 3, textAnchor: "end", fontSize: 9.5, fontFamily: "var(--font-body)", style: { fill: "var(--muted)" } }, L.t)));
 
   return h("svg", { viewBox: "0 0 " + VBW + " " + VBH, width: "100%", style: { display: "block", height: "auto", overflow: "visible", marginTop: "2px" } }, els);
 }
@@ -116,7 +116,7 @@ export default function PaperCrossoverChart({ impulses }) {
     <div className="card" style={{ padding: "24px 26px 22px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 4 }}>
         <div style={{ minWidth: 240, maxWidth: 460 }}>
-          <h2 style={{ margin: "0 0 8px -.035em", fontFamily: "'Playfair Display',Georgia,serif", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Did you resist the site?</h2>
+          <h2 style={{ margin: "0 0 8px -.035em", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, lineHeight: 1.05, color: "var(--text)" }}>Did you resist the site?</h2>
           <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.5, marginBottom: 8 }}>
             Of the times you completed your reading goal, how often you went to the site (unlocked it) vs. resisted (kept reading or closed the tab).
           </div>

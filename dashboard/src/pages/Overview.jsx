@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
-import {
-  fetchReadingLog, fetchImpulseLog, impulsesThisWeek, currentStreak, streakMood,
-} from "../lib/data.js";
-import PaperStatCard from "../components/paper/PaperStatCard.jsx";
-import PaperArticlesChart from "../components/paper/PaperArticlesChart.jsx";
-import PaperCrossoverChart from "../components/paper/PaperCrossoverChart.jsx";
-import PaperGenreBars from "../components/paper/PaperGenreBars.jsx";
-import PaperImpulseHistory from "../components/paper/PaperImpulseHistory.jsx";
-import PaperHeatmap from "../components/paper/PaperHeatmap.jsx";
+import { fetchReadingLog, fetchImpulseLog } from "../lib/data.js";
+import DueSlip from "../components/catalog/DueSlip.jsx";
+import RecentReads from "../components/catalog/RecentReads.jsx";
+import BorrowerRecord from "../components/catalog/BorrowerRecord.jsx";
+import ResistCard from "../components/catalog/ResistCard.jsx";
+import Shelf from "../components/catalog/Shelf.jsx";
+import DoomscrollCard from "../components/catalog/DoomscrollCard.jsx";
 
-// Overview — warm-paper design ported from the Claude Design project
-// "Reading Gate Dashboard.dc.html", wired to real Supabase data.
+// Overview — "Card Catalog" design: index cards on the desk, all from live Supabase data.
+// Reading cards open /reading; impulse cards open /impulses.
 export default function Overview() {
   const [reading, setReading] = useState(null);
   const [impulses, setImpulses] = useState([]);
@@ -22,47 +20,26 @@ export default function Overview() {
       .catch((e) => setErr(e.message));
   }, []);
 
-  const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-
   if (err) return <div className="loading">Couldn't load data: {err}</div>;
   if (reading === null) return <div className="loading">Loading…</div>;
 
-  const mood = streakMood(reading);
-
   return (
-    <div className="overview-paper">
-      <div className="overview-shell">
-        <div className="page-head">
-          <div>
-            <h1 className="page-title">Overview</h1>
-            <p className="page-sub">A snapshot of your reading habits.</p>
-          </div>
-          <div style={{ fontSize: 14, color: "var(--muted)" }}>{today}</div>
+    <>
+      <h1 className="sr-only">Overview</h1>
+      <div className="cc-grid">
+        <div className="cc-col">
+          <DueSlip reading={reading} />
+          <RecentReads reading={reading} limit={8} />
         </div>
-
-        <div className="ov-label">Your progress</div>
-        <div className="ov-progress">
-          <PaperArticlesChart reading={reading} />
-          <div className="ov-statcol">
-            <PaperStatCard
-              value={currentStreak(reading)}
-              label="Day streak"
-              adornment={<span className="mood-emoji" role="img" aria-label={mood.key}>{mood.emoji}</span>}
-              caption={mood.caption}
-            />
-            <PaperStatCard value={impulsesThisWeek(impulses)} label="Impulses this week" />
-            <PaperStatCard value={impulses.length} label="Impulses all-time" />
-          </div>
-          <PaperCrossoverChart impulses={impulses} />
-          <PaperGenreBars reading={reading} />
-        </div>
-
-        <div className="ov-label">Habits</div>
-        <div className="ov-habits">
-          <PaperImpulseHistory impulses={impulses} />
-          <PaperHeatmap impulses={impulses} />
+        <div className="cc-col">
+          <BorrowerRecord reading={reading} impulses={impulses} />
+          <ResistCard impulses={impulses} />
+          <Shelf reading={reading} />
         </div>
       </div>
-    </div>
+      <div className="cc-wide">
+        <DoomscrollCard impulses={impulses} />
+      </div>
+    </>
   );
 }
